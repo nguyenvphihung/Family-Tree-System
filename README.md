@@ -8,7 +8,7 @@ Cây Gia Phả là một nền tảng trực tuyến giúp người dùng tạo,
 
 Trong tháng đầu tiên, chúng ta tập trung xây dựng một bản demo cơ bản với các mục tiêu sau:
 
-- **Thiết lập môi trường làm việc**: Tạo kho mã Git, cài đặt công cụ (IntelliJ, VSCode, PostgreSQL), và thiết lập quy trình Git (branch: `main`, `dev`).
+- **Thiết lập môi trường làm việc**: Tạo kho mã Git, cài đặt công cụ (IntelliJ, PostgreSQL,..), và thiết lập quy trình Git (branch: `main`, `dev`).
 - **Thiết kế giao diện (UI/UX)**: Tạo wireframe cho form nhập thông tin (họ tên, ngày sinh, quan hệ) và bố cục hiển thị cây gia phả.
 - **Xây dựng cơ sở dữ liệu**: Thiết kế schema (`persons`, `relationships`), viết `init.sql`, và triển khai trên PostgreSQL.
 - **Phát triển backend (Java/Spring)**: Tạo API để thêm thành viên (`POST /person`, `/relationship`) và hiển thị cây (`GET /family-tree/{rootId}`) bằng thuật toán DFS trong `backend/src/main/java/com/familytree/service/FamilyTreeService.java`.
