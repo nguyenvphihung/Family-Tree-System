@@ -1,9 +1,3 @@
--- Tạo database
-CREATE DATABASE IF NOT EXISTS familytree;
-
--- Sử dụng database vừa tạo
-\c familytree;
-
 -- Tạo các kiểu ENUM
 CREATE TYPE gender_type AS ENUM ('Nam', 'Nữ', 'Khác');
 CREATE TYPE relationship_type AS ENUM ('parent', 'child', 'spouse', 'sibling');
