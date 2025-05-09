@@ -87,9 +87,8 @@ family-tree-demo/
      npm start
      ```
 4. **Thiết lập cơ sở dữ liệu**:
-   - Tạo server mới, nhập chuỗi kết nối được cung cấp.
-   - Tạo cơ sở dữ liệu PostgreSQL tên `familytree`.
-   - Copy đưa vào query tool rồi chạy script trong `database/init_sql.sql'.
+   - Tạo server mới với tên tùy ý, chọn tag connect rồi nhập chuỗi kết nối được cung cấp.
+   - Ấn save và kiểm tra tồn tại của CSDL và các bảng trong database 'postgres'
 
 ## Giấy phép
 
