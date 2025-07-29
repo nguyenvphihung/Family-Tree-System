@@ -1,0 +1,1 @@
+export { default as familyLogo } from './family.png';
