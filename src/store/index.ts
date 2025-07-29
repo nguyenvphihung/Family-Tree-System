@@ -8,7 +8,7 @@ import { userService } from "../services/userService";
 // Auth Store
 interface AuthStore extends AuthState {
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  register: (userData: { fullName: string; email: string; phone: string; password: string }) => Promise<void>;
   logout: () => Promise<void>;
   getCurrentUser: () => Promise<void>;
   clearError: () => void;
@@ -44,14 +44,15 @@ export const useAuthStore = create<AuthStore>()(
           }
         },
 
-        register: async (email: string, password: string, name: string) => {
+        register: async (userData: { fullName: string; email: string; phone: string; password: string }) => {
           try {
             set({ isLoading: true, error: null });
             const response = await authService.register({
-              email,
-              password,
-              name,
-              confirmPassword: password,
+              email: userData.email,
+              password: userData.password,
+              name: userData.fullName,
+              phone: userData.phone,
+              confirmPassword: userData.password,
             });
             set({
               user: response.user,

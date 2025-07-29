@@ -1,19 +1,16 @@
-import { Suspense } from "react";
-import { useRoutes, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home/Home.tsx";
-import routes from "./routes";
-import AppRouter from "./routes";
+import React from "react";
 
 function App() {
   return (
-    <Suspense fallback={<p>Loading...</p>}>
-      <>
-        <Routes>
-          <Route path="/" element={<Home />} />
-        </Routes>
-        <AppRouter />
-      </>
-    </Suspense>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh'
+    }}>
+      <h1 style={{fontSize: 36, color: '#61dafb', marginBottom: 32}}>Welcome to React</h1>
+    </div>
   );
 }
 
