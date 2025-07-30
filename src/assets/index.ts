@@ -1,1 +1,1 @@
-export { default as familyLogo } from './family.png';
+export { default as familyLogo } from './family-bg.jpg';

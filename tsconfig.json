@@ -19,7 +19,7 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "src/types/*.d.ts", "src/types/images.d.ts"],
   "exclude": [],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
