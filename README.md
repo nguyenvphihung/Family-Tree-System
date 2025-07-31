@@ -1,30 +1,86 @@
-# React + TypeScript + Vite
+# Family Tree System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Hệ thống quản lý gia phả hiện đại được xây dựng với React, TypeScript và Tailwind CSS.
 
-Currently, two official plugins are available:
+## 🚀 Công nghệ sử dụng
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Frontend:** React 18 + TypeScript
+- **Styling:** Tailwind CSS
+- **Build Tool:** Vite
+- **State Management:** Redux Toolkit
+- **Routing:** React Router DOM
+- **UI Components:** Shadcn/ui
+- **Icons:** Lucide React
 
-## Expanding the ESLint configuration
+## 📁 Cấu trúc dự án
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+```
+src/
+├── assets/           # Tài nguyên (ảnh, font, icons)
+├── components/       # Components dùng chung
+│   ├── hooks/       # Custom hooks
+│   ├── layout/      # Layout components (Navbar, Sidebar, Footer)
+│   ├── ui/          # UI components (Button, Modal, Input...)
+│   └── utils/       # Hàm tiện ích
+├── config/          # Cấu hình (Axios, env, theme)
+├── pages/           # Các trang của ứng dụng
+│   ├── About/
+│   ├── Dashboard/
+│   ├── Home/
+│   ├── Login/
+│   └── Register/
+├── routes/          # Cấu hình Router
+├── services/        # Dịch vụ API
+├── store/           # Quản lý state (Redux)
+│   └── slices/      # Redux slices
+├── types/           # TypeScript type definitions
+├── App.tsx          # Component gốc
+└── main.tsx         # Điểm khởi chạy
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+## 🛠️ Cài đặt và chạy
+
+1. **Clone dự án:**
+   ```bash
+   git clone <repository-url>
+   cd Family-Tree-System
+   ```
+
+2. **Cài đặt dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Chạy dự án:**
+   ```bash
+   npm run dev
+   ```
+
+4. **Build production:**
+   ```bash
+   npm run build
+   ```
+
+## 📱 Tính năng chính
+
+- ✅ **Authentication:** Đăng nhập/Đăng ký
+- ✅ **Responsive Design:** Tương thích mọi thiết bị
+- ✅ **Modern UI:** Giao diện đẹp với Tailwind CSS
+- ✅ **Type Safety:** TypeScript đầy đủ
+- ✅ **State Management:** Redux Toolkit
+- ✅ **Routing:** React Router DOM
+
+## 🔧 Cấu hình môi trường
+
+Tạo file `.env` từ `.env.example` và cập nhật các biến môi trường:
+
+```env
+VITE_APP_NAME="Family Tree System"
+VITE_API_URL="http://localhost:3000/api"
+VITE_SUPABASE_URL="your_supabase_url"
+VITE_SUPABASE_ANON_KEY="your_supabase_key"
+```
+
+## 📄 License
+
+MIT License
