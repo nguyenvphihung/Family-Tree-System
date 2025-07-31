@@ -1,18 +1,31 @@
 import React, { useState } from "react";
 import familyBg from "@/assets/family-bg.jpg";
 import { Link } from "react-router-dom";
-const Login = () => {
-  const [phone, setPhone] = useState("");
+
+const Register = () => {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    // Basic validation (you'll want more robust validation later)
+    if (password !== confirmPassword) {
+      alert("Mật khẩu và xác nhận mật khẩu không khớp!");
+      setIsLoading(false);
+      return;
+    }
+
+    // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
-      alert("Đăng nhập thành công! (Demo)");
-    }, 1000);
+      alert("Đăng ký thành công! (Demo)");
+    }, 2000);
   };
 
   return (
@@ -31,15 +44,15 @@ const Login = () => {
       <div className="absolute bottom-20 right-20 w-40 h-40 bg-orange-300/20 rounded-full blur-xl animate-pulse delay-1000" />
       <div className="absolute top-1/2 left-10 w-24 h-24 bg-amber-300/20 rounded-full blur-lg animate-bounce" />
 
-      {/* Main Login Container */}
-      <div className="relative z-20 w-full max-w-2xl mx-4">
-        {/* Enhanced Login Card */}
+      {/* Main Register Container */}
+      <div className="relative z-20 w-full max-w-xl mx-4">
+        {/* Enhanced Register Card */}
         <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-yellow-200/50 overflow-hidden">
           {/* Header Section with Gradient */}
           <div className="bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 p-8 text-center relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-300/30 to-orange-300/30" />
             <div className="relative z-10">
-              {/* Enhanced Logo */}
+              {/* Enhanced Logo (reused from Login) */}
               <div className="flex justify-center mb-6">
                 <div className="relative">
                   <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm border-2 border-white/30">
@@ -69,10 +82,10 @@ const Login = () => {
                 </div>
               </div>
               <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
-                Hệ thống gia phả
+                Đăng ký tài khoản
               </h1>
               <p className="text-yellow-100 text-lg font-medium">
-                Kết nối gia đình, lưu giữ truyền thống
+                Bắt đầu hành trình gia phả của bạn
               </p>
             </div>
           </div>
@@ -80,7 +93,7 @@ const Login = () => {
           {/* Form Section */}
           <div className="p-8 lg:p-12">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Phone Input */}
+              {/* First Name Input */}
               <div className="space-y-2">
                 <label className="text-lg font-semibold text-gray-700 flex items-center gap-2">
                   <svg
@@ -93,24 +106,75 @@ const Login = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                      d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  Số điện thoại
+                  Họ
                 </label>
-                <div className="relative">
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    required
-                    className="w-full px-4 py-4 text-lg rounded-xl border-2 border-gray-200 text-gray-700 focus:outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-100 bg-gray-50 placeholder:text-gray-400 transition-all duration-300 hover:border-yellow-300"
-                    placeholder="Nhập số điện thoại của bạn"
-                  />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                  </div>
-                </div>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                  className="w-full px-4 py-4 text-lg rounded-xl border-2 border-gray-200 text-gray-700 focus:outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-100 bg-gray-50 placeholder:text-gray-400 transition-all duration-300 hover:border-yellow-300"
+                  placeholder="Nhập họ của bạn"
+                />
+              </div>
+
+              {/* Last Name Input */}
+              <div className="space-y-2">
+                <label className="text-lg font-semibold text-gray-700 flex items-center gap-2">
+                  <svg
+                    className="w-5 h-5 text-yellow-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  Tên
+                </label>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                  className="w-full px-4 py-4 text-lg rounded-xl border-2 border-gray-200 text-gray-700 focus:outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-100 bg-gray-50 placeholder:text-gray-400 transition-all duration-300 hover:border-yellow-300"
+                  placeholder="Nhập tên của bạn"
+                />
+              </div>
+
+              {/* Email Input */}
+              <div className="space-y-2">
+                <label className="text-lg font-semibold text-gray-700 flex items-center gap-2">
+                  <svg
+                    className="w-5 h-5 text-yellow-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8m-9 13h9a2 2 0 002-2V7a2 2 0 00-2-2H3a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                  </svg>
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full px-4 py-4 text-lg rounded-xl border-2 border-gray-200 text-gray-700 focus:outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-100 bg-gray-50 placeholder:text-gray-400 transition-all duration-300 hover:border-yellow-300"
+                  placeholder="Nhập email của bạn"
+                />
               </div>
 
               {/* Password Input */}
@@ -131,51 +195,56 @@ const Login = () => {
                   </svg>
                   Mật khẩu
                 </label>
-                <div className="relative">
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="w-full px-4 py-4 text-lg rounded-xl border-2 border-gray-200 text-gray-700 focus:outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-100 bg-gray-50 placeholder:text-gray-400 transition-all duration-300 hover:border-yellow-300"
-                    placeholder="Nhập mật khẩu của bạn"
-                  />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <svg
-                      className="w-5 h-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                      />
-                    </svg>
-                  </div>
-                </div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full px-4 py-4 text-lg rounded-xl border-2 border-gray-200 text-gray-700 focus:outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-100 bg-gray-50 placeholder:text-gray-400 transition-all duration-300 hover:border-yellow-300"
+                  placeholder="Tạo mật khẩu"
+                />
               </div>
 
-              {/* Enhanced Login Button */}
+              {/* Confirm Password Input */}
+              <div className="space-y-2">
+                <label className="text-lg font-semibold text-gray-700 flex items-center gap-2">
+                  <svg
+                    className="w-5 h-5 text-yellow-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                  Xác nhận mật khẩu
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  className="w-full px-4 py-4 text-lg rounded-xl border-2 border-gray-200 text-gray-700 focus:outline-none focus:border-yellow-400 focus:ring-4 focus:ring-yellow-100 bg-gray-50 placeholder:text-gray-400 transition-all duration-300 hover:border-yellow-300"
+                  placeholder="Nhập lại mật khẩu"
+                />
+              </div>
+
+              {/* Register Button */}
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-white font-bold text-xl rounded-xl py-4 mt-6 transition-all duration-300 transform hover:scale-105 disabled:opacity-60 disabled:transform-none shadow-lg hover:shadow-xl border-2 border-yellow-300/50 relative overflow-hidden group"
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold text-xl rounded-xl py-4 mt-6 transition-all duration-300 transform hover:scale-105 disabled:opacity-60 disabled:transform-none shadow-lg hover:shadow-xl border-2 border-green-300/50 relative overflow-hidden group"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-yellow-300/20 to-orange-300/20 transform translate-x-full group-hover:translate-x-0 transition-transform duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-r from-green-300/20 to-emerald-300/20 transform translate-x-full group-hover:translate-x-0 transition-transform duration-500" />
                 <span className="relative flex items-center justify-center gap-2">
                   {isLoading ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Đang đăng nhập...
+                      Đang đăng ký...
                     </>
                   ) : (
                     <>
@@ -189,53 +258,25 @@ const Login = () => {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                          d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
                         />
                       </svg>
-                      Đăng nhập
+                      Đăng ký
                     </>
                   )}
                 </span>
               </button>
             </form>
 
-            {/* Action Buttons */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-8">
+            {/* Link to Login Page */}
+            <div className="mt-6 text-center text-gray-700">
+              Đã có tài khoản?{" "}
               <Link
-                to="/register"
-                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold text-lg rounded-xl py-3 px-6 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                to="/login"
+                className="text-blue-600 hover:text-blue-800 font-semibold transition-colors duration-200"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-                Đăng ký dùng thử
+                Đăng nhập ngay
               </Link>
-              <button className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold text-lg rounded-xl py-3 px-6 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                  />
-                </svg>
-                Quay lại trang chủ
-              </button>
             </div>
 
             {/* Footer */}
@@ -280,4 +321,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;
