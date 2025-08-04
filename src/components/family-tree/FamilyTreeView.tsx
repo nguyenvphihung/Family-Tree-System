@@ -1,18 +1,16 @@
 import React, { useState } from "react";
+import { useFamilyTreeStore, FamilyMember } from "../../store";
 
 const FamilyTreeView: React.FC = () => {
-  const [treeData] = useState({
-    currentPerson: {
-      name: "Xuân phúc Võ",
-      birthYear: "2003",
-      status: "Alive",
-      isCurrent: true,
-    },
-    parents: {
-      father: null,
-      mother: null,
-    },
-  });
+  const { currentPerson, members } = useFamilyTreeStore();
+  
+  // Get family members by relationship
+  const father = members.find(m => m.relationship === 'father');
+  const mother = members.find(m => m.relationship === 'mother');
+  const maternalGrandmother = members.find(m => m.relationship === 'maternalGrandmother');
+  const maternalGrandfather = members.find(m => m.relationship === 'maternalGrandfather');
+  const paternalGrandmother = members.find(m => m.relationship === 'paternalGrandmother');
+  const paternalGrandfather = members.find(m => m.relationship === 'paternalGrandfather');
 
   const [zoomLevel, setZoomLevel] = useState(1);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
@@ -60,7 +58,7 @@ const FamilyTreeView: React.FC = () => {
     setZoomLevel(prev => Math.max(0.3, Math.min(3, prev * delta)));
   };
 
-  const renderPersonNode = (person: any, x: number, y: number) => {
+  const renderPersonNode = (person: FamilyMember, x: number, y: number) => {
     return (
       <g key={`person-${x}-${y}`}>
         <rect
@@ -145,7 +143,7 @@ const FamilyTreeView: React.FC = () => {
           fill="#6b7280"
           className="font-inter"
         >
-          {person.birthYear} – {person.status}
+          {person.birthYear} – {person.isAlive ? 'Alive' : 'Deceased'}
      
         </text>
 
@@ -377,9 +375,9 @@ const FamilyTreeView: React.FC = () => {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <h3 className="font-semibold text-gray-900 text-lg">{treeData.currentPerson.name}</h3>
+                  <h3 className="font-semibold text-gray-900 text-lg">{currentPerson?.name || 'Xuân phúc Võ'}</h3>
                   <p className="text-sm text-gray-600">This is you</p>
-                  <p className="text-sm text-gray-500">b. {treeData.currentPerson.birthYear} ({treeData.currentPerson.status})</p>
+                  <p className="text-sm text-gray-500">b. {currentPerson?.birthYear || '2003'} ({currentPerson?.isAlive ? 'Alive' : 'Deceased'})</p>
                 </div>
               </div>
               <a href="#" className="text-green-600 text-sm hover:underline">Research this person</a>
@@ -487,7 +485,7 @@ const FamilyTreeView: React.FC = () => {
               <div className="flex items-center space-x-4">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">Vo Family Tree</h2>
-                  <p className="text-sm text-gray-600">{treeData.currentPerson.name}</p>
+                  <p className="text-sm text-gray-600">{currentPerson?.name || 'Xuân phúc Võ'}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
@@ -602,12 +600,14 @@ const FamilyTreeView: React.FC = () => {
                 {/* Connection lines */}
                 {renderConnectionLines(600, 400)}
 
-                {/* Parent placeholders */}
-                {renderParentPlaceholder("father", 400, 300)}
-                {renderParentPlaceholder("mother", 800, 300)}
+                {/* Parent nodes */}
+                {father && renderPersonNode(father, 400, 300)}
+                {!father && renderParentPlaceholder("father", 400, 300)}
+                {mother && renderPersonNode(mother, 800, 300)}
+                {!mother && renderParentPlaceholder("mother", 800, 300)}
 
                 {/* Current person */}
-                {renderPersonNode(treeData.currentPerson, 600, 500)}
+                {currentPerson && renderPersonNode(currentPerson, 600, 500)}
               </svg>
             </div>
           </div>

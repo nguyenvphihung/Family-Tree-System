@@ -39,7 +39,7 @@ const FinishAccountModal: React.FC<FinishAccountModalProps> = ({
             <select
               value={yearOfBirth}
               onChange={(e) => setYearOfBirth(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
             >
               {Array.from({ length: 100 }, (_, i) => 2024 - i).map((year) => (
                 <option key={year} value={year}>
@@ -62,7 +62,7 @@ const FinishAccountModal: React.FC<FinishAccountModalProps> = ({
                   value="male"
                   checked={gender === "male"}
                   onChange={(e) => setGender(e.target.value)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
                 />
                 <span className="ml-2 text-sm text-gray-900">Male</span>
               </label>
@@ -73,7 +73,7 @@ const FinishAccountModal: React.FC<FinishAccountModalProps> = ({
                   value="female"
                   checked={gender === "female"}
                   onChange={(e) => setGender(e.target.value)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
                 />
                 <span className="ml-2 text-sm text-gray-900">Female</span>
               </label>
@@ -84,7 +84,7 @@ const FinishAccountModal: React.FC<FinishAccountModalProps> = ({
         <div className="mt-6 flex justify-end">
           <button
             onClick={handleContinue}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-md font-medium transition-colors"
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-medium transition-colors"
           >
             Continue
           </button>

@@ -5,6 +5,7 @@ import MaternalGrandparentsStep from "./MaternalGrandparentsStep";
 import PaternalGrandparentsStep from "./PaternalGrandparentsStep";
 import BuildingTreeLoading from "../loading/BuildingTreeLoading";
 import FamilyTreeView from "../family-tree/FamilyTreeView";
+import { useFamilyTreeStore, FamilyMember } from "../../store";
 
 type OnboardingStep = 
   | "finish-account"
@@ -17,14 +18,54 @@ type OnboardingStep =
 const OnboardingFlow: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>("finish-account");
   const [userData, setUserData] = useState<any>({});
+  const { setCurrentPerson, addParents, addGrandparents } = useFamilyTreeStore();
 
   const handleFinishAccount = (data: { yearOfBirth: string; gender: string }) => {
     setUserData({ ...userData, ...data });
+    
+    // Create current person from user data
+    const currentPerson: FamilyMember = {
+      id: 'current-person',
+      name: 'Xuân phúc Võ', // Default name, can be updated later
+      birthYear: data.yearOfBirth,
+      gender: data.gender as 'male' | 'female',
+      isAlive: true,
+      relationship: 'self',
+    };
+    
+    setCurrentPerson(currentPerson);
     setCurrentStep("parents-info");
   };
 
   const handleParentsInfo = (data: any) => {
     setUserData({ ...userData, parents: data });
+    
+    // Create parent members if data is provided
+    if (data.father && data.father.firstName) {
+      const father: FamilyMember = {
+        id: 'father',
+        name: data.father.firstName,
+        birthYear: data.father.yearOfBirth || '',
+        gender: 'male',
+        isAlive: data.father.isAlive,
+        countryOfBirth: data.father.countryOfBirth,
+        relationship: 'father',
+      };
+      
+      const mother: FamilyMember = {
+        id: 'mother',
+        name: data.mother.firstName,
+        birthYear: data.mother.yearOfBirth || '',
+        gender: 'female',
+        isAlive: data.mother.isAlive,
+        countryOfBirth: data.mother.countryOfBirth,
+        maidenName: data.mother.maidenName,
+        relationship: 'mother',
+      };
+      
+      addParents({ father, mother });
+    }
+    
     setCurrentStep("maternal-grandparents");
   };
 
@@ -34,6 +75,39 @@ const OnboardingFlow: React.FC = () => {
 
   const handleMaternalGrandparents = (data: any) => {
     setUserData({ ...userData, maternalGrandparents: data });
+    
+    // Create maternal grandparents if data is provided
+    const grandparents: any = {};
+    
+    if (data.maternalGrandmother && data.maternalGrandmother.firstName) {
+      grandparents.maternalGrandmother = {
+        id: 'maternal-grandmother',
+        name: data.maternalGrandmother.firstName,
+        birthYear: data.maternalGrandmother.yearOfBirth || '',
+        gender: 'female',
+        isAlive: data.maternalGrandmother.isAlive,
+        countryOfBirth: data.maternalGrandmother.countryOfBirth,
+        maidenName: data.maternalGrandmother.maidenName,
+        relationship: 'maternalGrandmother',
+      };
+    }
+    
+    if (data.maternalGrandfather && data.maternalGrandfather.firstName) {
+      grandparents.maternalGrandfather = {
+        id: 'maternal-grandfather',
+        name: data.maternalGrandfather.firstName,
+        birthYear: data.maternalGrandfather.yearOfBirth || '',
+        gender: 'male',
+        isAlive: data.maternalGrandfather.isAlive,
+        countryOfBirth: data.maternalGrandfather.countryOfBirth,
+        relationship: 'maternalGrandfather',
+      };
+    }
+    
+    if (Object.keys(grandparents).length > 0) {
+      addGrandparents(grandparents);
+    }
+    
     setCurrentStep("paternal-grandparents");
   };
 
@@ -43,6 +117,39 @@ const OnboardingFlow: React.FC = () => {
 
   const handlePaternalGrandparents = (data: any) => {
     setUserData({ ...userData, paternalGrandparents: data });
+    
+    // Create paternal grandparents if data is provided
+    const grandparents: any = {};
+    
+    if (data.paternalGrandmother && data.paternalGrandmother.firstName) {
+      grandparents.paternalGrandmother = {
+        id: 'paternal-grandmother',
+        name: data.paternalGrandmother.firstName,
+        birthYear: data.paternalGrandmother.yearOfBirth || '',
+        gender: 'female',
+        isAlive: data.paternalGrandmother.isAlive,
+        countryOfBirth: data.paternalGrandmother.countryOfBirth,
+        maidenName: data.paternalGrandmother.maidenName,
+        relationship: 'paternalGrandmother',
+      };
+    }
+    
+    if (data.paternalGrandfather && data.paternalGrandfather.firstName) {
+      grandparents.paternalGrandfather = {
+        id: 'paternal-grandfather',
+        name: data.paternalGrandfather.firstName,
+        birthYear: data.paternalGrandfather.yearOfBirth || '',
+        gender: 'male',
+        isAlive: data.paternalGrandfather.isAlive,
+        countryOfBirth: data.paternalGrandfather.countryOfBirth,
+        relationship: 'paternalGrandfather',
+      };
+    }
+    
+    if (Object.keys(grandparents).length > 0) {
+      addGrandparents(grandparents);
+    }
+    
     setCurrentStep("loading");
     
     // Simulate loading time

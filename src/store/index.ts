@@ -190,3 +190,125 @@ export const useUserStore = create<UserStore>()(
     { name: "user-store" },
   ),
 );
+
+// Family Tree Store
+export interface FamilyMember {
+  id: string;
+  name: string;
+  birthYear: string;
+  gender: 'male' | 'female';
+  isAlive: boolean;
+  countryOfBirth?: string;
+  maidenName?: string;
+  relationship: 'self' | 'father' | 'mother' | 'maternalGrandmother' | 'maternalGrandfather' | 'paternalGrandmother' | 'paternalGrandfather';
+}
+
+interface FamilyTreeStore {
+  members: FamilyMember[];
+  currentPerson: FamilyMember | null;
+  setCurrentPerson: (person: FamilyMember) => void;
+  addFamilyMember: (member: FamilyMember) => void;
+  addParents: (parents: { father: FamilyMember; mother: FamilyMember }) => void;
+  addGrandparents: (grandparents: {
+    maternalGrandmother?: FamilyMember;
+    maternalGrandfather?: FamilyMember;
+    paternalGrandmother?: FamilyMember;
+    paternalGrandfather?: FamilyMember;
+  }) => void;
+  clearFamilyTree: () => void;
+}
+
+export const useFamilyTreeStore = create<FamilyTreeStore>()(
+  devtools(
+    persist(
+      (set, get) => ({
+        members: [],
+        currentPerson: null,
+
+        setCurrentPerson: (person) => {
+          set((state) => {
+            const existingIndex = state.members.findIndex(member => member.id === person.id);
+            const newMembers = [...state.members];
+            
+            if (existingIndex === -1) {
+              newMembers.push(person);
+            } else {
+              newMembers[existingIndex] = person;
+            }
+            
+            return {
+              currentPerson: person,
+              members: newMembers,
+            };
+          });
+        },
+
+        addFamilyMember: (member) => {
+          set((state) => {
+            const existingIndex = state.members.findIndex(m => m.id === member.id);
+            const newMembers = [...state.members];
+            
+            if (existingIndex === -1) {
+              newMembers.push(member);
+            } else {
+              newMembers[existingIndex] = member;
+            }
+            
+            return { members: newMembers };
+          });
+        },
+
+        addParents: (parents) => {
+          set((state) => {
+            const newMembers = [...state.members];
+            
+            // Add father
+            const fatherIndex = newMembers.findIndex(m => m.id === parents.father.id);
+            if (fatherIndex === -1) {
+              newMembers.push(parents.father);
+            } else {
+              newMembers[fatherIndex] = parents.father;
+            }
+            
+            // Add mother
+            const motherIndex = newMembers.findIndex(m => m.id === parents.mother.id);
+            if (motherIndex === -1) {
+              newMembers.push(parents.mother);
+            } else {
+              newMembers[motherIndex] = parents.mother;
+            }
+            
+            return { members: newMembers };
+          });
+        },
+
+        addGrandparents: (grandparents) => {
+          set((state) => {
+            const newMembers = [...state.members];
+            
+            Object.values(grandparents).forEach(member => {
+              if (member) {
+                const existingIndex = newMembers.findIndex(m => m.id === member.id);
+                if (existingIndex === -1) {
+                  newMembers.push(member);
+                } else {
+                  newMembers[existingIndex] = member;
+                }
+              }
+            });
+            
+            return { members: newMembers };
+          });
+        },
+
+        clearFamilyTree: () => {
+          set({ members: [], currentPerson: null });
+        },
+      }),
+      {
+        name: "family-tree-storage",
+      },
+    ),
+    { name: "family-tree-store" },
+  ),
+);

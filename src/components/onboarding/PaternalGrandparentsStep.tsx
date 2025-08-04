@@ -37,10 +37,10 @@ const PaternalGrandparentsStep: React.FC<PaternalGrandparentsStepProps> = ({ onD
       {/* Header */}
       <div className="border-b border-gray-200 p-4">
         <div className="flex items-center">
-          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-            F
+          <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+            🌳
           </div>
-          <span className="ml-2 text-xl font-semibold text-gray-900">FamilyTree</span>
+          <span className="ml-2 text-xl font-semibold text-gray-900">MyHeritage</span>
         </div>
       </div>
 
@@ -51,7 +51,7 @@ const PaternalGrandparentsStep: React.FC<PaternalGrandparentsStepProps> = ({ onD
             <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">
               ✓
             </div>
-            <span className="ml-2 text-sm text-gray-600">xuanphuc</span>
+            <span className="ml-2 text-sm text-gray-600">P</span>
           </div>
           <div className="flex items-center">
             <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">
@@ -110,7 +110,7 @@ const PaternalGrandparentsStep: React.FC<PaternalGrandparentsStepProps> = ({ onD
               <div className="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center">
                 <span className="text-pink-600 text-xl">👵</span>
               </div>
-              <h2 className="ml-3 text-xl font-semibold text-gray-900">Your Father's Mother</h2>
+              <h2 className="ml-3 text-xl font-semibold text-gray-900">Your Father's Mother (Grandma)</h2>
             </div>
 
             <div className="space-y-4">
@@ -185,7 +185,7 @@ const PaternalGrandparentsStep: React.FC<PaternalGrandparentsStepProps> = ({ onD
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                 <span className="text-blue-600 text-xl">👴</span>
               </div>
-              <h2 className="ml-3 text-xl font-semibold text-gray-900">Your Father's Father</h2>
+              <h2 className="ml-3 text-xl font-semibold text-gray-900">Your Father's Father (Grandpa)</h2>
             </div>
 
             <div className="space-y-4">
@@ -197,7 +197,7 @@ const PaternalGrandparentsStep: React.FC<PaternalGrandparentsStepProps> = ({ onD
                   type="text"
                   value={paternalGrandfather.firstName}
                   onChange={(e) => setPaternalGrandfather({ ...paternalGrandfather, firstName: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                   placeholder="Enter first name"
                 />
               </div>
@@ -234,7 +234,7 @@ const PaternalGrandparentsStep: React.FC<PaternalGrandparentsStepProps> = ({ onD
                   type="checkbox"
                   checked={paternalGrandfather.isAlive}
                   onChange={(e) => setPaternalGrandfather({ ...paternalGrandfather, isAlive: e.target.checked })}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                 />
                 <label className="ml-2 text-sm text-gray-700">Is alive</label>
               </div>
