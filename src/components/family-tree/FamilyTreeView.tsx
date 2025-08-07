@@ -4,6 +4,11 @@ import { useFamilyTreeStore, FamilyMember } from "../../store";
 const FamilyTreeView: React.FC = () => {
   const { currentPerson, members } = useFamilyTreeStore();
   
+  // Debug: Log ra dữ liệu để kiểm tra
+  console.log('=== DEBUG FamilyTreeView ===');
+  console.log('members:', members);
+  console.log('currentPerson:', currentPerson);
+  
   // Get family members by relationship
   const father = members.find(m => m.relationship === 'father');
   const mother = members.find(m => m.relationship === 'mother');
@@ -11,6 +16,14 @@ const FamilyTreeView: React.FC = () => {
   const maternalGrandfather = members.find(m => m.relationship === 'maternalGrandfather');
   const paternalGrandmother = members.find(m => m.relationship === 'paternalGrandmother');
   const paternalGrandfather = members.find(m => m.relationship === 'paternalGrandfather');
+  
+  console.log('father:', father);
+  console.log('mother:', mother);
+  console.log('maternalGrandmother:', maternalGrandmother);
+  console.log('maternalGrandfather:', maternalGrandfather);
+  console.log('paternalGrandmother:', paternalGrandmother);
+  console.log('paternalGrandfather:', paternalGrandfather);
+  console.log('=== END DEBUG ===');
 
   const [zoomLevel, setZoomLevel] = useState(1);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
@@ -58,7 +71,17 @@ const FamilyTreeView: React.FC = () => {
     setZoomLevel(prev => Math.max(0.3, Math.min(3, prev * delta)));
   };
 
+  // Helper lấy màu theo giới tính
+  const getGenderColor = (gender: string) => {
+    if (gender === 'male') return '#2563eb'; // blue-600
+    if (gender === 'female') return '#f472b6'; // pink-400
+    return '#6b7280'; // gray-500
+  };
+  // Helper lấy màu line xám
+  const lineColor = '#9ca3af'; // gray-400
+
   const renderPersonNode = (person: FamilyMember, x: number, y: number) => {
+    const borderColor = getGenderColor(person.gender);
     return (
       <g key={`person-${x}-${y}`}>
         <rect
@@ -68,8 +91,8 @@ const FamilyTreeView: React.FC = () => {
           height="120"
           rx="18"
           fill="#f0fdf4"
-          stroke="#10b981"
-          strokeWidth="2"
+          stroke={borderColor}
+          strokeWidth="3"
           className="shadow-lg transition-all duration-300 hover:shadow-xl"
         />
 
@@ -81,7 +104,7 @@ const FamilyTreeView: React.FC = () => {
           height="110"
           rx="16"
           fill="none"
-          stroke="#a7f3d0"
+          stroke={borderColor}
           strokeWidth="1.5"
         />
 
@@ -91,7 +114,7 @@ const FamilyTreeView: React.FC = () => {
           cy={y - 15}
           r="35"
           fill="#e5e7eb"
-          stroke="#9ca3af"
+          stroke={borderColor}
           strokeWidth="2"
         />
 
@@ -115,16 +138,25 @@ const FamilyTreeView: React.FC = () => {
           fill="#10b981"
           stroke="white"
           strokeWidth="2"
-          className="cursor-pointer hover:scale-110 transition-transform duration-200"
+          className="cursor-pointer transition-all duration-200 hover:scale-110 hover:fill-green-600"
+          onClick={() => handleCameraClick(person.id)}
         />
-        <text x={x - 70} y={y - 30} textAnchor="middle" fontSize="22" fill="white">
+        <text 
+          x={x - 70} 
+          y={y - 30} 
+          textAnchor="middle" 
+          fontSize="22" 
+          fill="white"
+          className="cursor-pointer"
+          onClick={() => handleCameraClick(person.id)}
+        >
           📷
         </text>
 
         {/* Name */}
         <text
           x={x + 20}
-          y={y - 15}
+          y={y - 25}
           textAnchor="middle"
           fontSize="22"
           fill="#1f2937"
@@ -134,17 +166,54 @@ const FamilyTreeView: React.FC = () => {
           {person.name}
         </text>
 
+        {/* Maiden name, Last name */}
+        {person.maidenName && (
+          <text
+            x={x + 20}
+            y={y}
+            textAnchor="middle"
+            fontSize="16"
+            fill="#6b7280"
+            className="font-inter"
+          >
+            Maiden: {person.maidenName}
+          </text>
+        )}
+        {person.lastName && (
+          <text
+            x={x + 20}
+            y={y + 18}
+            textAnchor="middle"
+            fontSize="16"
+            fill="#6b7280"
+            className="font-inter"
+          >
+            Last: {person.lastName}
+          </text>
+        )}
+        {/* Country of birth */}
+        {person.countryOfBirth && (
+          <text
+            x={x + 20}
+            y={y + 36}
+            textAnchor="middle"
+            fontSize="16"
+            fill="#6b7280"
+            className="font-inter"
+          >
+            {person.countryOfBirth}
+          </text>
+        )}
         {/* Birth year and status */}
         <text
           x={x + 20}
-          y={y + 15}
+          y={y + 54}
           textAnchor="middle"
           fontSize="16"
           fill="#6b7280"
           className="font-inter"
         >
           {person.birthYear} – {person.isAlive ? 'Alive' : 'Deceased'}
-     
         </text>
 
         {/* Edit button */}
@@ -155,7 +224,8 @@ const FamilyTreeView: React.FC = () => {
           fill="#9ca3af"
           stroke="white"
           strokeWidth="2"
-          className="cursor-pointer hover:scale-110 transition-transform duration-200"
+          className="cursor-pointer transition-all duration-200 hover:scale-110 hover:fill-gray-500"
+          onClick={() => handleEditClick(person.id)}
         />
         <text
           x={x + 105}
@@ -164,31 +234,13 @@ const FamilyTreeView: React.FC = () => {
           fontSize="22"
           fill="white"
           fontWeight="600"
+          className="cursor-pointer"
+          onClick={() => handleEditClick(person.id)}
         >
           ✏️
         </text>
 
-        {/* Add child button - redesigned */}
-        <circle
-          cx={x}
-          cy={y + 65}
-          r="25"
-          fill="#ffffff"
-          stroke="#10b981"
-          strokeWidth="3"
-          className="cursor-pointer hover:fill-green-50 transition-colors duration-200"
-        />
-        <text
-          x={x}
-          y={y + 72}
-          textAnchor="middle"
-          fontSize="32"
-          fill="#10b981"
-          fontWeight="700"
-          className="font-inter"
-        >
-          +
-        </text>
+        {/* Bỏ dấu "+" trong renderPersonNode - chỉ giữ dấu "+" to ở dưới bằng renderAddChildButton */}
       </g>
     );
   };
@@ -262,59 +314,354 @@ const FamilyTreeView: React.FC = () => {
     );
   };
 
-  const renderConnectionLines = (centerX: number, centerY: number) => {
-    const childY = centerY + 100; // Child node position
-    const parentY = centerY - 100; // Parent nodes position
-    const fatherX = centerX - 200; // Father node position
-    const motherX = centerX + 200; // Mother node position
+  // Helper: Xây dựng tree từ flat array (members)
+  function buildFamilyTree(members: FamilyMember[]): any {
+    // Map relationship sang key tree
+    const relMap: Record<string, string> = {
+      self: 'self',
+      father: 'father',
+      mother: 'mother',
+      paternalGrandfather: 'paternalGrandfather',
+      paternalGrandmother: 'paternalGrandmother',
+      maternalGrandfather: 'maternalGrandfather',
+      maternalGrandmother: 'maternalGrandmother',
+    };
+    const tree: any = {};
+    members.forEach(m => {
+      tree[relMap[m.relationship]] = m;
+    });
+    return tree;
+  }
 
+  // Đệ quy render node và các thế hệ
+  function renderTreeNode(
+    member: FamilyMember | undefined,
+    x: number,
+    y: number,
+    level: number,
+    direction: 'left' | 'right' | 'center',
+    tree: any
+  ) {
+    // Kích thước node
+    const nodeWidth = 180;
+    const nodeHeight = 90;
+    const verticalGap = 120;
+    const horizontalGap = 120;
+
+    // Tính vị trí các node con
+    let children: { member: FamilyMember | undefined; rel: string; dir: 'left' | 'right' }[] = [];
+    if (member) {
+      if (member.relationship === 'father') {
+        children = [
+          { member: tree.paternalGrandfather, rel: 'paternalGrandfather', dir: 'left' },
+          { member: tree.paternalGrandmother, rel: 'paternalGrandmother', dir: 'right' },
+        ];
+      } else if (member.relationship === 'mother') {
+        children = [
+          { member: tree.maternalGrandfather, rel: 'maternalGrandfather', dir: 'left' },
+          { member: tree.maternalGrandmother, rel: 'maternalGrandmother', dir: 'right' },
+        ];
+      }
+    }
+
+    // Render node hiện tại
+    const node = member
+      ? renderPersonNode(member, x, y)
+      : (direction === 'left' || direction === 'right')
+        ? renderParentPlaceholder(direction === 'left' ? 'father' : 'mother', x, y)
+        : null;
+
+    // Nếu có node cha mẹ, render tiếp các thế hệ trên
+    if (children.length > 0) {
+      // Tính vị trí các node cha mẹ
+      const leftX = x - horizontalGap;
+      const rightX = x + horizontalGap;
+      const parentY = y - verticalGap;
+      const lines = [];
+      const nodes = [];
+      // Cha (left)
+      nodes.push(renderTreeNode(children[0].member, leftX, parentY, level + 1, 'left', tree));
+      // Mẹ (right)
+      nodes.push(renderTreeNode(children[1].member, rightX, parentY, level + 1, 'right', tree));
+      // Đường nối cha mẹ -> node hiện tại
+      lines.push(
+        <g key={`line-${x}-${y}`}>
+          {/* Đường thẳng đứng từ cha xuống */}
+          <line x1={leftX} y1={parentY + nodeHeight / 2} x2={leftX} y2={y - nodeHeight / 2} stroke={lineColor} strokeWidth="2" />
+          {/* Đường thẳng đứng từ mẹ xuống */}
+          <line x1={rightX} y1={parentY + nodeHeight / 2} x2={rightX} y2={y - nodeHeight / 2} stroke={lineColor} strokeWidth="2" />
+          {/* Đường ngang nối hai cha mẹ */}
+          <line x1={leftX} y1={y - nodeHeight / 2} x2={rightX} y2={y - nodeHeight / 2} stroke={lineColor} strokeWidth="2" />
+          {/* Đường thẳng đứng từ giữa xuống node hiện tại */}
+          <line x1={x} y1={y - nodeHeight / 2} x2={x} y2={y - nodeHeight / 2 + 30} stroke={lineColor} strokeWidth="2" />
+        </g>
+      );
+      return (
+        <g key={`tree-${x}-${y}`}>
+          {nodes}
+          {lines}
+          {node}
+        </g>
+      );
+    }
+    return node;
+  }
+
+  // Tọa độ các node theo thế hệ (căn giữa, tách biệt rõ ràng) - tăng khoảng cách
+  // Ông bà nội (hàng trên cùng)
+  const posPaternalGrandfather = { x: 200, y: 150 };
+  const posPaternalGrandmother = { x: 600, y: 150 };
+  // Cha nằm giữa ông bà nội
+  const posFather = { x: 400, y: 350 };
+  
+  // Ông bà ngoại (hàng trên cùng)
+  const posMaternalGrandfather = { x: 1400, y: 150 };
+  const posMaternalGrandmother = { x: 1800, y: 150 };
+  // Mẹ nằm giữa ông bà ngoại
+  const posMother = { x: 1600, y: 350 };
+  
+  // Bản thân nằm giữa cha mẹ
+  const posSelf = { x: 1000, y: 550 };
+
+  // Hàm vẽ đường nối gấp khúc (orthogonal) từ cha mẹ xuống con
+  const renderParentToChildLine = (parent1: { x: number, y: number }, parent2: { x: number, y: number }, child: { x: number, y: number }, debugColor?: string) => {
+    const midX = (parent1.x + parent2.x) / 2;
+    const parentBottomY = parent1.y + 50; // điểm dưới node cha mẹ
+    const childTopY = child.y - 50; // điểm trên node con
+    const color = debugColor || lineColor; // Màu xanh đậm dễ nhìn
     return (
       <g>
-        {/* Vertical line from child to connection point */}
-        <line
-          x1={centerX}
-          y1={childY - 60}
-          x2={centerX}
-          y2={parentY + 50}
-          stroke="#6b7280"
-          strokeWidth="2"
-          fill="none"
-        />
-
-        {/* Horizontal connection line */}
-        <line
-          x1={fatherX}
-          y1={parentY + 50}
-          x2={motherX}
-          y2={parentY + 50}
-          stroke="#6b7280"
-          strokeWidth="2"
-          fill="none"
-        />
-
-        {/* Line to father */}
-        <line
-          x1={fatherX}
-          y1={parentY + 50}
-          x2={fatherX}
-          y2={parentY + 50}
-          stroke="#6b7280"
-          strokeWidth="2"
-          fill="none"
-        />
-
-        {/* Line to mother */}
-        <line
-          x1={motherX}
-          y1={parentY + 50}
-          x2={motherX}
-          y2={parentY + 50}
-          stroke="#6b7280"
-          strokeWidth="2"
-          fill="none"
-        />
+        {/* Đường thẳng đứng từ cha xuống */}
+        <line x1={parent1.x} y1={parentBottomY} x2={parent1.x} y2={parentBottomY + 40} stroke={color} strokeWidth="4" />
+        {/* Đường thẳng đứng từ mẹ xuống */}
+        <line x1={parent2.x} y1={parentBottomY} x2={parent2.x} y2={parentBottomY + 40} stroke={color} strokeWidth="4" />
+        {/* Đường ngang nối hai cha mẹ */}
+        <line x1={parent1.x} y1={parentBottomY + 40} x2={parent2.x} y2={parentBottomY + 40} stroke={color} strokeWidth="4" />
+        {/* Đường thẳng đứng từ giữa xuống con */}
+        <line x1={midX} y1={parentBottomY + 40} x2={midX} y2={childTopY - 40} stroke={color} strokeWidth="4" />
+        {/* Đường ngang nối vào node con */}
+        <line x1={midX} y1={childTopY - 40} x2={child.x} y2={childTopY - 40} stroke={color} strokeWidth="4" />
+        {/* Đường thẳng đứng cuối cùng vào node con */}
+        <line x1={child.x} y1={childTopY - 40} x2={child.x} y2={childTopY} stroke={color} strokeWidth="4" />
       </g>
     );
+  };
+
+  // Hàm render node placeholder cho các thế hệ sâu hơn (như hình mẫu)
+  const renderAncestorPlaceholder = (x: number, y: number, label: string, onClick: () => void) => (
+    <g>
+      <rect
+        x={x - 55}
+        y={y - 30}
+        width="110"
+        height="60"
+        rx="8"
+        fill="#f9fafb"
+        stroke="#d1d5db"
+        strokeWidth="2"
+        strokeDasharray="8,8"
+        className="shadow-md cursor-pointer hover:shadow-lg transition-all duration-300"
+        onClick={onClick}
+      />
+      <circle
+        cx={x}
+        cy={y}
+        r="18"
+        fill="#ffffff"
+        stroke="#10b981"
+        strokeWidth="3"
+        className="cursor-pointer hover:fill-green-50 transition-all duration-200 hover:scale-110"
+        onClick={onClick}
+      />
+      <text
+        x={x}
+        y={y + 5}
+        textAnchor="middle"
+        fontSize="20"
+        fill="#10b981"
+        fontWeight="bold"
+        className="cursor-pointer"
+        onClick={onClick}
+      >
+        +
+      </text>
+      <text
+        x={x}
+        y={y + 25}
+        textAnchor="middle"
+        fontSize="10"
+        fill="#6b7280"
+        fontWeight="500"
+        className="cursor-pointer"
+        onClick={onClick}
+      >
+        {label}
+      </text>
+    </g>
+  );
+
+  // Hàm render dấu "+" để thêm con cho mỗi node
+  const renderAddChildButton = (x: number, y: number, onClick: () => void) => (
+    <g>
+      {/* Đường nối từ node xuống dấu + */}
+      <line
+        x1={x}
+        y1={y + 60} // đáy node (node cao 120, y là tâm)
+        x2={x}
+        y2={y + 78} // lên sát dấu +
+        stroke={lineColor}
+        strokeWidth="4"
+      />
+      <circle
+        cx={x}
+        cy={y + 100}
+        r="22"
+        fill="#ffffff"
+        stroke={lineColor}
+        strokeWidth="3"
+        className="cursor-pointer hover:fill-green-50 transition-all duration-200"
+        onClick={onClick}
+      />
+      <text
+        x={x}
+        y={y + 112}
+        textAnchor="middle"
+        fontSize="24"
+        fill="#10b981"
+        fontWeight="bold"
+        className="cursor-pointer"
+        onClick={onClick}
+      >
+        +
+      </text>
+    </g>
+  );
+
+  // Hàm render 2 nhánh lên trên cho mỗi node (Add father/mother) - chỉ cho các node khác, không phải node bản thân
+  const renderParentBranches = (x: number, y: number, onAddFather: () => void, onAddMother: () => void) => (
+    <g>
+      {/* Đường thẳng dọc lên giữa hai node Add father/mother - tăng khoảng cách */}
+      <line x1={x} y1={y - 60} x2={x} y2={y - 180} stroke="#d1d5db" strokeWidth="2" />
+      {/* Nhánh trái - Add father */}
+      <line x1={x} y1={y - 180} x2={x - 120} y2={y - 180} stroke="#d1d5db" strokeWidth="2" />
+      {/* Hình vuông thay vì hình tròn cho Add father */}
+      <rect
+        x={x - 120 - 46}
+        y={y - 190 - 46}
+        width="92"
+        height="92"
+        rx="12"
+        fill="#ffffff"
+        stroke="#10b981"
+        strokeWidth="4"
+        strokeDasharray="10,8"
+        className="cursor-pointer hover:fill-green-50 transition-all duration-200"
+        onClick={onAddFather}
+      />
+      {/* Dấu + ở giữa hình vuông */}
+      <text
+        x={x - 120}
+        y={y - 185}
+        textAnchor="middle"
+        fontSize="32"
+        fill="#10b981"
+        fontWeight="bold"
+        className="cursor-pointer"
+        onClick={onAddFather}
+      >
+        +
+      </text>
+      {/* Chữ Add father nằm trong hình vuông, dưới dấu + */}
+      <text
+        x={x - 120}
+        y={y - 165}
+        textAnchor="middle"
+        fontSize="12"
+        fill="#6b7280"
+        fontWeight="600"
+        textLength="60"
+        lengthAdjust="spacingAndGlyphs"
+        className="cursor-pointer"
+        onClick={onAddFather}
+      >
+        Add father
+      </text>
+      {/* Nhánh phải - Add mother */}
+      <line x1={x} y1={y - 180} x2={x + 120} y2={y - 180} stroke="#d1d5db" strokeWidth="2" />
+      {/* Hình vuông thay vì hình tròn cho Add mother */}
+      <rect
+        x={x + 120 - 46}
+        y={y - 190 - 46}
+        width="92"
+        height="92"
+        rx="12"
+        fill="#ffffff"
+        stroke="#10b981"
+        strokeWidth="4"
+        strokeDasharray="10,8"
+        className="cursor-pointer hover:fill-green-50 transition-all duration-200"
+        onClick={onAddMother}
+      />
+      {/* Dấu + ở giữa hình vuông */}
+      <text
+        x={x + 120}
+        y={y - 185}
+        textAnchor="middle"
+        fontSize="32"
+        fill="#10b981"
+        fontWeight="bold"
+        className="cursor-pointer"
+        onClick={onAddMother}
+      >
+        +
+      </text>
+      {/* Chữ Add mother nằm trong hình vuông, dưới dấu + */}
+      <text
+        x={x + 120}
+        y={y - 165}
+        textAnchor="middle"
+        fontSize="12"
+        fill="#6b7280"
+        fontWeight="600"
+        textLength="60"
+        lengthAdjust="spacingAndGlyphs"
+        className="cursor-pointer"
+        onClick={onAddMother}
+      >
+        Add mother
+      </text>
+    </g>
+  );
+
+  // Click handlers
+  const handleAddChild = (parentId: string) => {
+    console.log('Add child for:', parentId);
+    // TODO: Implement add child logic
+  };
+
+  const handleAddFather = (childId: string) => {
+    console.log('Add father for:', childId);
+    // TODO: Implement add father logic
+  };
+
+  const handleAddMother = (childId: string) => {
+    console.log('Add mother for:', childId);
+    // TODO: Implement add mother logic
+  };
+
+  const handleAddAncestor = (position: string) => {
+    console.log('Add ancestor at:', position);
+    // TODO: Implement add ancestor logic
+  };
+
+  const handleCameraClick = (personId: string) => {
+    console.log('Camera clicked for:', personId);
+    // TODO: Implement camera/photo logic
+  };
+
+  const handleEditClick = (personId: string) => {
+    console.log('Edit clicked for:', personId);
+    // TODO: Implement edit logic
   };
 
   return (
@@ -589,7 +936,7 @@ const FamilyTreeView: React.FC = () => {
               <svg
                 width="100%"
                 height="100vh"
-                viewBox="0 0 1200 800"
+                viewBox="0 0 3000 800"
                 className="family-tree-svg"
                 style={{
                   transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
@@ -597,17 +944,83 @@ const FamilyTreeView: React.FC = () => {
                   transition: isDragging ? 'none' : 'transform 0.1s ease-out'
                 }}
               >
-                {/* Connection lines */}
-                {renderConnectionLines(600, 400)}
+                {/* Kiểm tra xem có bao nhiêu node để quyết định cách hiển thị */}
+                {(() => {
+                  // Đếm số node có sẵn
+                  const hasFather = !!father;
+                  const hasMother = !!mother;
+                  const hasPaternalGrandfather = !!paternalGrandfather;
+                  const hasPaternalGrandmother = !!paternalGrandmother;
+                  const hasMaternalGrandfather = !!maternalGrandfather;
+                  const hasMaternalGrandmother = !!maternalGrandmother;
+                  
+                  // Nếu chỉ có currentPerson (1 node chính)
+                  if (currentPerson && !hasFather && !hasMother && !hasPaternalGrandfather && !hasPaternalGrandmother && !hasMaternalGrandfather && !hasMaternalGrandmother) {
+                    // Tọa độ cho trường hợp chỉ có 1 node chính - tăng khoảng cách
+                    const centerX = 1000;
+                    const centerY = 700; // Tăng Y để node chính thấp hơn nữa, tạo khoảng cách lớn hơn với 2 nút add
+                    
+                    return (
+                      <g>
+                        {/* Node chính ở giữa */}
+                        {renderPersonNode(currentPerson, centerX, centerY)}
+                        
+                        {/* Dấu "+" để thêm con cho node chính */}
+                        {renderAddChildButton(centerX, centerY, () => handleAddChild('self'))}
+                        
+                        {/* 2 nhánh "Add father" và "Add mother" ở phía trên */}
+                        {renderParentBranches(centerX, centerY, () => handleAddFather('self'), () => handleAddMother('self'))}
+                      </g>
+                    );
+                  }
+                  
+                  // Nếu có nhiều node hơn, hiển thị theo logic cũ
+                  return (
+                    <g>
+                      {/* Đường nối ông bà nội -> cha */}
+                      {father && paternalGrandfather && paternalGrandmother && 
+                        renderParentToChildLine(posPaternalGrandfather, posPaternalGrandmother, posFather)}
+                      
+                      {/* Đường nối ông bà ngoại -> mẹ */}
+                      {mother && maternalGrandfather && maternalGrandmother && 
+                        renderParentToChildLine(posMaternalGrandfather, posMaternalGrandmother, posMother)}
+                      
+                      {/* Đường nối cha mẹ -> bản thân */}
+                      {currentPerson && father && mother && 
+                        renderParentToChildLine(posFather, posMother, posSelf)}
 
-                {/* Parent nodes */}
-                {father && renderPersonNode(father, 400, 300)}
-                {!father && renderParentPlaceholder("father", 400, 300)}
-                {mother && renderPersonNode(mother, 800, 300)}
-                {!mother && renderParentPlaceholder("mother", 800, 300)}
+                      {/* Ông bà nội */}
+                      {paternalGrandfather && renderPersonNode(paternalGrandfather, posPaternalGrandfather.x, posPaternalGrandfather.y)}
+                      {paternalGrandmother && renderPersonNode(paternalGrandmother, posPaternalGrandmother.x, posPaternalGrandmother.y)}
+                      
+                      {/* Ông bà ngoại */}
+                      {maternalGrandfather && renderPersonNode(maternalGrandfather, posMaternalGrandfather.x, posMaternalGrandfather.y)}
+                      {maternalGrandmother && renderPersonNode(maternalGrandmother, posMaternalGrandmother.x, posMaternalGrandmother.y)}
+                      
+                      {/* Cha mẹ */}
+                      {father && renderPersonNode(father, posFather.x, posFather.y)}
+                      {mother && renderPersonNode(mother, posMother.x, posMother.y)}
+                      
+                      {/* Bản thân */}
+                      {currentPerson && renderPersonNode(currentPerson, posSelf.x, posSelf.y)}
 
-                {/* Current person */}
-                {currentPerson && renderPersonNode(currentPerson, 600, 500)}
+                      {/* Dấu "+" để thêm con cho mỗi node */}
+                      {paternalGrandfather && renderAddChildButton(posPaternalGrandfather.x, posPaternalGrandfather.y, () => handleAddChild('paternal-grandfather'))}
+                      {paternalGrandmother && renderAddChildButton(posPaternalGrandmother.x, posPaternalGrandmother.y, () => handleAddChild('paternal-grandmother'))}
+                      {maternalGrandfather && renderAddChildButton(posMaternalGrandfather.x, posMaternalGrandfather.y, () => handleAddChild('maternal-grandfather'))}
+                      {maternalGrandmother && renderAddChildButton(posMaternalGrandmother.x, posMaternalGrandmother.y, () => handleAddChild('maternal-grandmother'))}
+                      {father && renderAddChildButton(posFather.x, posFather.y, () => handleAddChild('father'))}
+                      {mother && renderAddChildButton(posMother.x, posMother.y, () => handleAddChild('mother'))}
+                      {currentPerson && renderAddChildButton(posSelf.x, posSelf.y, () => handleAddChild('self'))}
+
+                      {/* Thêm nhánh "Add father/mother" cho 4 node ở trên cùng */}
+                      {paternalGrandfather && renderParentBranches(posPaternalGrandfather.x, posPaternalGrandfather.y, () => handleAddFather('paternal-grandfather'), () => handleAddMother('paternal-grandfather'))}
+                      {paternalGrandmother && renderParentBranches(posPaternalGrandmother.x, posPaternalGrandmother.y, () => handleAddFather('paternal-grandmother'), () => handleAddMother('paternal-grandmother'))}
+                      {maternalGrandfather && renderParentBranches(posMaternalGrandfather.x, posMaternalGrandfather.y, () => handleAddFather('maternal-grandfather'), () => handleAddMother('maternal-grandfather'))}
+                      {maternalGrandmother && renderParentBranches(posMaternalGrandmother.x, posMaternalGrandmother.y, () => handleAddFather('maternal-grandmother'), () => handleAddMother('maternal-grandmother'))}
+                    </g>
+                  );
+                })()}
               </svg>
             </div>
           </div>

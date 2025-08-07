@@ -15,7 +15,8 @@ const PaternalGrandparentsStep: React.FC<PaternalGrandparentsStepProps> = ({ onD
   });
 
   const [paternalGrandfather, setPaternalGrandfather] = useState({
-    firstName: "vo", // Pre-filled as shown in the image
+    firstName: "xuan", // Pre-filled as shown in the image
+    lastName: "",
     yearOfBirth: "",
     countryOfBirth: "",
     isAlive: true,
@@ -110,7 +111,7 @@ const PaternalGrandparentsStep: React.FC<PaternalGrandparentsStepProps> = ({ onD
               <div className="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center">
                 <span className="text-pink-600 text-xl">👵</span>
               </div>
-              <h2 className="ml-3 text-xl font-semibold text-gray-900">Your Father's Mother (Grandma)</h2>
+              <h2 className="ml-3 text-xl font-semibold text-gray-900">Your Father's Mother</h2>
             </div>
 
             <div className="space-y-4">
@@ -122,8 +123,8 @@ const PaternalGrandparentsStep: React.FC<PaternalGrandparentsStepProps> = ({ onD
                   type="text"
                   value={paternalGrandmother.firstName}
                   onChange={(e) => setPaternalGrandmother({ ...paternalGrandmother, firstName: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter first name"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="First name"
                 />
               </div>
 
@@ -135,8 +136,8 @@ const PaternalGrandparentsStep: React.FC<PaternalGrandparentsStepProps> = ({ onD
                   type="text"
                   value={paternalGrandmother.maidenName}
                   onChange={(e) => setPaternalGrandmother({ ...paternalGrandmother, maidenName: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter maiden name"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="Maiden name"
                 />
               </div>
 
@@ -148,8 +149,8 @@ const PaternalGrandparentsStep: React.FC<PaternalGrandparentsStepProps> = ({ onD
                   type="text"
                   value={paternalGrandmother.yearOfBirth}
                   onChange={(e) => setPaternalGrandmother({ ...paternalGrandmother, yearOfBirth: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter year of birth"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="Year of birth"
                 />
                 <p className="text-xs text-gray-500 mt-1">Or the full date if known</p>
               </div>
@@ -162,8 +163,8 @@ const PaternalGrandparentsStep: React.FC<PaternalGrandparentsStepProps> = ({ onD
                   type="text"
                   value={paternalGrandmother.countryOfBirth}
                   onChange={(e) => setPaternalGrandmother({ ...paternalGrandmother, countryOfBirth: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter country of birth"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="Country of birth"
                 />
               </div>
 
@@ -172,7 +173,7 @@ const PaternalGrandparentsStep: React.FC<PaternalGrandparentsStepProps> = ({ onD
                   type="checkbox"
                   checked={paternalGrandmother.isAlive}
                   onChange={(e) => setPaternalGrandmother({ ...paternalGrandmother, isAlive: e.target.checked })}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                 />
                 <label className="ml-2 text-sm text-gray-700">Is alive</label>
               </div>
@@ -185,7 +186,7 @@ const PaternalGrandparentsStep: React.FC<PaternalGrandparentsStepProps> = ({ onD
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                 <span className="text-blue-600 text-xl">👴</span>
               </div>
-              <h2 className="ml-3 text-xl font-semibold text-gray-900">Your Father's Father (Grandpa)</h2>
+              <h2 className="ml-3 text-xl font-semibold text-gray-900">Your Father's Father</h2>
             </div>
 
             <div className="space-y-4">
@@ -198,7 +199,20 @@ const PaternalGrandparentsStep: React.FC<PaternalGrandparentsStepProps> = ({ onD
                   value={paternalGrandfather.firstName}
                   onChange={(e) => setPaternalGrandfather({ ...paternalGrandfather, firstName: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  placeholder="Enter first name"
+                  placeholder="First name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Last name
+                </label>
+                <input
+                  type="text"
+                  value={paternalGrandfather.lastName}
+                  onChange={(e) => setPaternalGrandfather({ ...paternalGrandfather, lastName: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="Last name"
                 />
               </div>
 
@@ -210,8 +224,8 @@ const PaternalGrandparentsStep: React.FC<PaternalGrandparentsStepProps> = ({ onD
                   type="text"
                   value={paternalGrandfather.yearOfBirth}
                   onChange={(e) => setPaternalGrandfather({ ...paternalGrandfather, yearOfBirth: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter year of birth"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="Year of birth"
                 />
                 <p className="text-xs text-gray-500 mt-1">Or the full date if known</p>
               </div>
@@ -224,8 +238,8 @@ const PaternalGrandparentsStep: React.FC<PaternalGrandparentsStepProps> = ({ onD
                   type="text"
                   value={paternalGrandfather.countryOfBirth}
                   onChange={(e) => setPaternalGrandfather({ ...paternalGrandfather, countryOfBirth: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter country of birth"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="Country of birth"
                 />
               </div>
 

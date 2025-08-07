@@ -15,7 +15,8 @@ const ParentsInfoStep: React.FC<ParentsInfoStepProps> = ({ onNext, onSkip }) => 
   });
 
   const [fatherData, setFatherData] = useState({
-    firstName: "",
+    firstName: "xuan", // Pre-filled as shown in the image
+    maidenName: "",
     yearOfBirth: "",
     countryOfBirth: "",
     isAlive: true,
@@ -51,16 +52,16 @@ const ParentsInfoStep: React.FC<ParentsInfoStepProps> = ({ onNext, onSkip }) => 
             <span className="ml-2 text-sm text-gray-600">P</span>
           </div>
           <div className="flex items-center">
-            <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs">
+            <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs border-2 border-orange-500">
               M
             </div>
-            <span className="ml-2 text-sm text-gray-600">Mom</span>
+            <span className="ml-2 text-sm text-gray-900 font-medium">Mom</span>
           </div>
           <div className="flex items-center">
-            <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs">
+            <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs border-2 border-orange-500">
               D
             </div>
-            <span className="ml-2 text-sm text-gray-600">Dad</span>
+            <span className="ml-2 text-sm text-gray-900 font-medium">Dad</span>
           </div>
           <div className="flex items-center">
             <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-white text-xs">
@@ -120,7 +121,7 @@ const ParentsInfoStep: React.FC<ParentsInfoStepProps> = ({ onNext, onSkip }) => 
                   value={motherData.firstName}
                   onChange={(e) => setMotherData({ ...motherData, firstName: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  placeholder="Enter first name"
+                  placeholder="First name"
                 />
               </div>
 
@@ -133,7 +134,7 @@ const ParentsInfoStep: React.FC<ParentsInfoStepProps> = ({ onNext, onSkip }) => 
                   value={motherData.maidenName}
                   onChange={(e) => setMotherData({ ...motherData, maidenName: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  placeholder="Enter maiden name"
+                  placeholder="Maiden name"
                 />
               </div>
 
@@ -146,7 +147,7 @@ const ParentsInfoStep: React.FC<ParentsInfoStepProps> = ({ onNext, onSkip }) => 
                   value={motherData.yearOfBirth}
                   onChange={(e) => setMotherData({ ...motherData, yearOfBirth: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  placeholder="Enter year of birth"
+                  placeholder="Year of birth"
                 />
                 <p className="text-xs text-gray-500 mt-1">Or the full date if known</p>
               </div>
@@ -160,7 +161,7 @@ const ParentsInfoStep: React.FC<ParentsInfoStepProps> = ({ onNext, onSkip }) => 
                   value={motherData.countryOfBirth}
                   onChange={(e) => setMotherData({ ...motherData, countryOfBirth: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  placeholder="Enter country of birth"
+                  placeholder="Country of birth"
                 />
               </div>
 
@@ -195,7 +196,20 @@ const ParentsInfoStep: React.FC<ParentsInfoStepProps> = ({ onNext, onSkip }) => 
                   value={fatherData.firstName}
                   onChange={(e) => setFatherData({ ...fatherData, firstName: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  placeholder="Enter first name"
+                  placeholder="First name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Maiden name
+                </label>
+                <input
+                  type="text"
+                  value={fatherData.maidenName}
+                  onChange={(e) => setFatherData({ ...fatherData, maidenName: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  placeholder="Maiden name"
                 />
               </div>
 
@@ -208,7 +222,7 @@ const ParentsInfoStep: React.FC<ParentsInfoStepProps> = ({ onNext, onSkip }) => 
                   value={fatherData.yearOfBirth}
                   onChange={(e) => setFatherData({ ...fatherData, yearOfBirth: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  placeholder="Enter year of birth"
+                  placeholder="Year of birth"
                 />
                 <p className="text-xs text-gray-500 mt-1">Or the full date if known</p>
               </div>
@@ -222,7 +236,7 @@ const ParentsInfoStep: React.FC<ParentsInfoStepProps> = ({ onNext, onSkip }) => 
                   value={fatherData.countryOfBirth}
                   onChange={(e) => setFatherData({ ...fatherData, countryOfBirth: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  placeholder="Enter country of birth"
+                  placeholder="Country of birth"
                 />
               </div>
 

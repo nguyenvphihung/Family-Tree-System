@@ -18,21 +18,21 @@ type OnboardingStep =
 const OnboardingFlow: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>("finish-account");
   const [userData, setUserData] = useState<any>({});
-  const { setCurrentPerson, addParents, addGrandparents } = useFamilyTreeStore();
+  const { setCurrentPerson, addParents, addGrandparents, clearFamilyTree } = useFamilyTreeStore();
 
-  const handleFinishAccount = (data: { yearOfBirth: string; gender: string }) => {
+  const handleFinishAccount = (data: { yearOfBirth: string; gender: string; firstName?: string; lastName?: string }) => {
     setUserData({ ...userData, ...data });
-    
+    // Xóa dữ liệu cây cũ trước khi tạo node chính mới
+    clearFamilyTree();
     // Create current person from user data
     const currentPerson: FamilyMember = {
-      id: 'current-person',
-      name: 'Xuân phúc Võ', // Default name, can be updated later
+      id: 'self',
+      name: 'Xuân phúc Võ', // Sử dụng tên mặc định
       birthYear: data.yearOfBirth,
       gender: data.gender as 'male' | 'female',
       isAlive: true,
       relationship: 'self',
     };
-    
     setCurrentPerson(currentPerson);
     setCurrentStep("parents-info");
   };
@@ -44,22 +44,25 @@ const OnboardingFlow: React.FC = () => {
     if (data.father && data.father.firstName) {
       const father: FamilyMember = {
         id: 'father',
-        name: data.father.firstName,
+        name: `${data.father.firstName} ${data.father.lastName || ''}`.trim(),
         birthYear: data.father.yearOfBirth || '',
         gender: 'male',
         isAlive: data.father.isAlive,
         countryOfBirth: data.father.countryOfBirth,
+        maidenName: data.father.maidenName,
+        lastName: data.father.lastName,
         relationship: 'father',
       };
       
       const mother: FamilyMember = {
         id: 'mother',
-        name: data.mother.firstName,
+        name: `${data.mother.firstName} ${data.mother.lastName || ''}`.trim(),
         birthYear: data.mother.yearOfBirth || '',
         gender: 'female',
         isAlive: data.mother.isAlive,
         countryOfBirth: data.mother.countryOfBirth,
         maidenName: data.mother.maidenName,
+        lastName: data.mother.lastName,
         relationship: 'mother',
       };
       
@@ -81,25 +84,28 @@ const OnboardingFlow: React.FC = () => {
     
     if (data.maternalGrandmother && data.maternalGrandmother.firstName) {
       grandparents.maternalGrandmother = {
-        id: 'maternal-grandmother',
+        id: 'maternalGrandmother',
         name: data.maternalGrandmother.firstName,
         birthYear: data.maternalGrandmother.yearOfBirth || '',
         gender: 'female',
         isAlive: data.maternalGrandmother.isAlive,
         countryOfBirth: data.maternalGrandmother.countryOfBirth,
         maidenName: data.maternalGrandmother.maidenName,
+        lastName: data.maternalGrandmother.lastName, // bổ sung nếu có
         relationship: 'maternalGrandmother',
       };
     }
     
     if (data.maternalGrandfather && data.maternalGrandfather.firstName) {
       grandparents.maternalGrandfather = {
-        id: 'maternal-grandfather',
+        id: 'maternalGrandfather',
         name: data.maternalGrandfather.firstName,
         birthYear: data.maternalGrandfather.yearOfBirth || '',
         gender: 'male',
         isAlive: data.maternalGrandfather.isAlive,
         countryOfBirth: data.maternalGrandfather.countryOfBirth,
+        maidenName: data.maternalGrandfather.maidenName, // nếu có
+        lastName: data.maternalGrandfather.lastName,
         relationship: 'maternalGrandfather',
       };
     }
@@ -123,25 +129,28 @@ const OnboardingFlow: React.FC = () => {
     
     if (data.paternalGrandmother && data.paternalGrandmother.firstName) {
       grandparents.paternalGrandmother = {
-        id: 'paternal-grandmother',
+        id: 'paternalGrandmother',
         name: data.paternalGrandmother.firstName,
         birthYear: data.paternalGrandmother.yearOfBirth || '',
         gender: 'female',
         isAlive: data.paternalGrandmother.isAlive,
         countryOfBirth: data.paternalGrandmother.countryOfBirth,
         maidenName: data.paternalGrandmother.maidenName,
+        lastName: data.paternalGrandmother.lastName, // bổ sung nếu có
         relationship: 'paternalGrandmother',
       };
     }
     
     if (data.paternalGrandfather && data.paternalGrandfather.firstName) {
       grandparents.paternalGrandfather = {
-        id: 'paternal-grandfather',
+        id: 'paternalGrandfather',
         name: data.paternalGrandfather.firstName,
         birthYear: data.paternalGrandfather.yearOfBirth || '',
         gender: 'male',
         isAlive: data.paternalGrandfather.isAlive,
         countryOfBirth: data.paternalGrandfather.countryOfBirth,
+        maidenName: data.paternalGrandfather.maidenName, // nếu có
+        lastName: data.paternalGrandfather.lastName,
         relationship: 'paternalGrandfather',
       };
     }

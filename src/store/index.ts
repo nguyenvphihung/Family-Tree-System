@@ -200,6 +200,7 @@ export interface FamilyMember {
   isAlive: boolean;
   countryOfBirth?: string;
   maidenName?: string;
+  lastName?: string;
   relationship: 'self' | 'father' | 'mother' | 'maternalGrandmother' | 'maternalGrandfather' | 'paternalGrandmother' | 'paternalGrandfather';
 }
 
