@@ -25,21 +25,21 @@ const FamilyTreeView: React.FC = () => {
   console.log('paternalGrandfather:', paternalGrandfather);
   console.log('=== END DEBUG ===');
 
-  const [zoomLevel, setZoomLevel] = useState(1);
+  const [zoomLevel, setZoomLevel] = useState(1.5); // Tăng zoom mặc định từ 1 lên 1.5
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   const handleZoomIn = () => {
-    setZoomLevel(prev => Math.min(prev * 1.2, 3));
+    setZoomLevel(prev => Math.min(prev * 1.2, 4)); // Tăng giới hạn zoom tối đa từ 3 lên 4
   };
 
   const handleZoomOut = () => {
-    setZoomLevel(prev => Math.max(prev / 1.2, 0.3));
+    setZoomLevel(prev => Math.max(prev / 1.2, 0.2)); // Giảm giới hạn zoom tối thiểu từ 0.3 xuống 0.2
   };
 
   const handleResetZoom = () => {
-    setZoomLevel(1);
+    setZoomLevel(1.5); // Reset về zoom mặc định mới
     setPanOffset({ x: 0, y: 0 });
   };
 
@@ -68,7 +68,7 @@ const FamilyTreeView: React.FC = () => {
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    setZoomLevel(prev => Math.max(0.3, Math.min(3, prev * delta)));
+    setZoomLevel(prev => Math.max(0.2, Math.min(4, prev * delta))); // Cập nhật giới hạn zoom cho mouse wheel
   };
 
   // Helper lấy màu theo giới tính
@@ -85,11 +85,11 @@ const FamilyTreeView: React.FC = () => {
     return (
       <g key={`person-${x}-${y}`}>
         <rect
-          x={x - 140}
-          y={y - 60}
-          width="280"
-          height="120"
-          rx="18"
+          x={x - 160}
+          y={y - 70}
+          width="320"
+          height="140"
+          rx="20"
           fill="#f0fdf4"
           stroke={borderColor}
           strokeWidth="3"
@@ -98,11 +98,11 @@ const FamilyTreeView: React.FC = () => {
 
         {/* Inner border */}
         <rect
-          x={x - 135}
-          y={y - 55}
-          width="270"
-          height="110"
-          rx="16"
+          x={x - 155}
+          y={y - 65}
+          width="310"
+          height="130"
+          rx="18"
           fill="none"
           stroke={borderColor}
           strokeWidth="1.5"
@@ -110,9 +110,9 @@ const FamilyTreeView: React.FC = () => {
 
         {/* Avatar circle */}
         <circle
-          cx={x - 90}
+          cx={x - 100}
           cy={y - 15}
-          r="35"
+          r="40"
           fill="#e5e7eb"
           stroke={borderColor}
           strokeWidth="2"
@@ -120,10 +120,10 @@ const FamilyTreeView: React.FC = () => {
 
         {/* Profile icon */}
         <text
-          x={x - 90}
+          x={x - 100}
           y={y - 5}
           textAnchor="middle"
-          fontSize="40"
+          fontSize="45"
           fill="#4b5563"
           fontWeight="600"
         >
@@ -132,9 +132,9 @@ const FamilyTreeView: React.FC = () => {
 
         {/* Camera icon */}
         <circle
-          cx={x - 70}
-          cy={y - 40}
-          r="20"
+          cx={x - 75}
+          cy={y - 45}
+          r="22"
           fill="#10b981"
           stroke="white"
           strokeWidth="2"
@@ -142,10 +142,10 @@ const FamilyTreeView: React.FC = () => {
           onClick={() => handleCameraClick(person.id)}
         />
         <text 
-          x={x - 70} 
-          y={y - 30} 
+          x={x - 75} 
+          y={y - 35} 
           textAnchor="middle" 
-          fontSize="22" 
+          fontSize="24" 
           fill="white"
           className="cursor-pointer"
           onClick={() => handleCameraClick(person.id)}
@@ -155,10 +155,10 @@ const FamilyTreeView: React.FC = () => {
 
         {/* Name */}
         <text
-          x={x + 20}
-          y={y - 25}
+          x={x + 30}
+          y={y - 30}
           textAnchor="middle"
-          fontSize="22"
+          fontSize="24"
           fill="#1f2937"
           fontWeight="600"
           className="font-inter"
@@ -169,10 +169,10 @@ const FamilyTreeView: React.FC = () => {
         {/* Maiden name, Last name */}
         {person.maidenName && (
           <text
-            x={x + 20}
-            y={y}
+            x={x + 30}
+            y={y - 5}
             textAnchor="middle"
-            fontSize="16"
+            fontSize="18"
             fill="#6b7280"
             className="font-inter"
           >
@@ -181,10 +181,10 @@ const FamilyTreeView: React.FC = () => {
         )}
         {person.lastName && (
           <text
-            x={x + 20}
-            y={y + 18}
+            x={x + 30}
+            y={y + 15}
             textAnchor="middle"
-            fontSize="16"
+            fontSize="18"
             fill="#6b7280"
             className="font-inter"
           >
@@ -194,10 +194,10 @@ const FamilyTreeView: React.FC = () => {
         {/* Country of birth */}
         {person.countryOfBirth && (
           <text
-            x={x + 20}
-            y={y + 36}
+            x={x + 30}
+            y={y + 35}
             textAnchor="middle"
-            fontSize="16"
+            fontSize="18"
             fill="#6b7280"
             className="font-inter"
           >
@@ -206,10 +206,10 @@ const FamilyTreeView: React.FC = () => {
         )}
         {/* Birth year and status */}
         <text
-          x={x + 20}
-          y={y + 54}
+          x={x + 30}
+          y={y + 55}
           textAnchor="middle"
-          fontSize="16"
+          fontSize="18"
           fill="#6b7280"
           className="font-inter"
         >
@@ -218,9 +218,9 @@ const FamilyTreeView: React.FC = () => {
 
         {/* Edit button */}
         <circle
-          cx={x + 105}
-          cy={y - 40}
-          r="20"
+          cx={x + 120}
+          cy={y - 45}
+          r="22"
           fill="#9ca3af"
           stroke="white"
           strokeWidth="2"
@@ -228,10 +228,10 @@ const FamilyTreeView: React.FC = () => {
           onClick={() => handleEditClick(person.id)}
         />
         <text
-          x={x + 105}
-          y={y - 30}
+          x={x + 120}
+          y={y - 35}
           textAnchor="middle"
-          fontSize="22"
+          fontSize="24"
           fill="white"
           fontWeight="600"
           className="cursor-pointer"
@@ -252,11 +252,11 @@ const FamilyTreeView: React.FC = () => {
       <g key={`parent-${type}-${x}-${y}`}>
         {/* Placeholder card */}
         <rect
-          x={x - 110}
-          y={y - 50}
-          width="220"
-          height="100"
-          rx="14"
+          x={x - 130}
+          y={y - 60}
+          width="260"
+          height="120"
+          rx="16"
           fill="#f9fafb"
           stroke="#d1d5db"
           strokeWidth="2"
@@ -266,11 +266,11 @@ const FamilyTreeView: React.FC = () => {
 
         {/* Inner border */}
         <rect
-          x={x - 105}
-          y={y - 45}
-          width="210"
-          height="90"
-          rx="12"
+          x={x - 125}
+          y={y - 55}
+          width="250"
+          height="110"
+          rx="14"
           fill="none"
           stroke="#e5e7eb"
           strokeWidth="1.5"
@@ -280,7 +280,7 @@ const FamilyTreeView: React.FC = () => {
         <circle
           cx={x}
           cy={y}
-          r="28"
+          r="32"
           fill="#ffffff"
           stroke="#10b981"
           strokeWidth="3"
@@ -290,7 +290,7 @@ const FamilyTreeView: React.FC = () => {
           x={x}
           y={y + 8}
           textAnchor="middle"
-          fontSize="36"
+          fontSize="40"
           fill="#10b981"
           fontWeight="700"
           className="font-inter"
@@ -301,9 +301,9 @@ const FamilyTreeView: React.FC = () => {
         {/* Label */}
         <text
           x={x}
-          y={y + 50}
+          y={y + 60}
           textAnchor="middle"
-          fontSize="16"
+          fontSize="18"
           fill="#6b7280"
           fontWeight="500"
           className="font-inter"
@@ -430,20 +430,20 @@ const FamilyTreeView: React.FC = () => {
     const childTopY = child.y - 50; // điểm trên node con
     const color = debugColor || lineColor; // Màu xanh đậm dễ nhìn
     return (
-      <g>
-        {/* Đường thẳng đứng từ cha xuống */}
-        <line x1={parent1.x} y1={parentBottomY} x2={parent1.x} y2={parentBottomY + 40} stroke={color} strokeWidth="4" />
-        {/* Đường thẳng đứng từ mẹ xuống */}
-        <line x1={parent2.x} y1={parentBottomY} x2={parent2.x} y2={parentBottomY + 40} stroke={color} strokeWidth="4" />
-        {/* Đường ngang nối hai cha mẹ */}
-        <line x1={parent1.x} y1={parentBottomY + 40} x2={parent2.x} y2={parentBottomY + 40} stroke={color} strokeWidth="4" />
-        {/* Đường thẳng đứng từ giữa xuống con */}
-        <line x1={midX} y1={parentBottomY + 40} x2={midX} y2={childTopY - 40} stroke={color} strokeWidth="4" />
-        {/* Đường ngang nối vào node con */}
-        <line x1={midX} y1={childTopY - 40} x2={child.x} y2={childTopY - 40} stroke={color} strokeWidth="4" />
-        {/* Đường thẳng đứng cuối cùng vào node con */}
-        <line x1={child.x} y1={childTopY - 40} x2={child.x} y2={childTopY} stroke={color} strokeWidth="4" />
-      </g>
+              <g>
+          {/* Đường thẳng đứng từ cha xuống */}
+          <line x1={parent1.x} y1={parentBottomY} x2={parent1.x} y2={parentBottomY + 40} stroke={color} strokeWidth="8" />
+          {/* Đường thẳng đứng từ mẹ xuống */}
+          <line x1={parent2.x} y1={parentBottomY} x2={parent2.x} y2={parentBottomY + 40} stroke={color} strokeWidth="8" />
+          {/* Đường ngang nối hai cha mẹ */}
+          <line x1={parent1.x} y1={parentBottomY + 40} x2={parent2.x} y2={parentBottomY + 40} stroke={color} strokeWidth="8" />
+          {/* Đường thẳng đứng từ giữa xuống con */}
+          <line x1={midX} y1={parentBottomY + 40} x2={midX} y2={childTopY - 40} stroke={color} strokeWidth="8" />
+          {/* Đường ngang nối vào node con */}
+          <line x1={midX} y1={childTopY - 40} x2={child.x} y2={childTopY - 40} stroke={color} strokeWidth="8" />
+          {/* Đường thẳng đứng cuối cùng vào node con */}
+          <line x1={child.x} y1={childTopY - 40} x2={child.x} y2={childTopY} stroke={color} strokeWidth="8" />
+        </g>
     );
   };
 
@@ -506,16 +506,16 @@ const FamilyTreeView: React.FC = () => {
       {/* Đường nối từ node xuống dấu + */}
       <line
         x1={x}
-        y1={y + 60} // đáy node (node cao 120, y là tâm)
+        y1={y + 70} // đáy node (node cao 140, y là tâm)
         x2={x}
-        y2={y + 78} // lên sát dấu +
+        y2={y + 88} // lên sát dấu +
         stroke={lineColor}
-        strokeWidth="4"
+        strokeWidth="8"
       />
       <circle
         cx={x}
-        cy={y + 100}
-        r="22"
+        cy={y + 120}
+        r="25"
         fill="#ffffff"
         stroke={lineColor}
         strokeWidth="3"
@@ -524,9 +524,9 @@ const FamilyTreeView: React.FC = () => {
       />
       <text
         x={x}
-        y={y + 112}
+        y={y + 132}
         textAnchor="middle"
-        fontSize="24"
+        fontSize="28"
         fill="#10b981"
         fontWeight="bold"
         className="cursor-pointer"
@@ -539,18 +539,18 @@ const FamilyTreeView: React.FC = () => {
 
   // Hàm render 2 nhánh lên trên cho mỗi node (Add father/mother) - chỉ cho các node khác, không phải node bản thân
   const renderParentBranches = (x: number, y: number, onAddFather: () => void, onAddMother: () => void) => (
-    <g>
-      {/* Đường thẳng dọc lên giữa hai node Add father/mother - tăng khoảng cách */}
-      <line x1={x} y1={y - 60} x2={x} y2={y - 180} stroke="#d1d5db" strokeWidth="2" />
-      {/* Nhánh trái - Add father */}
-      <line x1={x} y1={y - 180} x2={x - 120} y2={y - 180} stroke="#d1d5db" strokeWidth="2" />
+          <g>
+        {/* Đường thẳng dọc lên giữa hai node Add father/mother - tăng khoảng cách */}
+        <line x1={x} y1={y - 70} x2={x} y2={y - 200} stroke="#d1d5db" strokeWidth="6" />
+        {/* Nhánh trái - Add father */}
+        <line x1={x} y1={y - 200} x2={x - 140} y2={y - 200} stroke="#d1d5db" strokeWidth="6" />
       {/* Hình vuông thay vì hình tròn cho Add father */}
       <rect
-        x={x - 120 - 46}
-        y={y - 190 - 46}
-        width="92"
-        height="92"
-        rx="12"
+        x={x - 140 - 50}
+        y={y - 210 - 50}
+        width="100"
+        height="100"
+        rx="14"
         fill="#ffffff"
         stroke="#10b981"
         strokeWidth="4"
@@ -560,10 +560,10 @@ const FamilyTreeView: React.FC = () => {
       />
       {/* Dấu + ở giữa hình vuông */}
       <text
-        x={x - 120}
-        y={y - 185}
+        x={x - 140}
+        y={y - 200}
         textAnchor="middle"
-        fontSize="32"
+        fontSize="36"
         fill="#10b981"
         fontWeight="bold"
         className="cursor-pointer"
@@ -573,28 +573,28 @@ const FamilyTreeView: React.FC = () => {
       </text>
       {/* Chữ Add father nằm trong hình vuông, dưới dấu + */}
       <text
-        x={x - 120}
-        y={y - 165}
+        x={x - 140}
+        y={y - 175}
         textAnchor="middle"
-        fontSize="12"
+        fontSize="14"
         fill="#6b7280"
         fontWeight="600"
-        textLength="60"
+        textLength="70"
         lengthAdjust="spacingAndGlyphs"
         className="cursor-pointer"
         onClick={onAddFather}
       >
         Add father
-      </text>
-      {/* Nhánh phải - Add mother */}
-      <line x1={x} y1={y - 180} x2={x + 120} y2={y - 180} stroke="#d1d5db" strokeWidth="2" />
+              </text>
+        {/* Nhánh phải - Add mother */}
+        <line x1={x} y1={y - 200} x2={x + 140} y2={y - 200} stroke="#d1d5db" strokeWidth="6" />
       {/* Hình vuông thay vì hình tròn cho Add mother */}
       <rect
-        x={x + 120 - 46}
-        y={y - 190 - 46}
-        width="92"
-        height="92"
-        rx="12"
+        x={x + 140 - 50}
+        y={y - 210 - 50}
+        width="100"
+        height="100"
+        rx="14"
         fill="#ffffff"
         stroke="#10b981"
         strokeWidth="4"
@@ -604,10 +604,10 @@ const FamilyTreeView: React.FC = () => {
       />
       {/* Dấu + ở giữa hình vuông */}
       <text
-        x={x + 120}
-        y={y - 185}
+        x={x + 140}
+        y={y - 200}
         textAnchor="middle"
-        fontSize="32"
+        fontSize="36"
         fill="#10b981"
         fontWeight="bold"
         className="cursor-pointer"
@@ -617,13 +617,13 @@ const FamilyTreeView: React.FC = () => {
       </text>
       {/* Chữ Add mother nằm trong hình vuông, dưới dấu + */}
       <text
-        x={x + 120}
-        y={y - 165}
+        x={x + 140}
+        y={y - 175}
         textAnchor="middle"
-        fontSize="12"
+        fontSize="14"
         fill="#6b7280"
         fontWeight="600"
-        textLength="60"
+        textLength="70"
         lengthAdjust="spacingAndGlyphs"
         className="cursor-pointer"
         onClick={onAddMother}
@@ -665,7 +665,7 @@ const FamilyTreeView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 font-inter">
+    <div className="h-screen w-screen bg-gray-100 font-inter overflow-hidden">
       {/* Main Navigation */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -708,9 +708,9 @@ const FamilyTreeView: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex">
+      <div className="flex h-full">
         {/* Left Sidebar */}
-        <div className="w-80 bg-white border-r border-gray-200 min-h-screen p-6">
+        <div className="w-80 bg-white border-r border-gray-200 p-6">
           <div className="space-y-6">
             {/* Profile Card */}
             <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -799,54 +799,48 @@ const FamilyTreeView: React.FC = () => {
                   content: <div className="text-sm text-gray-600">2003 Birth 2003</div>,
                 },
               ].map((section, idx) => (
-                <div
-                  key={idx}
-                  className="border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow duration-200"
-                >
+                <div key={idx} className="border-b border-gray-100 pb-4">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold text-gray-900 text-sm">{section.title}</h4>
+                    <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{section.title}</h4>
                     {section.action}
                   </div>
                   {section.content}
                 </div>
               ))}
             </div>
-
-            {/* DNA Actions */}
-            <div className="space-y-3">
-              <button className="w-full bg-green-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors duration-200">
-                Order DNA Test
-              </button>
-              <button className="w-full bg-green-100 text-green-700 py-2.5 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors duration-200">
-                Upload DNA Data
-              </button>
-            </div>
           </div>
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1">
+        <div className="flex-1 bg-gray-50">
           {/* Top Controls */}
-          <div className="bg-white border-b border-gray-200 p-4 shadow-sm">
+          <div className="bg-white border-b border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Vo Family Tree</h2>
-                  <p className="text-sm text-gray-600">{currentPerson?.name || 'Xuân phúc Võ'}</p>
+                <h2 className="text-xl font-semibold text-gray-900">Family Tree</h2>
+                <div className="flex items-center space-x-2">
+                  <button className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors duration-200">
+                    Tree View
+                  </button>
+                  <button className="px-3 py-1.5 text-gray-600 hover:text-green-600 transition-colors duration-200">
+                    Fan Chart
+                  </button>
+                  <button className="px-3 py-1.5 text-gray-600 hover:text-green-600 transition-colors duration-200">
+                    Descendants
+                  </button>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
-                <button className="text-gray-600 hover:text-green-600 transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Find a person..."
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 w-64"
+                  />
+                  <svg className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
-                </button>
-                <span className="text-sm text-gray-600">1 of 1 people</span>
-                <button className="text-gray-600 hover:text-green-600 transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
+                </div>
               </div>
             </div>
             <div className="flex items-center justify-between mt-3">
@@ -877,25 +871,25 @@ const FamilyTreeView: React.FC = () => {
           </div>
 
           {/* Family Tree Canvas */}
-          <div className="bg-gray-50 min-h-screen flex items-center justify-center relative overflow-hidden">
+          <div className="h-full bg-gray-50 relative overflow-hidden">
             {/* Zoom Controls */}
             <div className="absolute top-4 right-4 z-10 flex flex-col space-y-2">
               <button
                 onClick={handleZoomIn}
-                className="w-10 h-10 bg-white border border-gray-300 rounded-lg shadow-md hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
+                className="w-12 h-12 bg-white border border-gray-300 rounded-lg shadow-md hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
                 title="Zoom In"
               >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                 </svg>
               </button>
               
               <button
                 onClick={handleZoomOut}
-                className="w-10 h-10 bg-white border border-gray-300 rounded-lg shadow-md hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
+                className="w-12 h-12 bg-white border border-gray-300 rounded-lg shadow-md hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
                 title="Zoom Out"
               >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 7v3m0 0v3m0-3h3m-3 0H7" />
                 </svg>
@@ -903,18 +897,18 @@ const FamilyTreeView: React.FC = () => {
               
               <button
                 onClick={handleResetZoom}
-                className="w-10 h-10 bg-white border border-gray-300 rounded-lg shadow-md hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
+                className="w-12 h-12 bg-white border border-gray-300 rounded-lg shadow-md hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
                 title="Reset Zoom"
               >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                 </svg>
               </button>
             </div>
 
             
-            <div className="absolute top-4 left-4 z-10 bg-white border border-gray-300 rounded-lg shadow-md px-3 py-2">
-              <span className="text-sm text-gray-600 font-medium">
+            <div className="absolute top-4 left-4 z-10 bg-white border border-gray-300 rounded-lg shadow-md px-4 py-3">
+              <span className="text-base text-gray-600 font-medium">
                 {Math.round(zoomLevel * 100)}%
               </span>
             </div>
@@ -935,7 +929,7 @@ const FamilyTreeView: React.FC = () => {
             >
               <svg
                 width="100%"
-                height="100vh"
+                height="100%"
                 viewBox="0 0 3000 800"
                 className="family-tree-svg"
                 style={{
@@ -956,9 +950,9 @@ const FamilyTreeView: React.FC = () => {
                   
                   // Nếu chỉ có currentPerson (1 node chính)
                   if (currentPerson && !hasFather && !hasMother && !hasPaternalGrandfather && !hasPaternalGrandmother && !hasMaternalGrandfather && !hasMaternalGrandmother) {
-                    // Tọa độ cho trường hợp chỉ có 1 node chính - tăng khoảng cách
-                    const centerX = 1000;
-                    const centerY = 700; // Tăng Y để node chính thấp hơn nữa, tạo khoảng cách lớn hơn với 2 nút add
+                    // Tọa độ cho trường hợp chỉ có 1 node chính - căn giữa màn hình
+                    const centerX = 1500; // Căn giữa theo chiều ngang (3000/2)
+                    const centerY = 400; // Căn giữa theo chiều dọc (800/2)
                     
                     return (
                       <g>
