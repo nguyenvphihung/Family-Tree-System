@@ -1650,9 +1650,9 @@ const FamilyTreeView: React.FC = () => {
                             
                             {/* Đường ngang giữa 2 node father và mother */}
                             <line
-                              x1={centerX - 200 + 120}
+                              x1={centerX - 200 + 160}
                               y1={centerY - 400}
-                              x2={centerX + 200 - 120}
+                              x2={centerX + 200 - 160}
                               y2={centerY - 400}
                               stroke="#6b7280"
                               strokeWidth="3"
@@ -1662,7 +1662,7 @@ const FamilyTreeView: React.FC = () => {
                             
                             {/* Bo tròn tại điểm nối father */}
                             <circle
-                              cx={centerX - 200 + 120}
+                              cx={centerX - 200 + 160}
                               cy={centerY - 400}
                               r="6"
                               fill="#6b7280"
@@ -1670,7 +1670,7 @@ const FamilyTreeView: React.FC = () => {
                             
                             {/* Bo tròn tại điểm nối mother */}
                             <circle
-                              cx={centerX + 200 - 120}
+                              cx={centerX + 200 - 160}
                               cy={centerY - 400}
                               r="6"
                               fill="#6b7280"
@@ -1707,7 +1707,7 @@ const FamilyTreeView: React.FC = () => {
                             <line
                               x1={centerX}
                               y1={centerY - 400}
-                              x2={centerX + 200 - 130}
+                              x2={centerX + 200 - 160}
                               y2={centerY - 400}
                               stroke="#6b7280"
                               strokeWidth="3"
@@ -1725,7 +1725,7 @@ const FamilyTreeView: React.FC = () => {
                             
                             {/* Bo tròn tại điểm nối placeholder mẹ */}
                             <circle
-                              cx={centerX + 200 - 130}
+                              cx={centerX + 200 - 160}
                               cy={centerY - 400}
                               r="6"
                               fill="#6b7280"
