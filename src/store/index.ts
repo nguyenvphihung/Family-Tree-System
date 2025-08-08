@@ -195,12 +195,23 @@ export const useUserStore = create<UserStore>()(
 export interface FamilyMember {
   id: string;
   name: string;
-  birthYear: string;
-  gender: 'male' | 'female';
+  firstName?: string;
+  lastName?: string;
+  prefix?: string;
+  suffix?: string;
+  birthYear?: string;
+  birthDate?: {
+    precision: string;
+    month?: string;
+    day?: string;
+    year?: string;
+  };
+  birthPlace?: string;
+  gender: 'male' | 'female' | 'unknown';
   isAlive: boolean;
   countryOfBirth?: string;
   maidenName?: string;
-  lastName?: string;
+  email?: string;
   relationship: 'self' | 'father' | 'mother' | 'maternalGrandmother' | 'maternalGrandfather' | 'paternalGrandmother' | 'paternalGrandfather';
 }
 

@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useFamilyTreeStore, FamilyMember } from "../../store";
+import AddParentModal from "./AddParentModal";
 
 const FamilyTreeView: React.FC = () => {
-  const { currentPerson, members } = useFamilyTreeStore();
+  const { currentPerson, members, addFamilyMember } = useFamilyTreeStore();
   
   // Debug: Log ra dữ liệu để kiểm tra
   console.log('=== DEBUG FamilyTreeView ===');
@@ -29,6 +30,9 @@ const FamilyTreeView: React.FC = () => {
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [showExpandedTree, setShowExpandedTree] = useState(false); // State để quản lý hiển thị cây mở rộng
+  const [showAddParentModal, setShowAddParentModal] = useState(false); // State để quản lý hiển thị modal thêm cha mẹ
+  const [parentModalType, setParentModalType] = useState<"father" | "mother">("father"); // Loại cha mẹ cần thêm
 
   const handleZoomIn = () => {
     setZoomLevel(prev => Math.min(prev * 1.2, 4)); // Tăng giới hạn zoom tối đa từ 3 lên 4
@@ -79,6 +83,11 @@ const FamilyTreeView: React.FC = () => {
   };
   // Helper lấy màu line xám
   const lineColor = '#9ca3af'; // gray-400
+  
+  // Helper lấy màu line gradient đẹp hơn
+  const getLineGradient = (id: string) => {
+    return `url(#${id})`;
+  };
 
   const renderPersonNode = (person: FamilyMember, x: number, y: number) => {
     const borderColor = getGenderColor(person.gender);
@@ -110,7 +119,7 @@ const FamilyTreeView: React.FC = () => {
 
         {/* Avatar circle */}
         <circle
-          cx={x - 100}
+          cx={x - 80}
           cy={y - 15}
           r="40"
           fill="#e5e7eb"
@@ -120,7 +129,7 @@ const FamilyTreeView: React.FC = () => {
 
         {/* Profile icon */}
         <text
-          x={x - 100}
+          x={x - 80}
           y={y - 5}
           textAnchor="middle"
           fontSize="45"
@@ -132,7 +141,7 @@ const FamilyTreeView: React.FC = () => {
 
         {/* Camera icon */}
         <circle
-          cx={x - 75}
+          cx={x - 55}
           cy={y - 45}
           r="22"
           fill="#10b981"
@@ -142,7 +151,7 @@ const FamilyTreeView: React.FC = () => {
           onClick={() => handleCameraClick(person.id)}
         />
         <text 
-          x={x - 75} 
+          x={x - 55} 
           y={y - 35} 
           textAnchor="middle" 
           fontSize="24" 
@@ -155,7 +164,7 @@ const FamilyTreeView: React.FC = () => {
 
         {/* Name */}
         <text
-          x={x + 30}
+          x={x + 50}
           y={y - 30}
           textAnchor="middle"
           fontSize="24"
@@ -166,60 +175,33 @@ const FamilyTreeView: React.FC = () => {
           {person.name}
         </text>
 
-        {/* Maiden name, Last name */}
-        {person.maidenName && (
+        {/* Birth information */}
           <text
-            x={x + 30}
-            y={y - 5}
+          x={x + 50}
+          y={y - 5}
             textAnchor="middle"
-            fontSize="18"
-            fill="#6b7280"
-            className="font-inter"
-          >
-            Maiden: {person.maidenName}
-          </text>
-        )}
-        {person.lastName && (
-          <text
-            x={x + 30}
-            y={y + 15}
-            textAnchor="middle"
-            fontSize="18"
-            fill="#6b7280"
-            className="font-inter"
-          >
-            Last: {person.lastName}
-          </text>
-        )}
-        {/* Country of birth */}
-        {person.countryOfBirth && (
-          <text
-            x={x + 30}
-            y={y + 35}
-            textAnchor="middle"
-            fontSize="18"
-            fill="#6b7280"
-            className="font-inter"
-          >
-            {person.countryOfBirth}
-          </text>
-        )}
-        {/* Birth year and status */}
-        <text
-          x={x + 30}
-          y={y + 55}
-          textAnchor="middle"
           fontSize="18"
-          fill="#6b7280"
-          className="font-inter"
-        >
-          {person.birthYear} – {person.isAlive ? 'Alive' : 'Deceased'}
+            fill="#6b7280"
+            className="font-inter"
+          >
+          {person.birthDate?.precision === 'Before' && person.birthDate?.month && person.birthDate?.day && person.birthDate?.year 
+            ? `b. Before ${person.birthDate.month} ${person.birthDate.day} ${person.birthDate.year}`
+            : person.birthDate?.precision === 'Exactly' && person.birthDate?.month && person.birthDate?.day && person.birthDate?.year
+            ? `b. ${person.birthDate.month} ${person.birthDate.day} ${person.birthDate.year}`
+            : person.birthDate?.precision === 'After' && person.birthDate?.month && person.birthDate?.day && person.birthDate?.year
+            ? `b. After ${person.birthDate.month} ${person.birthDate.day} ${person.birthDate.year}`
+            : person.birthDate?.precision === 'Circa' && person.birthDate?.year
+            ? `b. Circa ${person.birthDate.year}`
+            : person.birthYear
+            ? `b. ${person.birthYear}`
+            : 'Birth date unknown'
+          }
         </text>
 
         {/* Edit button */}
         <circle
-          cx={x + 120}
-          cy={y - 45}
+          cx={x + 160}
+          cy={y - 70}
           r="22"
           fill="#9ca3af"
           stroke="white"
@@ -228,8 +210,8 @@ const FamilyTreeView: React.FC = () => {
           onClick={() => handleEditClick(person.id)}
         />
         <text
-          x={x + 120}
-          y={y - 35}
+          x={x + 160}
+          y={y - 60}
           textAnchor="middle"
           fontSize="24"
           fill="white"
@@ -245,11 +227,11 @@ const FamilyTreeView: React.FC = () => {
     );
   };
 
-  const renderParentPlaceholder = (type: "father" | "mother", x: number, y: number) => {
+  const renderParentPlaceholder = (type: "father" | "mother", x: number, y: number, onClick?: () => void) => {
     const label = type === "father" ? "Add father" : "Add mother";
     
     return (
-      <g key={`parent-${type}-${x}-${y}`}>
+      <g key={`parent-${type}-${x}-${y}`} onClick={onClick} className={onClick ? "cursor-pointer" : ""}>
         {/* Placeholder card */}
         <rect
           x={x - 130}
@@ -426,24 +408,24 @@ const FamilyTreeView: React.FC = () => {
   // Hàm vẽ đường nối gấp khúc (orthogonal) từ cha mẹ xuống con
   const renderParentToChildLine = (parent1: { x: number, y: number }, parent2: { x: number, y: number }, child: { x: number, y: number }, debugColor?: string) => {
     const midX = (parent1.x + parent2.x) / 2;
-    const parentBottomY = parent1.y + 50; // điểm dưới node cha mẹ
-    const childTopY = child.y - 50; // điểm trên node con
+    const parentBottomY = parent1.y + 70; // điểm dưới node cha mẹ (viền)
+    const childTopY = child.y - 70; // điểm trên node con (viền)
     const color = debugColor || lineColor; // Màu xanh đậm dễ nhìn
     return (
-              <g>
-          {/* Đường thẳng đứng từ cha xuống */}
-          <line x1={parent1.x} y1={parentBottomY} x2={parent1.x} y2={parentBottomY + 40} stroke={color} strokeWidth="8" />
-          {/* Đường thẳng đứng từ mẹ xuống */}
-          <line x1={parent2.x} y1={parentBottomY} x2={parent2.x} y2={parentBottomY + 40} stroke={color} strokeWidth="8" />
-          {/* Đường ngang nối hai cha mẹ */}
-          <line x1={parent1.x} y1={parentBottomY + 40} x2={parent2.x} y2={parentBottomY + 40} stroke={color} strokeWidth="8" />
-          {/* Đường thẳng đứng từ giữa xuống con */}
-          <line x1={midX} y1={parentBottomY + 40} x2={midX} y2={childTopY - 40} stroke={color} strokeWidth="8" />
-          {/* Đường ngang nối vào node con */}
-          <line x1={midX} y1={childTopY - 40} x2={child.x} y2={childTopY - 40} stroke={color} strokeWidth="8" />
-          {/* Đường thẳng đứng cuối cùng vào node con */}
-          <line x1={child.x} y1={childTopY - 40} x2={child.x} y2={childTopY} stroke={color} strokeWidth="8" />
-        </g>
+      <g>
+        {/* Đường thẳng đứng từ cha xuống */}
+          <line x1={parent1.x} y1={parentBottomY} x2={parent1.x} y2={parentBottomY + 40} stroke={color} strokeWidth="3" />
+        {/* Đường thẳng đứng từ mẹ xuống */}
+          <line x1={parent2.x} y1={parentBottomY} x2={parent2.x} y2={parentBottomY + 40} stroke={color} strokeWidth="3" />
+        {/* Đường ngang nối hai cha mẹ */}
+          <line x1={parent1.x} y1={parentBottomY + 40} x2={parent2.x} y2={parentBottomY + 40} stroke={color} strokeWidth="3" />
+        {/* Đường thẳng đứng từ giữa xuống con */}
+          <line x1={midX} y1={parentBottomY + 40} x2={midX} y2={childTopY - 40} stroke={color} strokeWidth="3" />
+        {/* Đường ngang nối vào node con */}
+          <line x1={midX} y1={childTopY - 40} x2={child.x} y2={childTopY - 40} stroke={color} strokeWidth="3" />
+        {/* Đường thẳng đứng cuối cùng vào node con - chỉ chạm viền */}
+          <line x1={child.x} y1={childTopY - 40} x2={child.x} y2={childTopY} stroke={color} strokeWidth="3" />
+      </g>
     );
   };
 
@@ -510,7 +492,7 @@ const FamilyTreeView: React.FC = () => {
         x2={x}
         y2={y + 88} // lên sát dấu +
         stroke={lineColor}
-        strokeWidth="8"
+        strokeWidth="3"
       />
       <circle
         cx={x}
@@ -539,11 +521,11 @@ const FamilyTreeView: React.FC = () => {
 
   // Hàm render 2 nhánh lên trên cho mỗi node (Add father/mother) - chỉ cho các node khác, không phải node bản thân
   const renderParentBranches = (x: number, y: number, onAddFather: () => void, onAddMother: () => void) => (
-          <g>
-        {/* Đường thẳng dọc lên giữa hai node Add father/mother - tăng khoảng cách */}
-        <line x1={x} y1={y - 70} x2={x} y2={y - 200} stroke="#d1d5db" strokeWidth="6" />
-        {/* Nhánh trái - Add father */}
-        <line x1={x} y1={y - 200} x2={x - 140} y2={y - 200} stroke="#d1d5db" strokeWidth="6" />
+    <g>
+      {/* Đường thẳng dọc lên giữa hai node Add father/mother - tăng khoảng cách */}
+        <line x1={x} y1={y - 70} x2={x} y2={y - 200} stroke="#d1d5db" strokeWidth="3" />
+      {/* Nhánh trái - Add father */}
+        <line x1={x} y1={y - 200} x2={x - 140} y2={y - 200} stroke="#d1d5db" strokeWidth="3" />
       {/* Hình vuông thay vì hình tròn cho Add father */}
       <rect
         x={x - 140 - 50}
@@ -585,9 +567,9 @@ const FamilyTreeView: React.FC = () => {
         onClick={onAddFather}
       >
         Add father
-              </text>
-        {/* Nhánh phải - Add mother */}
-        <line x1={x} y1={y - 200} x2={x + 140} y2={y - 200} stroke="#d1d5db" strokeWidth="6" />
+      </text>
+      {/* Nhánh phải - Add mother */}
+        <line x1={x} y1={y - 200} x2={x + 140} y2={y - 200} stroke="#d1d5db" strokeWidth="3" />
       {/* Hình vuông thay vì hình tròn cho Add mother */}
       <rect
         x={x + 140 - 50}
@@ -663,6 +645,431 @@ const FamilyTreeView: React.FC = () => {
     console.log('Edit clicked for:', personId);
     // TODO: Implement edit logic
   };
+
+    // Hàm xử lý click vào dấu "+" để mở rộng cây
+  const handleExpandTree = () => {
+    setShowExpandedTree(true);
+  };
+  
+  // Hàm xử lý đóng cây mở rộng
+  const handleCloseExpandedTree = () => {
+    setShowExpandedTree(false);
+  };
+  
+  // Hàm xử lý mở modal thêm cha mẹ
+  const handleOpenAddParentModal = (type: "father" | "mother") => {
+    setParentModalType(type);
+    setShowAddParentModal(true);
+  };
+  
+  // Hàm xử lý đóng modal thêm cha mẹ
+  const handleCloseAddParentModal = () => {
+    setShowAddParentModal(false);
+  };
+  
+  // Hàm xử lý lưu thông tin cha mẹ
+  const handleSaveParent = (data: any) => {
+    console.log('Saving parent data:', data);
+    
+    // Tạo FamilyMember object từ form data
+    const newParent: FamilyMember = {
+      id: `${parentModalType}-${Date.now()}`, // Tạo ID duy nhất
+      name: `${data.prefix || ''} ${data.firstName || ''} ${data.lastName || ''} ${data.suffix || ''}`.trim(),
+      firstName: data.firstName,
+      lastName: data.lastName,
+      prefix: data.prefix,
+      suffix: data.suffix,
+      birthYear: data.birthDate?.year || '',
+      birthDate: data.birthDate,
+      birthPlace: data.birthPlace,
+      gender: data.gender,
+      isAlive: data.isAlive,
+      email: data.email,
+      relationship: parentModalType,
+    };
+
+    console.log('Created new parent object:', newParent);
+
+    // Thêm vào store
+    addFamilyMember(newParent);
+    
+    console.log('Parent added to store successfully');
+    
+    // Đóng modal và expanded tree
+    setShowAddParentModal(false);
+    setShowExpandedTree(false);
+  };
+
+  // Hàm render node "Add father"
+  const renderAddFatherNode = (x: number, y: number, onClick: () => void) => (
+    <g key={`add-father-${x}-${y}`}>
+      <rect
+        x={x - 120}
+        y={y - 50}
+        width="240"
+        height="100"
+        rx="12"
+        fill="#f0fdf4"
+        stroke="#2563eb"
+        strokeWidth="2"
+        className="shadow-lg transition-all duration-300 hover:shadow-xl cursor-pointer"
+        onClick={onClick}
+      />
+      <circle
+        cx={x - 80}
+        cy={y}
+        r="25"
+        fill="#e5e7eb"
+        stroke="#2563eb"
+        strokeWidth="2"
+      />
+      <text
+        x={x - 80}
+        y={y + 5}
+        textAnchor="middle"
+        fontSize="20"
+        fill="#6b7280"
+        className="font-medium"
+      >
+        👨
+      </text>
+      <text
+        x={x - 40}
+        y={y - 15}
+        fontSize="16"
+        fill="#1f2937"
+        className="font-semibold"
+      >
+        Add father
+      </text>
+      <text
+        x={x - 40}
+        y={y + 5}
+        fontSize="12"
+        fill="#6b7280"
+      >
+        Father, dad...
+      </text>
+    </g>
+  );
+
+  // Hàm render node "Add mother"
+  const renderAddMotherNode = (x: number, y: number, onClick: () => void) => (
+    <g key={`add-mother-${x}-${y}`}>
+      <rect
+        x={x - 120}
+        y={y - 50}
+        width="240"
+        height="100"
+        rx="12"
+        fill="#f0fdf4"
+        stroke="#f472b6"
+        strokeWidth="2"
+        className="shadow-lg transition-all duration-300 hover:shadow-xl cursor-pointer"
+        onClick={onClick}
+      />
+      <circle
+        cx={x - 80}
+        cy={y}
+        r="25"
+        fill="#e5e7eb"
+        stroke="#f472b6"
+        strokeWidth="2"
+      />
+      <text
+        x={x - 80}
+        y={y + 5}
+        textAnchor="middle"
+        fontSize="20"
+        fill="#6b7280"
+        className="font-medium"
+      >
+        👩
+      </text>
+      <text
+        x={x - 40}
+        y={y - 15}
+        fontSize="16"
+        fill="#1f2937"
+        className="font-semibold"
+      >
+        Add mother
+      </text>
+      <text
+        x={x - 40}
+        y={y + 5}
+        fontSize="12"
+        fill="#6b7280"
+      >
+        Mother, mom...
+      </text>
+    </g>
+  );
+
+  // Hàm render node "Add brother"
+  const renderAddBrotherNode = (x: number, y: number, onClick: () => void) => (
+    <g key={`add-brother-${x}-${y}`}>
+      <rect
+        x={x - 120}
+        y={y - 50}
+        width="240"
+        height="100"
+        rx="12"
+        fill="#f0fdf4"
+        stroke="#2563eb"
+        strokeWidth="2"
+        className="shadow-lg transition-all duration-300 hover:shadow-xl cursor-pointer"
+        onClick={onClick}
+      />
+      <circle
+        cx={x - 80}
+        cy={y}
+        r="25"
+        fill="#e5e7eb"
+        stroke="#2563eb"
+        strokeWidth="2"
+      />
+      <text
+        x={x - 80}
+        y={y + 5}
+        textAnchor="middle"
+        fontSize="20"
+        fill="#6b7280"
+        className="font-medium"
+      >
+        👨
+      </text>
+      <text
+        x={x - 40}
+        y={y - 15}
+        fontSize="16"
+        fill="#1f2937"
+        className="font-semibold"
+      >
+        Add brother
+      </text>
+      <text
+        x={x - 40}
+        y={y + 5}
+        fontSize="12"
+        fill="#6b7280"
+      >
+        Brother...
+      </text>
+    </g>
+  );
+
+  // Hàm render node "Add sister"
+  const renderAddSisterNode = (x: number, y: number, onClick: () => void) => (
+    <g key={`add-sister-${x}-${y}`}>
+      <rect
+        x={x - 120}
+        y={y - 50}
+        width="240"
+        height="100"
+        rx="12"
+        fill="#f0fdf4"
+        stroke="#f472b6"
+        strokeWidth="2"
+        className="shadow-lg transition-all duration-300 hover:shadow-xl cursor-pointer"
+        onClick={onClick}
+      />
+      <circle
+        cx={x - 80}
+        cy={y}
+        r="25"
+        fill="#e5e7eb"
+        stroke="#f472b6"
+        strokeWidth="2"
+      />
+      <text
+        x={x - 80}
+        y={y + 5}
+        textAnchor="middle"
+        fontSize="20"
+        fill="#6b7280"
+        className="font-medium"
+      >
+        👩
+      </text>
+      <text
+        x={x - 40}
+        y={y - 15}
+        fontSize="16"
+        fill="#1f2937"
+        className="font-semibold"
+      >
+        Add sister
+      </text>
+      <text
+        x={x - 40}
+        y={y + 5}
+        fontSize="12"
+        fill="#6b7280"
+      >
+        Sister...
+      </text>
+    </g>
+  );
+
+  // Hàm render node "Add partner"
+  const renderAddPartnerNode = (x: number, y: number, onClick: () => void) => (
+    <g key={`add-partner-${x}-${y}`}>
+      <rect
+        x={x - 120}
+        y={y - 50}
+        width="240"
+        height="100"
+        rx="12"
+        fill="#f0fdf4"
+        stroke="#f472b6"
+        strokeWidth="2"
+        className="shadow-lg transition-all duration-300 hover:shadow-xl cursor-pointer"
+        onClick={onClick}
+      />
+      <circle
+        cx={x - 80}
+        cy={y}
+        r="25"
+        fill="#e5e7eb"
+        stroke="#f472b6"
+        strokeWidth="2"
+      />
+      <text
+        x={x - 80}
+        y={y + 5}
+        textAnchor="middle"
+        fontSize="20"
+        fill="#6b7280"
+        className="font-medium"
+      >
+        👩
+      </text>
+      <text
+        x={x - 40}
+        y={y - 15}
+        fontSize="16"
+        fill="#1f2937"
+        className="font-semibold"
+      >
+        Add partner
+      </text>
+      <text
+        x={x - 40}
+        y={y + 5}
+        fontSize="12"
+        fill="#6b7280"
+      >
+        Wife, partner...
+      </text>
+    </g>
+  );
+
+  // Hàm render node "Add son"
+  const renderAddSonNode = (x: number, y: number, onClick: () => void) => (
+    <g key={`add-son-${x}-${y}`}>
+      <rect
+        x={x - 120}
+        y={y - 50}
+        width="240"
+        height="100"
+        rx="12"
+        fill="#f0fdf4"
+        stroke="#2563eb"
+        strokeWidth="2"
+        className="shadow-lg transition-all duration-300 hover:shadow-xl cursor-pointer"
+        onClick={onClick}
+      />
+      <circle
+        cx={x - 80}
+        cy={y}
+        r="25"
+        fill="#e5e7eb"
+        stroke="#2563eb"
+        strokeWidth="2"
+      />
+      <text
+        x={x - 80}
+        y={y + 5}
+        textAnchor="middle"
+        fontSize="20"
+        fill="#6b7280"
+        className="font-medium"
+      >
+        👨
+      </text>
+      <text
+        x={x - 40}
+        y={y - 15}
+        fontSize="16"
+        fill="#1f2937"
+        className="font-semibold"
+      >
+        Add son
+      </text>
+      <text
+        x={x - 40}
+        y={y + 5}
+        fontSize="12"
+        fill="#6b7280"
+      >
+        Son...
+      </text>
+    </g>
+  );
+
+  // Hàm render node "Add daughter"
+  const renderAddDaughterNode = (x: number, y: number, onClick: () => void) => (
+    <g key={`add-daughter-${x}-${y}`}>
+      <rect
+        x={x - 120}
+        y={y - 50}
+        width="240"
+        height="100"
+        rx="12"
+        fill="#f0fdf4"
+        stroke="#f472b6"
+        strokeWidth="2"
+        className="shadow-lg transition-all duration-300 hover:shadow-xl cursor-pointer"
+        onClick={onClick}
+      />
+      <circle
+        cx={x - 80}
+        cy={y}
+        r="25"
+        fill="#e5e7eb"
+        stroke="#f472b6"
+        strokeWidth="2"
+      />
+      <text
+        x={x - 80}
+        y={y + 5}
+        textAnchor="middle"
+        fontSize="20"
+        fill="#6b7280"
+        className="font-medium"
+      >
+        👩
+      </text>
+      <text
+        x={x - 40}
+        y={y - 15}
+        fontSize="16"
+        fill="#1f2937"
+        className="font-semibold"
+      >
+        Add daughter
+      </text>
+      <text
+        x={x - 40}
+        y={y + 5}
+        fontSize="12"
+        fill="#6b7280"
+      >
+        Daughter...
+      </text>
+    </g>
+  );
 
   return (
     <div className="h-screen w-screen bg-gray-100 font-inter overflow-hidden">
@@ -938,6 +1345,26 @@ const FamilyTreeView: React.FC = () => {
                   transition: isDragging ? 'none' : 'transform 0.1s ease-out'
                 }}
               >
+                {/* Gradient definitions cho đường kết nối đẹp */}
+                <defs>
+                  <linearGradient id="lineGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8"/>
+                    <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.6"/>
+                    <stop offset="100%" stopColor="#ec4899" stopOpacity="0.8"/>
+                  </linearGradient>
+                  <linearGradient id="lineGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.8"/>
+                    <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.6"/>
+                    <stop offset="100%" stopColor="#ef4444" stopOpacity="0.8"/>
+                  </linearGradient>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                    <feMerge> 
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
                 {/* Kiểm tra xem có bao nhiêu node để quyết định cách hiển thị */}
                 {(() => {
                   // Đếm số node có sẵn
@@ -948,22 +1375,488 @@ const FamilyTreeView: React.FC = () => {
                   const hasMaternalGrandfather = !!maternalGrandfather;
                   const hasMaternalGrandmother = !!maternalGrandmother;
                   
-                  // Nếu chỉ có currentPerson (1 node chính)
-                  if (currentPerson && !hasFather && !hasMother && !hasPaternalGrandfather && !hasPaternalGrandmother && !hasMaternalGrandfather && !hasMaternalGrandmother) {
+                  // Nếu chỉ có currentPerson (1 node chính) hoặc có thêm father/mother
+                  if (currentPerson && !hasPaternalGrandfather && !hasPaternalGrandmother && !hasMaternalGrandfather && !hasMaternalGrandmother) {
                     // Tọa độ cho trường hợp chỉ có 1 node chính - căn giữa màn hình
                     const centerX = 1500; // Căn giữa theo chiều ngang (3000/2)
                     const centerY = 400; // Căn giữa theo chiều dọc (800/2)
                     
+                    // Nếu đã mở rộng cây, hiển thị cây mở rộng
+                    if (showExpandedTree) {
+                      return (
+                        <g>
+                          {/* Node chính ở giữa */}
+                          {renderPersonNode(currentPerson, centerX, centerY)}
+                          
+                          {/* Nút Close X ở góc trên bên phải */}
+                          <g onClick={handleCloseExpandedTree} className="cursor-pointer">
+                            <circle
+                              cx={centerX + 470}
+                              cy={centerY - 250}
+                              r="18"
+                              fill="#6b7280"
+                              stroke="#4b5563"
+                              strokeWidth="2"
+                              className="hover:fill-gray-500 transition-colors duration-200"
+                            />
+                            <text
+                              x={centerX + 470}
+                              y={centerY - 250 + 5}
+                              textAnchor="middle"
+                              fontSize="14"
+                              fill="white"
+                              fontWeight="bold"
+                              className="cursor-pointer"
+                            >
+                              ✕
+                            </text>
+                          </g>
+                          
+                                                      {/* Các node mở rộng xung quanh node chính - layout theo yêu cầu */}
+                            {/* Phía trên: Add father và Add mother */}
+                            {renderAddFatherNode(centerX - 200, centerY - 400, () => handleOpenAddParentModal('father'))}
+                            {renderAddMotherNode(centerX + 200, centerY - 400, () => handleOpenAddParentModal('mother'))}
+                          
+                          {/* Bên trái: Add brother và Add sister */}
+                          {renderAddBrotherNode(centerX - 400, centerY - 150, () => console.log('Add brother clicked'))}
+                          {renderAddSisterNode(centerX - 400, centerY + 150, () => console.log('Add sister clicked'))}
+                          
+                          {/* Bên phải: Add partner */}
+                          {renderAddPartnerNode(centerX + 400, centerY, () => console.log('Add partner clicked'))}
+                          
+                          {/* Phía dưới: Add son và Add daughter */}
+                          {renderAddSonNode(centerX - 200, centerY + 400, () => handleAddChild('self'))}
+                          {renderAddDaughterNode(centerX + 200, centerY + 400, () => console.log('Add daughter clicked'))}
+                          
+                          {/* Các đường kết nối màu xám - layout theo yêu cầu */}
+                          {/* Đường kết nối từ node chính đến parents - luôn vẽ cho placeholders */}
+                          {/* Đường thẳng lên giữa 2 node Add father và Add mother */}
+                          <line
+                            x1={centerX}
+                            y1={centerY - 70}
+                            x2={centerX}
+                            y2={centerY - 400}
+                            stroke="#6b7280"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          
+                          {/* Nhánh rẽ trái đến Add father */}
+                          <line
+                            x1={centerX}
+                            y1={centerY - 400}
+                            x2={centerX - 200 + 120}
+                            y2={centerY - 400}
+                            stroke="#6b7280"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          
+                          {/* Nhánh rẽ phải đến Add mother */}
+                          <line
+                            x1={centerX}
+                            y1={centerY - 400}
+                            x2={centerX + 200 - 120}
+                            y2={centerY - 400}
+                            stroke="#6b7280"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          
+                          {/* Bo tròn tại điểm nối Add father */}
+                          <circle
+                            cx={centerX - 200 + 120}
+                            cy={centerY - 400}
+                            r="6"
+                            fill="#6b7280"
+                          />
+                          
+                          {/* Bo tròn tại điểm nối Add mother */}
+                          <circle
+                            cx={centerX + 200 - 120}
+                            cy={centerY - 400}
+                            r="6"
+                            fill="#6b7280"
+                          />
+                          
+                          {/* Đường thẳng sang trái giữa 2 node Add brother và Add sister */}
+                          <line
+                            x1={centerX - 160}
+                            y1={centerY}
+                            x2={centerX - 400}
+                            y2={centerY}
+                            stroke="#6b7280"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          
+                          {/* Nhánh rẽ lên đến Add brother */}
+                          <line
+                            x1={centerX - 400}
+                            y1={centerY}
+                            x2={centerX - 400}
+                            y2={centerY - 150 + 50}
+                            stroke="#6b7280"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          
+                          {/* Nhánh rẽ xuống đến Add sister */}
+                          <line
+                            x1={centerX - 400}
+                            y1={centerY}
+                            x2={centerX - 400}
+                            y2={centerY + 150 - 50}
+                            stroke="#6b7280"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          
+                          {/* Bo tròn tại điểm nối Add brother */}
+                          <circle
+                            cx={centerX - 400}
+                            cy={centerY - 150 + 50}
+                            r="6"
+                            fill="#6b7280"
+                          />
+                          
+                          {/* Bo tròn tại điểm nối Add sister */}
+                          <circle
+                            cx={centerX - 400}
+                            cy={centerY + 150 - 50}
+                            r="6"
+                            fill="#6b7280"
+                          />
+                          
+                          {/* Đường từ node chính đến Add partner (bên phải) */}
+                          <line
+                            x1={centerX + 160}
+                            y1={centerY}
+                            x2={centerX + 400 - 120}
+                            y2={centerY}
+                            stroke="#6b7280"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          
+                          {/* Bo tròn tại điểm nối Add partner */}
+                          <circle
+                            cx={centerX + 400 - 120}
+                            cy={centerY}
+                            r="6"
+                            fill="#6b7280"
+                          />
+                          
+                          {/* Đường thẳng xuống giữa 2 node Add son và Add daughter */}
+                          <line
+                            x1={centerX}
+                            y1={centerY + 70}
+                            x2={centerX}
+                            y2={centerY + 400}
+                            stroke="#6b7280"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          
+                          {/* Nhánh rẽ trái đến Add son */}
+                          <line
+                            x1={centerX}
+                            y1={centerY + 400}
+                            x2={centerX - 200 + 120}
+                            y2={centerY + 400}
+                            stroke="#6b7280"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          
+                          {/* Nhánh rẽ phải đến Add daughter */}
+                          <line
+                            x1={centerX}
+                            y1={centerY + 400}
+                            x2={centerX + 200 - 120}
+                            y2={centerY + 400}
+                            stroke="#6b7280"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                          
+                          {/* Bo tròn tại điểm nối Add son */}
+                          <circle
+                            cx={centerX - 200 + 120}
+                            cy={centerY + 400}
+                            r="6"
+                            fill="#6b7280"
+                          />
+                          
+                          {/* Bo tròn tại điểm nối Add daughter */}
+                          <circle
+                            cx={centerX + 200 - 120}
+                            cy={centerY + 400}
+                            r="6"
+                            fill="#6b7280"
+                          />
+                        </g>
+                      );
+                    }
+                    
+                    // Nếu chưa mở rộng, hiển thị cây cơ bản
                     return (
                       <g>
                         {/* Node chính ở giữa */}
                         {renderPersonNode(currentPerson, centerX, centerY)}
                         
                         {/* Dấu "+" để thêm con cho node chính */}
-                        {renderAddChildButton(centerX, centerY, () => handleAddChild('self'))}
+                        {renderAddChildButton(centerX, centerY, () => handleExpandTree())}
                         
-                        {/* 2 nhánh "Add father" và "Add mother" ở phía trên */}
-                        {renderParentBranches(centerX, centerY, () => handleAddFather('self'), () => handleAddMother('self'))}
+                        {/* Hiển thị father nếu có, hoặc placeholder nếu chưa có */}
+                        {father ? (
+                          renderPersonNode(father, centerX - 200, centerY - 400)
+                        ) : (
+                          renderParentPlaceholder("father", centerX - 200, centerY - 400, () => handleOpenAddParentModal('father'))
+                        )}
+                        
+                        {/* Hiển thị mother nếu có, hoặc placeholder nếu chưa có */}
+                        {mother ? (
+                          renderPersonNode(mother, centerX + 200, centerY - 400)
+                        ) : (
+                          renderParentPlaceholder("mother", centerX + 200, centerY - 400, () => handleOpenAddParentModal('mother'))
+                        )}
+                        
+                        {/* Đường kết nối từ father và mother đến currentPerson */}
+                        {father && mother ? (
+                          // Vẽ đường Y-shape từ node chính lên giữa 2 node father và mother, rẽ ra 2 bên
+                          <>
+                            {/* Đường thẳng từ node chính lên giữa 2 node father và mother */}
+                            <line
+                              x1={centerX}
+                              y1={centerY - 70}
+                              x2={centerX}
+                              y2={centerY - 400}
+                              stroke="#6b7280"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            
+                            {/* Đường ngang giữa 2 node father và mother */}
+                            <line
+                              x1={centerX - 200 + 120}
+                              y1={centerY - 400}
+                              x2={centerX + 200 - 120}
+                              y2={centerY - 400}
+                              stroke="#6b7280"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            
+                            {/* Bo tròn tại điểm nối father */}
+                            <circle
+                              cx={centerX - 200 + 120}
+                              cy={centerY - 400}
+                              r="6"
+                              fill="#6b7280"
+                            />
+                            
+                            {/* Bo tròn tại điểm nối mother */}
+                            <circle
+                              cx={centerX + 200 - 120}
+                              cy={centerY - 400}
+                              r="6"
+                              fill="#6b7280"
+                            />
+                          </>
+                        ) : father ? (
+                          // Có father nhưng không có mother (có placeholder)
+                          <>
+                            {/* Đường thẳng từ node chính lên giữa */}
+                            <line
+                              x1={centerX}
+                              y1={centerY - 70}
+                              x2={centerX}
+                              y2={centerY - 400}
+                              stroke="#6b7280"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            
+                            {/* Đường ngang từ giữa đến node cha */}
+                            <line
+                              x1={centerX}
+                              y1={centerY - 400}
+                              x2={centerX - 200 + 160}
+                              y2={centerY - 400}
+                              stroke="#6b7280"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            
+                            {/* Đường ngang từ giữa đến placeholder mẹ */}
+                            <line
+                              x1={centerX}
+                              y1={centerY - 400}
+                              x2={centerX + 200 - 130}
+                              y2={centerY - 400}
+                              stroke="#6b7280"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            
+                            {/* Bo tròn tại điểm nối node cha */}
+                            <circle
+                              cx={centerX - 200 + 160}
+                              cy={centerY - 400}
+                              r="6"
+                              fill="#6b7280"
+                            />
+                            
+                            {/* Bo tròn tại điểm nối placeholder mẹ */}
+                            <circle
+                              cx={centerX + 200 - 130}
+                              cy={centerY - 400}
+                              r="6"
+                              fill="#6b7280"
+                            />
+                          </>
+                        ) : mother ? (
+                          <>
+                            {/* Đường thẳng từ node chính lên giữa */}
+                            <line
+                              x1={centerX}
+                              y1={centerY - 70}
+                              x2={centerX}
+                              y2={centerY - 400}
+                              stroke="#6b7280"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            
+                            {/* Đường ngang từ giữa đến node cha */}
+                            <line
+                              x1={centerX}
+                              y1={centerY - 400}
+                              x2={centerX - 200 + 160}
+                              y2={centerY - 400}
+                              stroke="#6b7280"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            
+                            {/* Bo tròn tại điểm nối node cha */}
+                            <circle
+                              cx={centerX - 200 + 160}
+                              cy={centerY - 400}
+                              r="6"
+                              fill="#6b7280"
+                            />
+                          </>
+                        ) : mother ? (
+                          <>
+                            {/* Đường thẳng từ node chính lên giữa */}
+                            <line
+                              x1={centerX}
+                              y1={centerY - 70}
+                              x2={centerX}
+                              y2={centerY - 400}
+                              stroke="#6b7280"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            
+                            {/* Đường ngang từ giữa đến node mẹ */}
+                            <line
+                              x1={centerX}
+                              y1={centerY - 400}
+                              x2={centerX + 200 - 120}
+                              y2={centerY - 400}
+                              stroke="#6b7280"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            
+                            {/* Bo tròn tại điểm nối node mẹ */}
+                            <circle
+                              cx={centerX + 200 - 120}
+                              cy={centerY - 400}
+                              r="6"
+                              fill="#6b7280"
+                            />
+                          </>
+                        ) : null}
+                        
+                        {/* Nếu cả hai đều chưa có, hiển thị đường kết nối Y-shape */}
+                        {!father && !mother && (
+                          <>
+                            {/* Đường thẳng lên giữa 2 node Add father và Add mother */}
+                            <line
+                              x1={centerX}
+                              y1={centerY - 70}
+                              x2={centerX}
+                              y2={centerY - 400}
+                              stroke="#6b7280"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            
+                            {/* Nhánh rẽ trái đến Add father */}
+                            <line
+                              x1={centerX}
+                              y1={centerY - 400}
+                              x2={centerX - 200 + 120}
+                              y2={centerY - 400}
+                              stroke="#6b7280"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            
+                            {/* Nhánh rẽ phải đến Add mother */}
+                            <line
+                              x1={centerX}
+                              y1={centerY - 400}
+                              x2={centerX + 200 - 120}
+                              y2={centerY - 400}
+                              stroke="#6b7280"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            
+                            {/* Bo tròn tại điểm nối Add father */}
+                            <circle
+                              cx={centerX - 200 + 120}
+                              cy={centerY - 400}
+                              r="6"
+                              fill="#6b7280"
+                            />
+                            
+                            {/* Bo tròn tại điểm nối Add mother */}
+                            <circle
+                              cx={centerX + 200 - 120}
+                              cy={centerY - 400}
+                              r="6"
+                              fill="#6b7280"
+                            />
+                          </>
+                        )}
                       </g>
                     );
                   }
@@ -1054,6 +1947,14 @@ const FamilyTreeView: React.FC = () => {
         </div>
       </div>
 
+      {/* Modal thêm cha mẹ */}
+      <AddParentModal
+        isOpen={showAddParentModal}
+        onClose={handleCloseAddParentModal}
+        onSave={handleSaveParent}
+        parentType={parentModalType}
+        childName={currentPerson?.name || "Xuân phúc Võ"}
+      />
     </div>
   );
 };
