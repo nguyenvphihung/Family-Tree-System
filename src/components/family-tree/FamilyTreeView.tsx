@@ -1,15 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useFamilyTreeStore } from "../../store";
 import { FamilyMember } from "../../types/family";
 import AddParentModal from "./AddParentModal";
+import BuildingTreeLoading from "../loading/BuildingTreeLoading";
 
 const FamilyTreeView: React.FC = () => {
-  const { currentPerson, members, addFamilyMember } = useFamilyTreeStore();
+  const { 
+    currentPerson, 
+    members, 
+    addFamilyMember,
+    createTreeRoot,
+    addChildren,
+    addParent,
+    addSpouse,
+    getPersonWithRelations,
+    isLoading,
+    error
+  } = useFamilyTreeStore();
+  
+  // Tree ID mặc định - trong thực tế sẽ lấy từ user hoặc context
+  const [treeId] = useState("11111111-2222-3333-4444-555555555555");
   
   // Debug: Log ra dữ liệu để kiểm tra
   console.log('=== DEBUG FamilyTreeView ===');
   console.log('members:', members);
   console.log('currentPerson:', currentPerson);
+  console.log('treeId:', treeId);
+  console.log('isLoading:', isLoading);
+  console.log('error:', error);
   
   // Get family members by relationship
   const father = members.find(m => m.relationship === 'father');
@@ -27,24 +45,39 @@ const FamilyTreeView: React.FC = () => {
   console.log('paternalGrandfather:', paternalGrandfather);
   console.log('=== END DEBUG ===');
 
-  const [zoomLevel, setZoomLevel] = useState(1.5); // Tăng zoom mặc định từ 1 lên 1.5
+  const [zoomLevel, setZoomLevel] = useState(1.5);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [showExpandedTree, setShowExpandedTree] = useState(false); // State để quản lý hiển thị cây mở rộng
-  const [showAddParentModal, setShowAddParentModal] = useState(false); // State để quản lý hiển thị modal thêm cha mẹ
-  const [parentModalType, setParentModalType] = useState<"father" | "mother">("father"); // Loại cha mẹ cần thêm
+  const [showExpandedTree, setShowExpandedTree] = useState(false);
+  const [showAddParentModal, setShowAddParentModal] = useState(false);
+  const [parentModalType, setParentModalType] = useState<"father" | "mother">("father");
+
+  // Load initial data if no members exist
+  useEffect(() => {
+    if (members.length === 0 && !isLoading && currentPerson) {
+      // Nếu chưa có dữ liệu nhưng có currentPerson, có thể load từ API
+      console.log("No members found but currentPerson exists, ready to load data");
+    }
+  }, [members.length, isLoading, currentPerson]);
+
+  // Load person with relations when component mounts
+  useEffect(() => {
+    if (currentPerson?.id && treeId) {
+      getPersonWithRelations(treeId, currentPerson.id);
+    }
+  }, [currentPerson?.id, treeId, getPersonWithRelations]);
 
   const handleZoomIn = () => {
-    setZoomLevel(prev => Math.min(prev * 1.2, 4)); // Tăng giới hạn zoom tối đa từ 3 lên 4
+    setZoomLevel(prev => Math.min(prev * 1.2, 4));
   };
 
   const handleZoomOut = () => {
-    setZoomLevel(prev => Math.max(prev / 1.2, 0.2)); // Giảm giới hạn zoom tối thiểu từ 0.3 xuống 0.2
+    setZoomLevel(prev => Math.max(prev / 1.2, 0.2));
   };
 
   const handleResetZoom = () => {
-    setZoomLevel(1.5); // Reset về zoom mặc định mới
+    setZoomLevel(1.5);
     setPanOffset({ x: 0, y: 0 });
   };
 
@@ -69,23 +102,21 @@ const FamilyTreeView: React.FC = () => {
     setIsDragging(false);
   };
 
-  //Zoom by mouse
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    setZoomLevel(prev => Math.max(0.2, Math.min(4, prev * delta))); // Cập nhật giới hạn zoom cho mouse wheel
+    setZoomLevel(prev => Math.max(0.2, Math.min(4, prev * delta)));
   };
 
   // Helper lấy màu theo giới tính
   const getGenderColor = (gender: string) => {
-    if (gender === 'male') return '#2563eb'; // blue-600
-    if (gender === 'female') return '#f472b6'; // pink-400
-    return '#6b7280'; // gray-500
+    if (gender === 'male' || gender === 'M') return '#2563eb';
+    if (gender === 'female' || gender === 'F') return '#f472b6';
+    return '#6b7280';
   };
-  // Helper lấy màu line xám
-  const lineColor = '#9ca3af'; // gray-400
   
-  // Helper lấy màu line gradient đẹp hơn
+  const lineColor = '#9ca3af';
+  
   const getLineGradient = (id: string) => {
     return `url(#${id})`;
   };
@@ -617,24 +648,130 @@ const FamilyTreeView: React.FC = () => {
   );
 
   // Click handlers
-  const handleAddChild = (parentId: string) => {
-    console.log('Add child for:', parentId);
-    // TODO: Implement add child logic
+  const handleAddChild = async (parentId: string) => {
+    try {
+      console.log('Add child for:', parentId);
+      
+      // Tìm parent member để xác định parent2Id
+      const parentMember = members.find(m => m.id === parentId || m.relationship === parentId);
+      let parent2Id = null;
+      
+      // Nếu là father, tìm mother; nếu là mother, tìm father
+      if (parentMember?.relationship === 'father') {
+        const mother = members.find(m => m.relationship === 'mother');
+        parent2Id = mother?.id || null;
+      } else if (parentMember?.relationship === 'mother') {
+        const father = members.find(m => m.relationship === 'father');
+        parent2Id = father?.id || null;
+      }
+      
+      // Tạo dữ liệu mẫu cho con cái (trong thực tế sẽ có form)
+      const childData = {
+        parent1Id: parentMember?.id || parentId,
+        parent2Id: parent2Id,
+        child: {
+          name: "Con mới",
+          gender: "M" as const,
+          birthday: null,
+          birthPlace: null
+        },
+        childrenType: parent2Id ? "BIOLOGICAL" as const : "SINGLE_PARENT" as const,
+        adoptionDate: null,
+        notes: null
+      };
+
+      const result = await addChildren(treeId, childData);
+      console.log('Child added via API:', result);
+      
+      // Reload person with relations after adding child
+      if (currentPerson?.id) {
+        await getPersonWithRelations(treeId, currentPerson.id);
+      }
+      
+    } catch (error) {
+      console.error('Error adding child:', error);
+    }
   };
 
-  const handleAddFather = (childId: string) => {
-    console.log('Add father for:', childId);
-    // TODO: Implement add father logic
+  const handleAddFather = async (childId: string) => {
+    try {
+      console.log('Add father for:', childId);
+      
+      // Mở modal để nhập thông tin cha
+      setParentModalType("father");
+      setShowAddParentModal(true);
+      
+    } catch (error) {
+      console.error('Error opening add father modal:', error);
+    }
   };
 
-  const handleAddMother = (childId: string) => {
-    console.log('Add mother for:', childId);
-    // TODO: Implement add mother logic
+  const handleAddMother = async (childId: string) => {
+    try {
+      console.log('Add mother for:', childId);
+      
+      // Mở modal để nhập thông tin mẹ
+      setParentModalType("mother");
+      setShowAddParentModal(true);
+      
+    } catch (error) {
+      console.error('Error opening add mother modal:', error);
+    }
   };
 
-  const handleAddAncestor = (position: string) => {
-    console.log('Add ancestor at:', position);
-    // TODO: Implement add ancestor logic
+  const handleAddAncestor = async (position: string) => {
+    try {
+      console.log('Add ancestor at:', position);
+      
+      // Tạo root node mới nếu chưa có
+      if (members.length === 0) {
+        const rootData = {
+          name: "Tổ tiên",
+          gender: "M" as const,
+          birthday: null,
+          birthPlace: null
+        };
+        
+        const result = await createTreeRoot(treeId, rootData);
+        console.log('Root ancestor created via API:', result);
+      }
+      
+    } catch (error) {
+      console.error('Error adding ancestor:', error);
+    }
+  };
+
+  const handleAddSpouse = async (personId: string) => {
+    try {
+      console.log('Add spouse for:', personId);
+      
+      // Tìm person member để xác định gender
+      const personMember = members.find(m => m.id === personId || m.relationship === personId);
+      const spouseGender = personMember?.gender === 'M' ? 'F' : 'M';
+      
+      // Tạo dữ liệu mẫu cho vợ/chồng (trong thực tế sẽ có form)
+      const spouseData = {
+        newSpouse: {
+          name: "Vợ/Chồng mới",
+          gender: spouseGender,
+          birthday: null,
+          birthPlace: null
+        },
+        marriageDate: null,
+        divorceDate: null
+      };
+
+      const result = await addSpouse(treeId, personId, spouseData);
+      console.log('Spouse added via API:', result);
+      
+      // Reload person with relations after adding spouse
+      if (currentPerson?.id) {
+        await getPersonWithRelations(treeId, currentPerson.id);
+      }
+      
+    } catch (error) {
+      console.error('Error adding spouse:', error);
+    }
   };
 
   const handleCameraClick = (personId: string) => {
@@ -669,36 +806,40 @@ const FamilyTreeView: React.FC = () => {
   };
   
   // Hàm xử lý lưu thông tin cha mẹ
-  const handleSaveParent = (data: any) => {
-    console.log('Saving parent data:', data);
-    
-    // Tạo FamilyMember object từ form data
-    const newParent: FamilyMember = {
-      id: `${parentModalType}-${Date.now()}`, // Tạo ID duy nhất
-      name: `${data.prefix || ''} ${data.firstName || ''} ${data.lastName || ''} ${data.suffix || ''}`.trim(),
-      firstName: data.firstName,
-      lastName: data.lastName,
-      prefix: data.prefix,
-      suffix: data.suffix,
-      birthYear: data.birthDate?.year || '',
-      birthDate: data.birthDate,
-      birthPlace: data.birthPlace,
-      gender: data.gender,
-      isAlive: data.isAlive,
-      email: data.email,
-      relationship: parentModalType,
-    };
+  const handleSaveParent = async (data: any) => {
+    try {
+      console.log('Saving parent data:', data);
+      
+      // Tạo dữ liệu cho API
+      const parentData = {
+        childId: currentPerson?.id || 'temp-child-id', // Trong thực tế sẽ lấy từ context
+        newParent: {
+          name: `${data.prefix || ''} ${data.firstName || ''} ${data.lastName || ''} ${data.suffix || ''}`.trim(),
+          gender: data.gender === 'male' ? 'M' : 'F',
+          birthday: data.birthDate?.year ? `${data.birthDate.year}-${data.birthDate.month || '01'}-${data.birthDate.day || '01'}` : null,
+          birthPlace: data.birthPlace || null
+        }
+      };
 
-    console.log('Created new parent object:', newParent);
+      console.log('API parent data:', parentData);
 
-    // Thêm vào store
-    addFamilyMember(newParent);
-    
-    console.log('Parent added to store successfully');
-    
-    // Đóng modal và expanded tree
-    setShowAddParentModal(false);
-    setShowExpandedTree(false);
+      // Gọi API để thêm cha mẹ
+      const result = await addParent(treeId, parentData);
+      console.log('Parent added via API:', result);
+
+      // Reload person with relations after adding parent
+      if (currentPerson?.id) {
+        await getPersonWithRelations(treeId, currentPerson.id);
+      }
+
+      // Đóng modal và expanded tree
+      setShowAddParentModal(false);
+      setShowExpandedTree(false);
+      
+    } catch (error) {
+      console.error('Error adding parent:', error);
+      // Có thể hiển thị thông báo lỗi cho user
+    }
   };
 
   // Hàm render node "Add father"
@@ -1072,6 +1213,37 @@ const FamilyTreeView: React.FC = () => {
     </g>
   );
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <BuildingTreeLoading />
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Lỗi tải dữ liệu</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => {
+              if (currentPerson?.id && treeId) {
+                getPersonWithRelations(treeId, currentPerson.id);
+              }
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen w-screen bg-gray-100 font-inter overflow-hidden">
       {/* Main Navigation */}
@@ -1132,7 +1304,13 @@ const FamilyTreeView: React.FC = () => {
                 <div className="ml-3">
                   <h3 className="font-semibold text-gray-900 text-lg">{currentPerson?.name || 'Xuân phúc Võ'}</h3>
                   <p className="text-sm text-gray-600">This is you</p>
-                  <p className="text-sm text-gray-500">b. {currentPerson?.birthYear || '2003'} ({currentPerson?.isAlive ? 'Alive' : 'Deceased'})</p>
+                  <p className="text-sm text-gray-500">
+                    b. {currentPerson?.birthday ? new Date(currentPerson.birthday).getFullYear() : currentPerson?.birthYear || 'N/A'} 
+                    ({currentPerson?.isAlive ? 'Alive' : 'Deceased'})
+                  </p>
+                  {currentPerson?.birthPlace && (
+                    <p className="text-sm text-gray-500">📍 {currentPerson.birthPlace}</p>
+                  )}
                 </div>
               </div>
               <a href="#" className="text-green-600 text-sm hover:underline">Research this person</a>
@@ -1193,6 +1371,29 @@ const FamilyTreeView: React.FC = () => {
                       </svg>
                     </div>
                   ),
+                  content: (
+                    <div className="space-y-2 text-sm text-gray-600">
+                      {father && (
+                        <div className="flex items-center justify-between">
+                          <span>👨 Father: {father.name}</span>
+                          <span className="text-xs text-gray-500">
+                            {father.birthday ? new Date(father.birthday).getFullYear() : father.birthYear || 'N/A'}
+                          </span>
+                        </div>
+                      )}
+                      {mother && (
+                        <div className="flex items-center justify-between">
+                          <span>👩 Mother: {mother.name}</span>
+                          <span className="text-xs text-gray-500">
+                            {mother.birthday ? new Date(mother.birthday).getFullYear() : mother.birthYear || 'N/A'}
+                          </span>
+                        </div>
+                      )}
+                      {!father && !mother && (
+                        <span className="text-gray-400">No parents added yet</span>
+                      )}
+                    </div>
+                  ),
                 },
                 {
                   title: "FACTS",
@@ -1204,7 +1405,72 @@ const FamilyTreeView: React.FC = () => {
                       </svg>
                     </div>
                   ),
-                  content: <div className="text-sm text-gray-600">2003 Birth 2003</div>,
+                  content: (
+                    <div className="space-y-1 text-sm text-gray-600">
+                      {currentPerson?.birthday && (
+                        <div>📅 Birth: {new Date(currentPerson.birthday).toLocaleDateString()}</div>
+                      )}
+                      {currentPerson?.birthPlace && (
+                        <div>📍 Birth Place: {currentPerson.birthPlace}</div>
+                      )}
+                      {currentPerson?.gender && (
+                        <div>👤 Gender: {currentPerson.gender === 'M' ? 'Male' : 'Female'}</div>
+                      )}
+                      {!currentPerson?.birthday && !currentPerson?.birthPlace && !currentPerson?.gender && (
+                        <div className="text-gray-400">No facts added yet</div>
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  title: "GRANDPARENTS",
+                  action: (
+                    <div className="flex items-center space-x-2">
+                      <button className="text-green-600 text-sm hover:underline">+ Add</button>
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  ),
+                  content: (
+                    <div className="space-y-2 text-sm text-gray-600">
+                      {paternalGrandfather && (
+                        <div className="flex items-center justify-between">
+                          <span>👴 Paternal Grandfather: {paternalGrandfather.name}</span>
+                          <span className="text-xs text-gray-500">
+                            {paternalGrandfather.birthday ? new Date(paternalGrandfather.birthday).getFullYear() : paternalGrandfather.birthYear || 'N/A'}
+                          </span>
+                        </div>
+                      )}
+                      {paternalGrandmother && (
+                        <div className="flex items-center justify-between">
+                          <span>👵 Paternal Grandmother: {paternalGrandmother.name}</span>
+                          <span className="text-xs text-gray-500">
+                            {paternalGrandmother.birthday ? new Date(paternalGrandmother.birthday).getFullYear() : paternalGrandmother.birthYear || 'N/A'}
+                          </span>
+                        </div>
+                      )}
+                      {maternalGrandfather && (
+                        <div className="flex items-center justify-between">
+                          <span>👴 Maternal Grandfather: {maternalGrandfather.name}</span>
+                          <span className="text-xs text-gray-500">
+                            {maternalGrandfather.birthday ? new Date(maternalGrandfather.birthday).getFullYear() : maternalGrandfather.birthYear || 'N/A'}
+                          </span>
+                        </div>
+                      )}
+                      {maternalGrandmother && (
+                        <div className="flex items-center justify-between">
+                          <span>👵 Maternal Grandmother: {maternalGrandmother.name}</span>
+                          <span className="text-xs text-gray-500">
+                            {maternalGrandmother.birthday ? new Date(maternalGrandmother.birthday).getFullYear() : maternalGrandmother.birthYear || 'N/A'}
+                          </span>
+                        </div>
+                      )}
+                      {!paternalGrandfather && !paternalGrandmother && !maternalGrandfather && !maternalGrandmother && (
+                        <span className="text-gray-400">No grandparents added yet</span>
+                      )}
+                    </div>
+                  ),
                 },
               ].map((section, idx) => (
                 <div key={idx} className="border-b border-gray-100 pb-4">

@@ -1,70 +1,137 @@
+// Core types for API relations
+export interface CreateTreeRootRequest {
+  name: string;
+  gender: 'M' | 'F';
+  birthday: string | null;
+  birthPlace: string | null;
+}
+
+export interface CreateTreeRootResponse {
+  id: string;
+  treeId: string;
+  name: string;
+  gender: 'M' | 'F';
+  birthday: string | null;
+  birthPlace: string | null;
+  generation: number;
+  createdAt: string;
+}
+
+export interface AddChildrenRequest {
+  parent1Id: string;
+  parent2Id: string | null;
+  child: {
+    name: string;
+    gender: 'M' | 'F';
+    birthday: string | null;
+    birthPlace: string | null;
+  };
+  childrenType: 'BIOLOGICAL' | 'SINGLE_PARENT';
+  adoptionDate: string | null;
+  notes: string | null;
+}
+
+export interface AddChildrenResponse {
+  child: CreateTreeRootResponse;
+  parent1: CreateTreeRootResponse;
+  parent2?: CreateTreeRootResponse;
+  childrenType: 'BIOLOGICAL' | 'SINGLE_PARENT';
+  adoptionDate: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface AddParentRequest {
+  childId: string;
+  newParent: {
+    name: string;
+    gender: 'M' | 'F';
+    birthday: string | null;
+    birthPlace: string | null;
+  };
+}
+
+export interface AddSpouseRequest {
+  newSpouse: {
+    name: string;
+    gender: 'M' | 'F';
+    birthday: string | null;
+    birthPlace: string | null;
+  };
+  marriageDate: string | null;
+  divorceDate: string | null;
+}
+
+export interface AddSpouseResponse {
+  person1: CreateTreeRootResponse;
+  person2: CreateTreeRootResponse;
+  marriageDate: string | null;
+  divorceDate: string | null;
+}
+
+export interface PersonWithRelations {
+  id: string;
+  treeId: string;
+  name: string;
+  gender: 'M' | 'F';
+  birthday: string | null;
+  birthPlace: string | null;
+  generation: number;
+  createdAt: string;
+  spouses: Array<{
+    id: string;
+    treeId: string;
+    name: string;
+    gender: 'M' | 'F';
+    birthday: string | null;
+    birthPlace: string | null;
+    generation: number;
+    createdAt: string;
+    marriageDate: string | null;
+    divorceDate: string | null;
+  }>;
+  children: PersonWithRelations[];
+}
+
+// Frontend FamilyMember interface for components
 export interface FamilyMember {
   id: string;
+  treeId?: string;
   name: string;
-  firstName?: string;
-  lastName?: string;
-  prefix?: string;
-  suffix?: string;
-  birthYear?: string;
-  birthDate?: {
-    precision: string;
-    month?: string;
-    day?: string;
-    year?: string;
-  };
-  birthPlace?: string;
-  gender: 'male' | 'female' | 'unknown';
-  isAlive: boolean;
-  countryOfBirth?: string;
-  maidenName?: string;
-  email?: string;
-  relationship: 'self' | 'father' | 'mother' | 'maternalGrandmother' | 'maternalGrandfather' | 'paternalGrandmother' | 'paternalGrandfather';
-}
-
-export interface FamilyTreeStore {
-  members: FamilyMember[];
-  currentPerson: FamilyMember | null;
-  setCurrentPerson: (person: FamilyMember) => void;
-  addFamilyMember: (member: FamilyMember) => void;
-  addParents: (parents: { father: FamilyMember; mother: FamilyMember }) => void;
-  addGrandparents: (grandparents: {
-    maternalGrandmother?: FamilyMember;
-    maternalGrandfather?: FamilyMember;
-    paternalGrandmother?: FamilyMember;
-    paternalGrandfather?: FamilyMember;
-  }) => void;
-  clearFamilyTree: () => void;
-}
-
-export interface AddParentData {
-  gender: 'male' | 'female' | 'unknown';
+  gender: 'M' | 'F';
+  birthday: string | null;
+  birthPlace: string | null;
+  generation: number;
+  createdAt?: string;
   firstName: string;
   lastName: string;
-  prefix?: string;
-  suffix?: string;
+  relationship: string;
+  isAlive: boolean;
+  countryOfBirth: string;
+  birthYear: string;
   birthDate: {
     precision: string;
-    month?: string;
-    day?: string;
-    year?: string;
+    month: string;
+    day: string;
+    year: string;
   };
-  birthPlace?: string;
-  isAlive: boolean;
+  prefix?: string;
+  suffix?: string;
   email?: string;
+  spouses?: Array<{
+    id: string;
+    name: string;
+    gender: 'M' | 'F';
+    marriageDate: string | null;
+    divorceDate: string | null;
+  }>;
+  children?: FamilyMember[];
 }
 
-export interface ParentFormData {
-  firstName: string;
-  maidenName?: string;
-  yearOfBirth: string;
-  countryOfBirth: string;
-  isAlive: boolean;
-}
-
-export interface GrandparentFormData {
-  firstName: string;
-  lastName: string;
-  yearOfBirth: string;
-  countryOfBirth: string;
-  isAlive: boolean;
+// API Response wrapper
+export interface ApiResponse<T> {
+  code: number;
+  status: string;
+  message: string;
+  data: T;
 }
