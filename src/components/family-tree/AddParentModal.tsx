@@ -16,7 +16,7 @@ const AddParentModal: React.FC<AddParentModalProps> = ({
   parentType,
   childName,
 }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<AddParentData>({
     gender: parentType === "father" ? "male" : "female",
     firstName: "",
     lastName: "",
@@ -106,7 +106,7 @@ const AddParentModal: React.FC<AddParentModalProps> = ({
                     name="gender"
                     value={option.value}
                     checked={formData.gender === option.value}
-                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, gender: e.target.value as 'male' | 'female' | 'unknown' })}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-700">{option.label}</span>

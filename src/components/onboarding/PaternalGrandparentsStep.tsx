@@ -7,9 +7,9 @@ interface PaternalGrandparentsStepProps {
 }
 
 const PaternalGrandparentsStep: React.FC<PaternalGrandparentsStepProps> = ({ onDone, onSkip }) => {
-  const [paternalGrandmother, setPaternalGrandmother] = useState({
+  const [paternalGrandmother, setPaternalGrandmother] = useState<GrandparentFormData>({
     firstName: "",
-    maidenName: "",
+    lastName: "",
     yearOfBirth: "",
     countryOfBirth: "",
     isAlive: true,
@@ -131,14 +131,14 @@ const PaternalGrandparentsStep: React.FC<PaternalGrandparentsStepProps> = ({ onD
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Maiden name
+                  Last name
                 </label>
                 <input
                   type="text"
-                  value={paternalGrandmother.maidenName}
-                  onChange={(e) => setPaternalGrandmother({ ...paternalGrandmother, maidenName: e.target.value })}
+                  value={paternalGrandmother.lastName}
+                  onChange={(e) => setPaternalGrandmother({ ...paternalGrandmother, lastName: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  placeholder="Maiden name"
+                  placeholder="Last name"
                 />
               </div>
 
