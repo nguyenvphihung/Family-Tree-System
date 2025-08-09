@@ -51,6 +51,40 @@ export interface AddParentRequest {
   };
 }
 
+// Frontend form data types
+export interface AddParentData {
+  prefix?: string;
+  firstName: string;
+  lastName: string;
+  suffix?: string;
+  gender: 'male' | 'female';
+  birthDate: {
+    precision: string;
+    month: string;
+    day: string;
+    year: string;
+  };
+  birthPlace: string;
+  isAlive: boolean;
+  email?: string;
+}
+
+export interface ParentFormData {
+  firstName: string;
+  maidenName?: string;
+  yearOfBirth: string;
+  isAlive: boolean;
+  countryOfBirth: string;
+}
+
+export interface GrandparentFormData {
+  firstName: string;
+  lastName: string;
+  yearOfBirth: string;
+  isAlive: boolean;
+  countryOfBirth: string;
+}
+
 export interface AddSpouseRequest {
   newSpouse: {
     name: string;
@@ -126,6 +160,25 @@ export interface FamilyMember {
     divorceDate: string | null;
   }>;
   children?: FamilyMember[];
+}
+
+// Store interface
+export interface FamilyTreeStore {
+  members: FamilyMember[];
+  currentPerson: FamilyMember | null;
+  isLoading: boolean;
+  error: string | null;
+  setCurrentPerson: (person: FamilyMember) => void;
+  addFamilyMember: (member: FamilyMember) => void;
+  addParents: (parents: { father: FamilyMember | null; mother: FamilyMember | null }) => void;
+
+  clearFamilyTree: () => void;
+  createTreeRoot: (treeId: string, data: any) => Promise<FamilyMember>;
+  addChildren: (treeId: string, data: any) => Promise<any>;
+  addParent: (treeId: string, data: any) => Promise<any>;
+  addSpouse: (treeId: string, spouseId: string, data: any) => Promise<any>;
+  getPersonWithRelations: (treeId: string, personId: string) => Promise<any>;
+  clearError: () => void;
 }
 
 // API Response wrapper

@@ -261,24 +261,7 @@ export const useFamilyTreeStore = create<FamilyTreeStore>()(
           });
         },
 
-        addGrandparents: (grandparents) => {
-          set((state) => {
-            const newMembers = [...state.members];
-            
-            Object.values(grandparents).forEach(member => {
-              if (member) {
-                const existingIndex = newMembers.findIndex(m => m.id === member.id);
-                if (existingIndex === -1) {
-                  newMembers.push(member);
-                } else {
-                  newMembers[existingIndex] = member;
-                }
-              }
-            });
-            
-            return { members: newMembers };
-          });
-        },
+
 
         clearFamilyTree: () => {
           set({ members: [], currentPerson: null });
@@ -454,7 +437,22 @@ export const useFamilyTreeStore = create<FamilyTreeStore>()(
                 month: person.birthday ? (new Date(person.birthday).getMonth() + 1).toString() : '',
                 day: person.birthday ? new Date(person.birthday).getDate().toString() : '',
                 year: person.birthday ? new Date(person.birthday).getFullYear().toString() : ''
-              }
+              },
+                             children: person.children ? person.children.map(child => ({
+                 ...child,
+                 firstName: child.name.split(' ')[0] || '',
+                 lastName: child.name.split(' ').slice(1).join(' ') || '',
+                 relationship: 'child',
+                 isAlive: true,
+                 countryOfBirth: child.birthPlace || '',
+                 birthYear: child.birthday ? new Date(child.birthday).getFullYear().toString() : '',
+                 birthDate: {
+                   precision: 'exact',
+                   month: child.birthday ? (new Date(child.birthday).getMonth() + 1).toString() : '',
+                   day: child.birthday ? new Date(child.birthday).getDate().toString() : '',
+                   year: child.birthday ? new Date(child.birthday).getFullYear().toString() : ''
+                 }
+               } as unknown as FamilyMember)) : []
             };
             
             set((state) => ({

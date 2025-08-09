@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import FinishAccountModal from "../modals/FinishAccountModal";
 import ParentsInfoStep from "./ParentsInfoStep";
-import MaternalGrandparentsStep from "./MaternalGrandparentsStep";
-import PaternalGrandparentsStep from "./PaternalGrandparentsStep";
 import BuildingTreeLoading from "../loading/BuildingTreeLoading";
 import FamilyTreeView from "../family-tree/FamilyTreeView";
 import { useFamilyTreeStore } from "../../store";
@@ -11,8 +9,6 @@ import { FamilyMember } from "../../types/family";
 type OnboardingStep = 
   | "finish-account"
   | "parents-info"
-  | "maternal-grandparents"
-  | "paternal-grandparents"
   | "loading"
   | "family-tree";
 
@@ -22,11 +18,9 @@ const OnboardingFlow: React.FC = () => {
   const { 
     setCurrentPerson, 
     addParents, 
-    addGrandparents, 
     clearFamilyTree,
     createTreeRoot,
-    addParent: addParentAPI,
-    addSpouse: addSpouseAPI
+    addParent: addParentAPI
   } = useFamilyTreeStore();
 
   // Tree ID mặc định - trong thực tế sẽ lấy từ user hoặc context
@@ -170,198 +164,7 @@ const OnboardingFlow: React.FC = () => {
         }
       }
       
-      setCurrentStep("maternal-grandparents");
-    } catch (error) {
-      console.error("Lỗi thêm thông tin cha mẹ:", error);
-      // Có thể hiển thị thông báo lỗi cho user
-    }
-  };
-
-  const handleSkipParents = () => {
-    setCurrentStep("maternal-grandparents");
-  };
-
-  const handleMaternalGrandparents = async (data: any) => {
-    try {
-      setUserData({ ...userData, maternalGrandparents: data });
-      
-      // Tạo maternal grandparents thông qua API nếu có dữ liệu
-      const grandparents: any = {};
-      
-      if (data.maternalGrandmother && data.maternalGrandmother.firstName) {
-        const grandmotherData = {
-          childId: userData.currentPersonId || 'temp-child-id',
-          newParent: {
-            name: `${data.maternalGrandmother.firstName} ${data.maternalGrandmother.lastName || ''}`.trim(),
-            gender: 'F',
-            birthday: data.maternalGrandmother.yearOfBirth ? `${data.maternalGrandmother.yearOfBirth}-01-01` : null,
-            birthPlace: data.maternalGrandmother.countryOfBirth || null
-          }
-        };
-
-        const grandmotherResponse = await addParentAPI(treeId, grandmotherData);
-        
-        grandparents.maternalGrandmother = {
-          id: grandmotherResponse.parent1.id,
-          treeId: grandmotherResponse.parent1.treeId,
-          name: grandmotherResponse.parent1.name,
-          birthYear: data.maternalGrandmother.yearOfBirth || '',
-          gender: 'F',
-          isAlive: data.maternalGrandmother.isAlive,
-          countryOfBirth: data.maternalGrandmother.countryOfBirth,
-          lastName: data.maternalGrandmother.lastName,
-          relationship: 'maternalGrandmother',
-          firstName: data.maternalGrandmother.firstName,
-          birthday: grandmotherResponse.parent1.birthday,
-          generation: grandmotherResponse.parent1.generation,
-          createdAt: grandmotherResponse.parent1.createdAt,
-          birthPlace: grandmotherResponse.parent1.birthPlace,
-          birthDate: {
-            precision: 'exact',
-            month: '01',
-            day: '01',
-            year: data.maternalGrandmother.yearOfBirth || ''
-          }
-        };
-      }
-      
-      if (data.maternalGrandfather && data.maternalGrandfather.firstName) {
-        const grandfatherData = {
-          childId: userData.currentPersonId || 'temp-child-id',
-          newParent: {
-            name: `${data.maternalGrandfather.firstName} ${data.maternalGrandfather.lastName || ''}`.trim(),
-            gender: 'M',
-            birthday: data.maternalGrandfather.yearOfBirth ? `${data.maternalGrandfather.yearOfBirth}-01-01` : null,
-            birthPlace: data.maternalGrandfather.countryOfBirth || null
-          }
-        };
-
-        const grandfatherResponse = await addParentAPI(treeId, grandfatherData);
-        
-        grandparents.maternalGrandfather = {
-          id: grandfatherResponse.parent1.id,
-          treeId: grandfatherResponse.parent1.treeId,
-          name: grandfatherResponse.parent1.name,
-          birthYear: data.maternalGrandfather.yearOfBirth || '',
-          gender: 'M',
-          isAlive: data.maternalGrandfather.isAlive,
-          countryOfBirth: data.maternalGrandfather.countryOfBirth,
-          lastName: data.maternalGrandfather.lastName,
-          relationship: 'maternalGrandfather',
-          firstName: data.maternalGrandfather.firstName,
-          birthday: grandfatherResponse.parent1.birthday,
-          generation: grandfatherResponse.parent1.generation,
-          createdAt: grandfatherResponse.parent1.createdAt,
-          birthPlace: grandfatherResponse.parent1.birthPlace,
-          birthDate: {
-            precision: 'exact',
-            month: '01',
-            day: '01',
-            year: data.maternalGrandfather.yearOfBirth || ''
-          }
-        };
-      }
-      
-      if (Object.keys(grandparents).length > 0) {
-        addGrandparents(grandparents);
-      }
-      
-      setCurrentStep("paternal-grandparents");
-    } catch (error) {
-      console.error("Lỗi thêm thông tin ông bà ngoại:", error);
-      // Có thể hiển thị thông báo lỗi cho user
-    }
-  };
-
-  const handleSkipMaternal = () => {
-    setCurrentStep("paternal-grandparents");
-  };
-
-  const handlePaternalGrandparents = async (data: any) => {
-    try {
-      setUserData({ ...userData, paternalGrandparents: data });
-      
-      // Tạo paternal grandparents thông qua API nếu có dữ liệu
-      const grandparents: any = {};
-      
-      if (data.paternalGrandmother && data.paternalGrandmother.firstName) {
-        const grandmotherData = {
-          childId: userData.currentPersonId || 'temp-child-id',
-          newParent: {
-            name: `${data.paternalGrandmother.firstName} ${data.paternalGrandmother.lastName || ''}`.trim(),
-            gender: 'F',
-            birthday: data.paternalGrandmother.yearOfBirth ? `${data.paternalGrandmother.yearOfBirth}-01-01` : null,
-            birthPlace: data.paternalGrandmother.countryOfBirth || null
-          }
-        };
-
-        const grandmotherResponse = await addParentAPI(treeId, grandmotherData);
-        
-        grandparents.paternalGrandmother = {
-          id: grandmotherResponse.parent1.id,
-          treeId: grandmotherResponse.parent1.treeId,
-          name: grandmotherResponse.parent1.name,
-          birthYear: data.paternalGrandmother.yearOfBirth || '',
-          gender: 'F',
-          isAlive: data.paternalGrandmother.isAlive,
-          countryOfBirth: data.paternalGrandmother.countryOfBirth,
-          lastName: data.paternalGrandmother.lastName,
-          relationship: 'paternalGrandmother',
-          firstName: data.paternalGrandmother.firstName,
-          birthday: grandmotherResponse.parent1.birthday,
-          generation: grandmotherResponse.parent1.generation,
-          createdAt: grandmotherResponse.parent1.createdAt,
-          birthPlace: grandmotherResponse.parent1.birthPlace,
-          birthDate: {
-            precision: 'exact',
-            month: '01',
-            day: '01',
-            year: data.paternalGrandmother.yearOfBirth || ''
-          }
-        };
-      }
-      
-      if (data.paternalGrandfather && data.paternalGrandfather.firstName) {
-        const grandfatherData = {
-          childId: userData.currentPersonId || 'temp-child-id',
-          newParent: {
-            name: `${data.paternalGrandfather.firstName} ${data.paternalGrandfather.lastName || ''}`.trim(),
-            gender: 'M',
-            birthday: data.paternalGrandfather.yearOfBirth ? `${data.paternalGrandfather.yearOfBirth}-01-01` : null,
-            birthPlace: data.paternalGrandfather.countryOfBirth || null
-          }
-        };
-
-        const grandfatherResponse = await addParentAPI(treeId, grandfatherData);
-        
-        grandparents.paternalGrandfather = {
-          id: grandfatherResponse.parent1.id,
-          treeId: grandfatherResponse.parent1.treeId,
-          name: grandfatherResponse.parent1.name,
-          birthYear: data.paternalGrandfather.yearOfBirth || '',
-          gender: 'M',
-          isAlive: data.paternalGrandfather.isAlive,
-          countryOfBirth: data.paternalGrandfather.countryOfBirth,
-          lastName: data.paternalGrandfather.lastName,
-          relationship: 'paternalGrandfather',
-          firstName: data.paternalGrandfather.firstName,
-          birthday: grandfatherResponse.parent1.birthday,
-          generation: grandfatherResponse.parent1.generation,
-          createdAt: grandfatherResponse.parent1.createdAt,
-          birthPlace: grandfatherResponse.parent1.birthPlace,
-          birthDate: {
-            precision: 'exact',
-            month: '01',
-            day: '01',
-            year: data.paternalGrandfather.yearOfBirth || ''
-          }
-        };
-      }
-      
-      if (Object.keys(grandparents).length > 0) {
-        addGrandparents(grandparents);
-      }
-      
+      // Chuyển thẳng đến loading sau khi hoàn thành thêm cha mẹ
       setCurrentStep("loading");
       
       // Simulate loading time
@@ -369,12 +172,13 @@ const OnboardingFlow: React.FC = () => {
         setCurrentStep("family-tree");
       }, 3000);
     } catch (error) {
-      console.error("Lỗi thêm thông tin ông bà nội:", error);
+      console.error("Lỗi thêm thông tin cha mẹ:", error);
       // Có thể hiển thị thông báo lỗi cho user
     }
   };
 
-  const handleSkipPaternal = () => {
+  const handleSkipParents = () => {
+    // Nếu skip thêm cha mẹ, chuyển thẳng đến loading
     setCurrentStep("loading");
     
     // Simulate loading time
@@ -398,20 +202,6 @@ const OnboardingFlow: React.FC = () => {
           <ParentsInfoStep
             onNext={handleParentsInfo}
             onSkip={handleSkipParents}
-          />
-        );
-      case "maternal-grandparents":
-        return (
-          <MaternalGrandparentsStep
-            onNext={handleMaternalGrandparents}
-            onSkip={handleSkipMaternal}
-          />
-        );
-      case "paternal-grandparents":
-        return (
-          <PaternalGrandparentsStep
-            onDone={handlePaternalGrandparents}
-            onSkip={handleSkipPaternal}
           />
         );
       case "loading":

@@ -98,7 +98,6 @@ const AddParentModal: React.FC<AddParentModalProps> = ({
               {[
                 { value: "male", label: "Male" },
                 { value: "female", label: "Female" },
-                { value: "unknown", label: "Unknown" },
               ].map((option) => (
                 <label key={option.value} className="flex items-center">
                   <input
@@ -106,7 +105,7 @@ const AddParentModal: React.FC<AddParentModalProps> = ({
                     name="gender"
                     value={option.value}
                     checked={formData.gender === option.value}
-                    onChange={(e) => setFormData({ ...formData, gender: e.target.value as 'male' | 'female' | 'unknown' })}
+                    onChange={(e) => setFormData({ ...formData, gender: e.target.value as 'male' | 'female' })}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-700">{option.label}</span>

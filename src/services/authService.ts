@@ -16,6 +16,16 @@ class AuthService {
     }
   }
 
+  async getCurrentUser(): Promise<any> {
+    try {
+      const response = await api.get(API_ENDPOINTS.AUTH.ME);
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi lấy thông tin user hiện tại:", error);
+      throw error;
+    }
+  }
+
   async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
     try {
       const response = await api.post<RefreshTokenResponse>(
