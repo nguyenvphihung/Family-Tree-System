@@ -5,7 +5,8 @@ import MaternalGrandparentsStep from "./MaternalGrandparentsStep";
 import PaternalGrandparentsStep from "./PaternalGrandparentsStep";
 import BuildingTreeLoading from "../loading/BuildingTreeLoading";
 import FamilyTreeView from "../family-tree/FamilyTreeView";
-import { useFamilyTreeStore, FamilyMember } from "../../store";
+import { useFamilyTreeStore } from "../../store";
+import { FamilyMember } from "../../types/family";
 
 type OnboardingStep = 
   | "finish-account"

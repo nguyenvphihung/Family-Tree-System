@@ -1,9 +1,10 @@
 import React, { useState } from "react";
+import { AddParentData } from "../../types/family";
 
 interface AddParentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: any) => void;
+  onSave: (data: AddParentData) => void;
   parentType: "father" | "mother";
   childName: string;
 }

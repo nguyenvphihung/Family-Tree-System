@@ -1,7 +1,8 @@
 import React, { useState } from "react";
+import { ParentFormData } from "../../types/family";
 
 interface ParentsInfoStepProps {
-  onNext: (data: any) => void;
+  onNext: (data: { mother: ParentFormData; father: ParentFormData }) => void;
   onSkip: () => void;
 }
 

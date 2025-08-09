@@ -1,7 +1,8 @@
 import React, { useState } from "react";
+import { GrandparentFormData } from "../../types/family";
 
 interface PaternalGrandparentsStepProps {
-  onDone: (data: any) => void;
+  onDone: (data: { paternalGrandfather: GrandparentFormData; paternalGrandmother: GrandparentFormData }) => void;
   onSkip: () => void;
 }
 

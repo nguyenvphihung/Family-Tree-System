@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useFamilyTreeStore, FamilyMember } from "../../store";
+import { useFamilyTreeStore } from "../../store";
+import { FamilyMember } from "../../types/family";
 import AddParentModal from "./AddParentModal";
 
 const FamilyTreeView: React.FC = () => {

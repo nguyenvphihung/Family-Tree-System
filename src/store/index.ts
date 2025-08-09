@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
 import { AuthState, User } from "../types/auth";
 import { UserProfile } from "../types/user";
+import { FamilyMember, FamilyTreeStore } from "../types/family";
 import { authService } from "../services/authService";
 import { userService } from "../services/userService";
 
@@ -192,43 +193,6 @@ export const useUserStore = create<UserStore>()(
 );
 
 // Family Tree Store
-export interface FamilyMember {
-  id: string;
-  name: string;
-  firstName?: string;
-  lastName?: string;
-  prefix?: string;
-  suffix?: string;
-  birthYear?: string;
-  birthDate?: {
-    precision: string;
-    month?: string;
-    day?: string;
-    year?: string;
-  };
-  birthPlace?: string;
-  gender: 'male' | 'female' | 'unknown';
-  isAlive: boolean;
-  countryOfBirth?: string;
-  maidenName?: string;
-  email?: string;
-  relationship: 'self' | 'father' | 'mother' | 'maternalGrandmother' | 'maternalGrandfather' | 'paternalGrandmother' | 'paternalGrandfather';
-}
-
-interface FamilyTreeStore {
-  members: FamilyMember[];
-  currentPerson: FamilyMember | null;
-  setCurrentPerson: (person: FamilyMember) => void;
-  addFamilyMember: (member: FamilyMember) => void;
-  addParents: (parents: { father: FamilyMember; mother: FamilyMember }) => void;
-  addGrandparents: (grandparents: {
-    maternalGrandmother?: FamilyMember;
-    maternalGrandfather?: FamilyMember;
-    paternalGrandmother?: FamilyMember;
-    paternalGrandfather?: FamilyMember;
-  }) => void;
-  clearFamilyTree: () => void;
-}
 
 export const useFamilyTreeStore = create<FamilyTreeStore>()(
   devtools(
