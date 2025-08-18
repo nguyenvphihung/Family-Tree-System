@@ -1,83 +1,118 @@
-import { api } from "../config/axios";
-import { API_ENDPOINTS } from "../config/apiEndpoints";
-import {
-  CreateTreeRootRequest,
-  CreateTreeRootResponse,
-  AddChildrenRequest,
-  AddChildrenResponse,
-  AddParentRequest,
-  AddSpouseRequest,
-  AddSpouseResponse,
-  PersonWithRelations,
-  ApiResponse
-} from "../types/family";
+import { makeRequest } from '../utils';
 
 class FamilyService {
-  // Lấy thông tin person với spouses và children
-  async getPersonWithRelations(treeId: string, personId: string): Promise<PersonWithRelations> {
+  // Create a new tree
+  async createTree(data: { name: string; description?: string }): Promise<any> {
     try {
-      const response = await api.get<ApiResponse<PersonWithRelations>>(
-        `${API_ENDPOINTS.RELATIONS.GET_PERSON}/${treeId}/persons/${personId}`
-      );
-      return response.data.data;
-    } catch (error) {
-      console.error("Lỗi lấy thông tin person với relations:", error);
+      const result = await makeRequest('/trees', 'POST', data, 'response-area');
+      if (result.error) {
+        // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
+        throw new Error(result.error.message);
+      }
+      // Trường hợp thành công: Lấy thông báo thành công từ makeRequest
+
+      console.log(result.success);
+      return result.data;
+    } catch (error: any) {
+      throw error;
+
+
+    }
+  }
+
+  // Create root person in a tree
+  async createTreeRoot(treeId: string, data: any): Promise<any> {
+    try {
+      const result = await makeRequest(`/relations/trees/${treeId}/root`, 'POST', data, 'response-area');
+      if (result.error) {
+        // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
+        throw new Error(result.error.message);
+      }
+      // Trường hợp thành công: Lấy thông báo thành công từ makeRequest
+      console.log(result.success);
+      return result.data;
+    } catch (error: any) {
       throw error;
     }
   }
 
-  // Tạo node đầu tiên trong cây (root)
-  async createTreeRoot(treeId: string, data: CreateTreeRootRequest): Promise<CreateTreeRootResponse> {
+  // Add children to a person
+  async addChildren(treeId: string, data: any): Promise<any> {
     try {
-      const response = await api.post<CreateTreeRootResponse>(
-        `${API_ENDPOINTS.RELATIONS.CREATE_TREE_ROOT}/${treeId}/root`,
-        data
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi tạo tree root:", error);
+      const result = await makeRequest(`/relations/trees/${treeId}/children`, 'POST', data, 'response-area');
+      if (result.error) {
+        // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
+        throw new Error(result.error.message);
+      }
+      // Trường hợp thành công: Lấy thông báo thành công từ makeRequest
+
+      console.log(result.success);
+      return result.data;
+    } catch (error: any) {
       throw error;
     }
   }
 
-  // Thêm con cái
-  async addChildren(treeId: string, data: AddChildrenRequest): Promise<AddChildrenResponse> {
+  // Add parent to a person
+  async addParent(treeId: string, data: any): Promise<any> {
     try {
-      const response = await api.post<AddChildrenResponse>(
-        `${API_ENDPOINTS.RELATIONS.ADD_CHILDREN}/${treeId}/children`,
-        data
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi thêm con cái:", error);
+      const result = await makeRequest(`/relations/trees/${treeId}/parent`, 'POST', data, 'response-area');
+      if (result.error) {
+        // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
+        throw new Error(result.error.message);
+      }
+      // Trường hợp thành công: Lấy thông báo thành công từ makeRequest
+      console.log(result.success);
+      return result.data;
+    } catch (error: any) {
       throw error;
     }
   }
 
-  // Thêm cha mẹ
-  async addParent(treeId: string, data: AddParentRequest): Promise<AddChildrenResponse> {
+  // Add spouse to a person
+  async addSpouse(treeId: string, spouseId: string, data: any): Promise<any> {
     try {
-      const response = await api.post<AddChildrenResponse>(
-        `${API_ENDPOINTS.RELATIONS.ADD_PARENT}/${treeId}/parent`,
-        data
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi thêm cha mẹ:", error);
+      const result = await makeRequest(`/relations/trees/${treeId}/spouses/${spouseId}`, 'POST', data, 'response-area');
+      if (result.error) {
+        // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
+        throw new Error(result.error.message);
+      }
+      // Trường hợp thành công: Lấy thông báo thành công từ makeRequest
+      console.log(result.success);
+      return result.data;
+    } catch (error: any) {
       throw error;
     }
   }
 
-  // Thêm vợ/chồng
-  async addSpouse(treeId: string, spouseId: string, data: AddSpouseRequest): Promise<AddSpouseResponse> {
+  // Get person with relations
+  async getPersonWithRelations(treeId: string, personId: string): Promise<any> {
     try {
-      const response = await api.post<AddSpouseResponse>(
-        `${API_ENDPOINTS.RELATIONS.ADD_SPOUSE}/${treeId}/spouses/${spouseId}`,
-        data
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi thêm vợ/chồng:", error);
+      const result = await makeRequest(`/relations/trees/${treeId}/persons/${personId}`, 'GET', null, 'response-area', { maxDepth: 5 });
+      if (result.error) {
+        // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
+        throw new Error(result.error.message);
+      }
+      // Trường hợp thành công: Lấy thông báo thành công từ makeRequest
+      console.log(result.success);
+      return result.data;
+    } catch (error: any) {
+      throw error;
+    }
+  }
+
+  // Delete a person
+  async deletePerson(personId: string): Promise<any> {
+    try {
+      const result = await makeRequest(`/persons/${personId}`, 'DELETE', null, 'response-area');
+      if (result.error) {
+        // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
+        throw new Error(result.error.message);
+      }
+      // Trường hợp thành công: Lấy thông báo thành công từ makeRequest
+      console.log(result.success);
+      return result.data;
+    } catch (error: any) {
       throw error;
     }
   }

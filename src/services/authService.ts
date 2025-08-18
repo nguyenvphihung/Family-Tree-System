@@ -1,62 +1,79 @@
-import { api } from "../config/axios";
 import { API_ENDPOINTS } from "../config/apiEndpoints";
 import { LoginCredentials, AuthResponse, RefreshTokenResponse } from "../types/auth";
+import { makeRequest } from "../utils";
 
 class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await api.post<AuthResponse>(
-        API_ENDPOINTS.AUTH.LOGIN,
-        credentials,
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi đăng nhập:", error);
+      const result = await makeRequest(API_ENDPOINTS.AUTH.LOGIN, 'POST', credentials, 'response-area');
+      if (result.error) {
+        // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
+        throw new Error(result.error.message);
+      }
+      // Trường hợp thành công: Lấy thông báo thành công từ makeRequest
+      console.log(result.success);
+      return result.data;
+    } catch (error: any) {
       throw error;
     }
   }
 
   async getCurrentUser(): Promise<any> {
     try {
-      const response = await api.get(API_ENDPOINTS.AUTH.ME);
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi lấy thông tin user hiện tại:", error);
+      const result = await makeRequest(API_ENDPOINTS.AUTH.ME, 'GET', null, 'response-area');
+      if (result.error) {
+        // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
+        throw new Error(result.error.message);
+      }
+      // Trường hợp thành công: Lấy thông báo thành công từ makeRequest
+      console.log(result.success);
+      return result.data;
+    } catch (error: any) {
       throw error;
     }
   }
 
   async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
     try {
-      const response = await api.post<RefreshTokenResponse>(
-        API_ENDPOINTS.AUTH.REFRESH,
-        { refreshToken },
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi refresh token:", error);
+      const result = await makeRequest(API_ENDPOINTS.AUTH.REFRESH, 'POST', { refreshToken }, 'response-area');
+      if (result.error) {
+        // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
+        throw new Error(result.error.message);
+      }
+      // Trường hợp thành công: Lấy thông báo thành công từ makeRequest
+      console.log(result.success);
+      return result.data;
+    } catch (error: any) {
       throw error;
     }
   }
 
   async logout(): Promise<void> {
     try {
-      await api.post(API_ENDPOINTS.AUTH.LOGOUT);
-    } catch (error) {
-      console.error("Lỗi đăng xuất:", error);
+      const result = await makeRequest(API_ENDPOINTS.AUTH.LOGOUT, 'POST', null, 'response-area');
+      if (result.error) {
+        // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
+        throw new Error(result.error.message);
+      }
+      // Trường hợp thành công: Lấy thông báo thành công từ makeRequest
+      console.log(result.success);
+      return result.data;
+    } catch (error: any) {
       throw error;
     }
   }
 
   async register(userData: any): Promise<AuthResponse> {
     try {
-      const response = await api.post<AuthResponse>(
-        API_ENDPOINTS.AUTH.REGISTER,
-        userData,
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi đăng ký:", error);
+      const result = await makeRequest(API_ENDPOINTS.AUTH.REGISTER, 'POST', userData, 'response-area');
+      if (result.error) {
+        // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
+        throw new Error(result.error.message);
+      }
+      // Trường hợp thành công: Lấy thông báo thành công từ makeRequest
+      console.log(result.success);
+      return result.data;
+    } catch (error: any) {
       throw error;
     }
   }

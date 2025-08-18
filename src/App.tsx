@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import AppRouter from "./routes";
-import BackgroundSelector from "./components/ui/background-selector";
 
 function App() {
   const [currentTheme, setCurrentTheme] = useState('family-tree');
@@ -40,9 +39,8 @@ function App() {
   }, [currentTheme]);
 
   return (
-    <div className={`min-h-screen ${currentTheme === 'gradient-animated' ? 'bg-gradient-animated' : `bg-${currentTheme}`}`}>
+    <div className={`h-screen overflow-hidden ${currentTheme === 'gradient-animated' ? 'bg-gradient-animated' : `bg-${currentTheme}`}`}>
       <AppRouter />
-      <BackgroundSelector currentTheme={currentTheme} onThemeChange={handleThemeChange} />
     </div>
   );
 }

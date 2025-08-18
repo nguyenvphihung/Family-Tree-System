@@ -5,24 +5,26 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
-interface AddParentModalProps {
+interface AddSpouseModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: any) => void;
-  childName?: string;
+  personName?: string;
 }
 
-const AddParentModal: React.FC<AddParentModalProps> = ({
+const AddSpouseModal: React.FC<AddSpouseModalProps> = ({
   isOpen,
   onClose,
   onSave,
-  childName = "Person"
+  personName = "Person"
 }) => {
   const [formData, setFormData] = useState({
     name: '',
     gender: '',
     birthday: '',
-    birthPlace: ''
+    birthPlace: '',
+    marriageDate: '',
+    divorceDate: ''
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -30,7 +32,9 @@ const AddParentModal: React.FC<AddParentModalProps> = ({
     onSave({
       ...formData,
       birthday: formData.birthday || null,
-      birthPlace: formData.birthPlace || null
+      birthPlace: formData.birthPlace || null,
+      marriageDate: formData.marriageDate || null,
+      divorceDate: formData.divorceDate || null
     });
   };
 
@@ -42,14 +46,14 @@ const AddParentModal: React.FC<AddParentModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Thêm cha/mẹ cho {childName}</DialogTitle>
+          <DialogTitle>Thêm vợ/chồng cho {personName}</DialogTitle>
         </DialogHeader>
-
+        
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="parentName">Tên cha/mẹ</Label>
+            <Label htmlFor="spouseName">Tên vợ/chồng</Label>
             <Input
-              id="parentName"
+              id="spouseName"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
               placeholder="Nhập tên"
@@ -58,7 +62,7 @@ const AddParentModal: React.FC<AddParentModalProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="parentGender">Giới tính</Label>
+            <Label htmlFor="spouseGender">Giới tính</Label>
             <Select value={formData.gender} onValueChange={(value) => handleInputChange('gender', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Chọn giới tính" />
@@ -71,9 +75,9 @@ const AddParentModal: React.FC<AddParentModalProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="parentBirthday">Ngày sinh</Label>
+            <Label htmlFor="spouseBirthday">Ngày sinh</Label>
             <Input
-              id="parentBirthday"
+              id="spouseBirthday"
               type="date"
               value={formData.birthday}
               onChange={(e) => handleInputChange('birthday', e.target.value)}
@@ -81,12 +85,32 @@ const AddParentModal: React.FC<AddParentModalProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="parentBirthPlace">Nơi sinh</Label>
+            <Label htmlFor="spouseBirthPlace">Nơi sinh</Label>
             <Input
-              id="parentBirthPlace"
+              id="spouseBirthPlace"
               value={formData.birthPlace}
               onChange={(e) => handleInputChange('birthPlace', e.target.value)}
               placeholder="Nhập nơi sinh"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="marriageDate">Ngày cưới</Label>
+            <Input
+              id="marriageDate"
+              type="date"
+              value={formData.marriageDate}
+              onChange={(e) => handleInputChange('marriageDate', e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="divorceDate">Ngày ly hôn</Label>
+            <Input
+              id="divorceDate"
+              type="date"
+              value={formData.divorceDate}
+              onChange={(e) => handleInputChange('divorceDate', e.target.value)}
             />
           </div>
 
@@ -95,7 +119,7 @@ const AddParentModal: React.FC<AddParentModalProps> = ({
               Hủy
             </Button>
             <Button type="submit">
-              Thêm cha/mẹ
+              Thêm vợ/chồng
             </Button>
           </div>
         </form>
@@ -104,4 +128,4 @@ const AddParentModal: React.FC<AddParentModalProps> = ({
   );
 };
 
-export default AddParentModal;
+export default AddSpouseModal;

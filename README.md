@@ -7,7 +7,7 @@ Hệ thống quản lý gia phả hiện đại được xây dựng với React
 - **Frontend:** React 18 + TypeScript
 - **Styling:** Tailwind CSS
 - **Build Tool:** Vite
-- **State Management:** Redux Toolkit
+- **State Management:** Zustand
 - **Routing:** React Router DOM
 - **UI Components:** Shadcn/ui
 - **Icons:** Lucide React
@@ -18,21 +18,16 @@ Hệ thống quản lý gia phả hiện đại được xây dựng với React
 src/
 ├── assets/           # Tài nguyên (ảnh, font, icons)
 ├── components/       # Components dùng chung
-│   ├── hooks/       # Custom hooks
-│   ├── layout/      # Layout components (Navbar, Sidebar, Footer)
 │   ├── ui/          # UI components (Button, Modal, Input...)
 │   └── utils/       # Hàm tiện ích
 ├── config/          # Cấu hình (Axios, env, theme)
 ├── pages/           # Các trang của ứng dụng
 │   ├── About/
-│   ├── Dashboard/
 │   ├── Home/
-│   ├── Login/
-│   └── Register/
+│   └── Login/
 ├── routes/          # Cấu hình Router
 ├── services/        # Dịch vụ API
-├── store/           # Quản lý state (Redux)
-│   └── slices/      # Redux slices
+├── store/           # Quản lý state (Zustand)
 ├── types/           # TypeScript type definitions
 ├── App.tsx          # Component gốc
 └── main.tsx         # Điểm khởi chạy
@@ -67,20 +62,57 @@ src/
 - ✅ **Responsive Design:** Tương thích mọi thiết bị
 - ✅ **Modern UI:** Giao diện đẹp với Tailwind CSS
 - ✅ **Type Safety:** TypeScript đầy đủ
-- ✅ **State Management:** Redux Toolkit
+- ✅ **State Management:** Zustand
 - ✅ **Routing:** React Router DOM
+- ✅ **API Integration:** Tích hợp đầy đủ với backend
 
-## 🔧 Cấu hình môi trường
+## 🌳 Family Tree Features
 
-Tạo file `.env` từ `.env.example` và cập nhật các biến môi trường:
+### API Integration
+- **Create Tree Root:** Tạo người đầu tiên trong cây gia phả
+- **Add Children:** Thêm con cái cho thành viên
+- **Add Parents:** Thêm cha mẹ cho thành viên
+- **Add Spouses:** Thêm vợ/chồng
+- **Delete Members:** Xóa thành viên với xác nhận
+- **View Relations:** Xem mối quan hệ gia đình
 
+### Supported API Endpoints
+1. **POST** `/relations/trees/{treeId}/root` - Tạo root person
+2. **POST** `/relations/trees/{treeId}/children` - Thêm con cái
+3. **POST** `/relations/trees/{treeId}/parent` - Thêm cha mẹ
+4. **POST** `/relations/trees/{treeId}/spouses/{spouseId}` - Thêm vợ/chồng
+5. **GET** `/relations/trees/{treeId}/persons/{personId}` - Lấy thông tin person
+6. **DELETE** `/persons/{personId}` - Xóa person
+
+## 🔧 Cấu hình
+
+### Environment Variables
+Tạo file `.env.local` trong thư mục gốc:
 ```env
-VITE_APP_NAME="Family Tree System"
-VITE_API_URL="http://localhost:3000/api"
-VITE_SUPABASE_URL="your_supabase_url"
-VITE_SUPABASE_ANON_KEY="your_supabase_key"
+VITE_API_BASE_URL=https://your-api-domain.com/api
 ```
 
-## 📄 License
+### API Configuration
+API được cấu hình trong `src/config/axios.ts` với:
+- Base URL từ environment variables
+- Request/Response interceptors
+- Error handling
+- Authentication headers
+
+## 🚀 Deployment
+
+### Vercel
+```bash
+npm run build
+vercel --prod
+```
+
+### Netlify
+```bash
+npm run build
+# Upload thư mục dist lên Netlify
+```
+
+## 📝 License
 
 MIT License

@@ -25,13 +25,14 @@ export const API_ENDPOINTS = {
   // Family/Relations endpoints
   RELATIONS: {
     // Tree management
-    CREATE_TREE_ROOT: '/relations/trees',
-    ADD_CHILDREN: '/relations/trees',
-    ADD_PARENT: '/relations/trees',
-    ADD_SPOUSE: '/relations/trees',
+    CREATE_TREE: '/trees',
+    CREATE_TREE_ROOT: '/trees',
+    ADD_CHILDREN: '/trees',
+    ADD_PARENT: '/trees',
+    ADD_SPOUSE: '/trees',
     
     // Person management
-    GET_PERSON: '/relations/trees',
+    GET_PERSON: '/trees',
   },
 
   // Onboarding endpoints

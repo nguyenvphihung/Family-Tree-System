@@ -10,6 +10,12 @@ const api: AxiosInstance = axios.create({
   },
 });
 
+// Log base URL in development to help diagnose misconfiguration
+if (import.meta.env.DEV) {
+  // eslint-disable-next-line no-console
+  console.log("Using API base URL:", env.API_BASE_URL);
+}
+
 // Request interceptor
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
