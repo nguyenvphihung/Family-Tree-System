@@ -13,7 +13,7 @@ const Navbar: React.FC = () => {
                 src="/src/assets/family.png"
                 alt="Family Tree"
               />
-              <span className="ml-2 text-xl font-bold text-gray-800">
+              <span className="ml-2 text-xl font text-white-400">
                 Family Tree
               </span>
             </Link>
