@@ -136,10 +136,10 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
     const spouseLinks: Array<{ source: { x: number; y: number }; target: { x: number; y: number } }> = [];
     const parentChildLinks: Array<{ source: { x: number; y: number }; target: { x: number; y: number } }> = [];
 
-    const nodeWidth = 160;
-    const nodeHeight = 90;
-    const spouseSpacing = 220;
-    const generationSpacing = 180;
+    const nodeWidth = 120;
+    const nodeHeight = 70;
+    const spouseSpacing = 160;
+    const generationSpacing = 140;
 
     function getCombinedChildren(person: TreeNode): TreeNode[] {
       const directChildren = (person.children || []) as TreeNode[];
@@ -310,10 +310,10 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
     nodeGroup
       .append("path")
       .attr("d", `
-M -40 0
-Q -16 14 -10 16
-Q 0 18 10 16
-Q 16 14 40 0
+M -30 0
+Q -12 10 -8 12
+Q 0 14 8 12
+Q 12 10 30 0
 Z
 
 
@@ -364,31 +364,75 @@ Z
         }
       });
 
+    // Add gender-specific avatar circle and icon
+    const avatarGroup = nodeGroup
+      .append("g")
+      .attr("transform", "translate(0, -20)");
+
+    // Circle background
+    avatarGroup
+      .append("circle")
+      .attr("r", 18)
+      .attr("fill", (d: any) => d.gender === "M" ? "#5BD1D7" : "#F59794")
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 1.5);
+
+    // Male avatar
+    avatarGroup
+      .filter((d: any) => d.gender === "M")
+      .append("path")
+      .attr("d", `
+        M -8 -6
+        a 8 8 0 1 1 16 0
+        a 8 8 0 1 1 -16 0
+        M 0 3
+        L 0 15
+        M -10 8
+        L 10 8
+        M -6 19
+        L 0 15
+        L 6 19
+      `)
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 1.5)
+      .attr("fill", "none");
+
+    // Female avatar
+    avatarGroup
+      .filter((d: any) => d.gender === "F")
+      .append("path")
+      .attr("d", `
+        M -8 -6
+        a 8 8 0 1 1 16 0
+        a 8 8 0 1 1 -16 0
+        M 0 3
+        L 0 10
+        M -8 17
+        L 0 10
+        L 8 17
+        M -6 13
+        L 6 13
+      `)
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 2.5)
+      .attr("fill", "none");
+
     // Vẽ tên
     nodeGroup
       .append("text")
-      .attr("dy", "-15")
+      .attr("dy", "15")
       .attr("text-anchor", "middle")
       .style("font-weight", "bold")
-      .style("font-size", "15px")
+      .style("font-size", "13px")
       .style("fill", "#222")
       .text((d: any) => d.name || "");
-
-    // Vẽ giới tính
-    nodeGroup
-      .append("text")
-      .attr("dy", "5")
-      .attr("text-anchor", "middle")
-      .style("font-size", "15px")
-      .style("fill", "#888")
-      .text((d: any) => (d.gender === "M" ? "Nam" : d.gender === "F" ? "Nữ" : ""));
 
     // Vẽ thế hệ
     nodeGroup
       .append("text")
-      .attr("dy", "25")
+      .attr("dy", "30")
       .attr("text-anchor", "middle")
-      .style("font-size", "15px")
+      .style("font-size", "12px")
       .style("fill", "#888")
       .text((d: any) => `Đời ${d.generation}`);
 
