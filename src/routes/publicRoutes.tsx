@@ -3,11 +3,13 @@ import Login from "../pages/Login";
 import Home from "../pages/Home";
 import About from "../pages/About";
 import FamilyTreeDemo from "../pages/FamilyTreeDemo";
+import Register from "@/pages/Register";
 
 export const publicRoutes: RouteObject[] = [
   { path: "/", element: <Home /> },
   { path: "/login", element: <Login /> },
   { path: "/about", element: <About /> },
+  { path: "/register", element: <Register /> },
   { path: "/family-tree-demo", element: <FamilyTreeDemo /> },
 ];
 

@@ -53,7 +53,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
           className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3 transition-colors"
         >
           <Plus className="w-4 h-4 text-green-600" />
-          <span>➕ Thêm con</span>
+          <span> Thêm con</span>
         </button>
         
         <button
@@ -61,7 +61,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
           className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3 transition-colors"
         >
           <Users className="w-4 h-4 text-blue-600" />
-          <span>👨‍👩‍👧‍👦 Thêm cha/mẹ</span>
+          <span>Thêm cha/mẹ</span>
         </button>
         
         <button
@@ -69,7 +69,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
           className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3 transition-colors"
         >
           <Heart className="w-4 h-4 text-pink-600" />
-          <span>💑 Thêm vợ/chồng</span>
+          <span>Thêm vợ/chồng</span>
         </button>
         
         <div className="border-t border-gray-200 my-1" />
@@ -79,7 +79,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
           className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3 transition-colors"
         >
           <Info className="w-4 h-4 text-blue-600" />
-          <span>ℹ️ Xem thông tin</span>
+          <span>Xem thông tin</span>
         </button>
         
         <div className="border-t border-gray-200 my-1" />
@@ -89,7 +89,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
           className="w-full px-4 py-2 text-left text-sm hover:bg-red-50 text-red-600 flex items-center gap-3 transition-colors"
         >
           <Trash2 className="w-4 h-4" />
-          <span>🗑️ Xóa người này</span>
+          <span>Xóa người này</span>
         </button>
       </div>
     </>

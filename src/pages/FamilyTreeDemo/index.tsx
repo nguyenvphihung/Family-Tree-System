@@ -32,25 +32,7 @@ const FamilyTreeDemo: React.FC = () => {
       <div className="text-white px-6 py-2 border-b border-gray-700 shadow-sm" style={{ backgroundColor: '#595959' }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-6">
-            <span className="text-xs text-gray-300 font-medium">Family Tree System</span>
-          </div>
-
-          <div className="flex space-x-3">
-            <button className="p-2 text-gray-200 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-              </svg>
-            </button>
-            <button className="p-2 text-gray-200 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-              </svg>
-            </button>
-            <button className="p-2 text-gray-200 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
-              </svg>
-            </button>
+            <span className="text-[10px] text-gray-300 font-medium">Family Tree System</span>
           </div>
 
           <div className="flex items-center space-x-3">
@@ -60,30 +42,27 @@ const FamilyTreeDemo: React.FC = () => {
             <span className="text-base font-bold text-white">Family Tree</span>
           </div>
 
+          {/* Main Navigation Bar - Modern */}
+          <div className="">
+            <div className="flex items-center space-x-8">
+              <a href="#" className="text-white hover:text-gray-900 font-medium transition-colors duration-200">Home</a>
+              <a href="#" className="text-rose-500 font-bold">Family tree</a>
+              <a href="#" className="text-white hover:text-gray-900 font-medium transition-colors duration-200">Discoveries</a>
+              <a href="#" className="text-white hover:text-gray-900 font-medium transition-colors duration-200">Photos</a>
+              <a href="#" className="text-white hover:text-gray-900 font-medium transition-colors duration-200">DNA</a>
+              <a href="#" className="text-white hover:text-gray-900 font-medium transition-colors duration-200">Research</a>
+            </div>
+          </div>
+
           <div className="flex items-center space-x-4">
-            <button className="bg-rose-200 hover:bg-rose-300 text-rose-800 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 shadow-sm">
+            <button className="bg-rose-200 hover:bg-rose-300 text-rose-800 mr-6 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 shadow-sm">
               Go Premium
             </button>
-            <button className="p-2 text-gray-200 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110 4 2 2 0 010-4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-              </svg>
-            </button>
+
           </div>
         </div>
       </div>
 
-      {/* Main Navigation Bar - Modern */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
-        <div className="flex items-center space-x-8">
-          <a href="#" className="text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200">Home</a>
-          <a href="#" className="text-rose-700 font-bold border-b-2 border-rose-500 pb-1 px-2">Family tree</a>
-          <a href="#" className="text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200">Discoveries</a>
-          <a href="#" className="text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200">Photos</a>
-          <a href="#" className="text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200">DNA</a>
-          <a href="#" className="text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200">Research</a>
-        </div>
-      </div>
 
       {/* Main Content Area */}
       <div className="flex w-full h-full">
@@ -123,36 +102,32 @@ const FamilyTreeDemo: React.FC = () => {
               <div className="flex items-center justify-center gap-4 mt-3 mb-2">
                 <button className="flex flex-col items-center text-gray-700 hover:text-rose-700">
                   <span className="bg-gray-100 rounded-full p-2 mb-1">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 14c-4.418 0-8 1.79-8 4v2h16v-2c0-2.21-3.582-4-8-4z" />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                   </span>
                   <span className="text-xs">Profile</span>
                 </button>
                 <button className="flex flex-col items-center text-gray-700 hover:text-rose-700">
                   <span className="bg-gray-100 rounded-full p-2 mb-1">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 20h9" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z" />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                     </svg>
                   </span>
                   <span className="text-xs">Edit</span>
                 </button>
                 <button className="flex flex-col items-center text-gray-700 hover:text-rose-700">
                   <span className="bg-gray-100 rounded-full p-2 mb-1">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
                   </span>
                   <span className="text-xs">Add</span>
                 </button>
                 <button className="flex flex-col items-center text-gray-700 hover:text-rose-700">
                   <span className="bg-gray-100 rounded-full p-2 mb-1">
-                    <svg className="w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <circle cx="5" cy="12" r="2" />
-                      <circle cx="12" cy="12" r="2" />
-                      <circle cx="19" cy="12" r="2" />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
                     </svg>
                   </span>
                   <span className="text-xs">More</span>
@@ -161,7 +136,7 @@ const FamilyTreeDemo: React.FC = () => {
             </div>
           </div>
           {/* Sections */}
-          <div className="space-y-2 flex-1 overflow-auto pb-6">
+          <div className="space-y-2 flex-1">
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-2">
               <div className="flex items-center justify-between mb-1">
                 <h4 className="font-bold text-gray-900 text-xs">DISCOVERIES</h4>
@@ -215,43 +190,35 @@ const FamilyTreeDemo: React.FC = () => {
           </div>
 
           {/* DNA Test Button */}
-          <div className="mt-auto flex flex-col items-center gap-4 pb-8">
+          <div className="flex-1 justify-center mx-auto" style={{ marginTop: '20px' }}>
             <button className="px-4 py-2 bg-white border border-rose-300 rounded-full text-rose-700 hover:bg-rose-50 transition-colors">
               Order DNA test
             </button>
-            <div className="flex flex-col items-center">
-              <button className="w-10 h-10 bg-white border border-gray-300 hover:bg-gray-100 rounded-full flex items-center justify-center text-gray-700 shadow-sm transition-all duration-200">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110 4 2 2 0 010-4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                </svg>
-              </button>
-              <span className="mt-1 text-[10px] text-gray-600">More</span>
-            </div>
           </div>
         </div>
 
         {/* Main content phải */}
-        <div className="flex-1 bg-white p-6" style={{ height: 'calc(100vh - 120px)', overflow: 'hidden' }}>
+        <div className="flex-1 bg-white p-1" style={{ height: 'calc(100vh - 50px)', overflow: 'hidden' }}>
           {/* Tree Controls */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <button className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 px-6 py-3 rounded-xl font-bold flex items-center space-x-3 shadow-sm transition-all duration-200">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+              <button className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 px-3.5 py-2 rounded-xl text-xs flex items-center space-x-2 shadow-sm transition-all duration-200">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
                 </svg>
                 <span>Family view</span>
               </button>
-              <button className="p-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200">
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+              <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
                 </svg>
               </button>
-              <button className="p-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200">
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+              <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </button>
-              <button className="p-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200">
+              <button className="w-10 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
                 </svg>
@@ -259,17 +226,20 @@ const FamilyTreeDemo: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-4">
-              <select className="border-2 border-gray-300 rounded-xl px-4 py-3 text-sm font-medium focus:border-rose-400 focus:outline-none transition-colors duration-200">
-                <option>Generations: 5+</option>
+              <select className="border-2 border-gray-300 rounded-xl px-3 py-1.5 text-xs font-medium focus:border-rose-400 focus:outline-none transition-colors duration-200">
+                <option>Generations 5+</option>
+                <option>Generations 6+</option>
+                <option>Generations 7+</option>
+                <option>Generations +</option>
               </select>
               <div className="relative max-w-md">
                 <input
                   type="text"
                   placeholder="Find a person..."
-                  className="w-48 border-2 border-gray-300 rounded-xl pl-4 pr-12 py-3 text-sm font-medium focus:border-rose-400 focus:outline-none transition-colors duration-200"
+                  className="w-40 border-2 border-gray-300 rounded-xl pl-3 pr-10 py-1.5 text-xs font-medium focus:border-rose-400 focus:outline-none transition-colors duration-200"
                 />
                 <button className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" />
                   </svg>
                 </button>
@@ -278,7 +248,7 @@ const FamilyTreeDemo: React.FC = () => {
           </div>
 
           {/* Family Tree Visualization */}
-          <div className="border-2 border-gray-200 rounded-xl overflow-hidden shadow-lg w-full h-[calc(100vh-150px)] flex items-center justify-center" style={{ background: '#e5e7eb' }}>
+          <div className="border-2 border-gray-200 rounded-xl overflow-hidden shadow-lg w-full h-full flex items-center justify-center" style={{ background: '#e5e7eb' }}>
             <D3FamilyTreeView
               treeId={treeId}
               personId={personId}
@@ -291,47 +261,53 @@ const FamilyTreeDemo: React.FC = () => {
           <div className="fixed bottom-6 right-6 flex flex-col space-y-3">
             <button
               onClick={handleZoomCenter}
-              className="w-12 h-12 bg-white border-2 border-white hover:bg-gray-100 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-all duration-200"
-              title="Center on person"
+              className="w-8 h-8 bg-white border border-gray-200 hover:bg-gray-100 rounded-full shadow-sm flex items-center justify-center hover:shadow transition-all duration-200"
+              title="Center Family Tree"
             >
-              <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+              <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
               </svg>
             </button>
             <button
-              onClick={handleZoomFit}
-              className="w-12 h-12 bg-white border-2 border-white hover:bg-gray-100 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-all duration-200"
-              title="Fit to view"
+              className="w-8 h-8 bg-white border border-gray-200 hover:bg-gray-100 rounded-full shadow-sm flex items-center justify-center hover:shadow transition-all duration-200"
+              title="Toggle Full Screen"
+              onClick={() => {
+                if (!document.fullscreenElement) {
+                  document.documentElement.requestFullscreen();
+                } else {
+                  document.exitFullscreen();
+                }
+              }}
             >
-              <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l-2.293 2.293a1 1 0 11-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12z" clipRule="evenodd" />
+              <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
               </svg>
             </button>
             <button
               onClick={handleZoomReset}
-              className="w-12 h-12 bg-white border-2 border-white hover:bg-gray-100 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-all duration-200"
-              title="Reset zoom"
+              className="w-8 h-8 bg-white border border-gray-200 hover:bg-gray-100 rounded-full shadow-sm flex items-center justify-center hover:shadow transition-all duration-200"
+              title="Reset View"
             >
-              <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10.707 2.293a1 1 0 00-1.414 0l-.707.707-.707-.707a1 1 0 00-1.414 1.414L7.586 4H4a1 1 0 000 2h3.586l-.293.293a1 1 0 101.414 1.414L10 7.414l.293.293a1 1 0 001.414-1.414L12.414 6H16a1 1 0 000-2h-3.586l.293-.293a1 1 0 000-1.414z" />
+              <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
               </svg>
             </button>
             <button
               onClick={handleZoomIn}
-              className="w-12 h-12 bg-white border-2 border-white hover:bg-gray-100 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-all duration-200"
-              title="Zoom in"
+              className="w-8 h-8 bg-white border border-gray-200 hover:bg-gray-100 rounded-full shadow-sm flex items-center justify-center hover:shadow transition-all duration-200"
+              title="Zoom In"
             >
-              <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+              <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
               </svg>
             </button>
             <button
               onClick={handleZoomOut}
-              className="w-12 h-12 bg-white border-2 border-white hover:bg-gray-100 rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-all duration-200"
-              title="Zoom out"
+              className="w-8 h-8 bg-white border border-gray-200 hover:bg-gray-100 rounded-full shadow-sm flex items-center justify-center hover:shadow transition-all duration-200"
+              title="Zoom Out"
             >
-              <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+              <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM13.5 10.5h-6" />
               </svg>
             </button>
           </div>

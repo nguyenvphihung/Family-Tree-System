@@ -50,7 +50,7 @@ const Home: React.FC = () => {
 
         {/* Main Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-          <Link 
+          <Link
             to="/family-tree-demo"
             className="group block p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-green-300"
           >
@@ -96,7 +96,7 @@ const Home: React.FC = () => {
               Giao diện trực quan, thân thiện với người dùng
             </p>
           </div>
-          
+
           <div className="text-center p-6 bg-white rounded-lg shadow-md border border-gray-200">
             <div className="text-3xl mb-4">🔒</div>
             <h4 className="text-lg font-semibold text-gray-900 mb-2">Bảo mật</h4>
@@ -104,7 +104,7 @@ const Home: React.FC = () => {
               Dữ liệu được bảo vệ an toàn và riêng tư
             </p>
           </div>
-          
+
           <div className="text-center p-6 bg-white rounded-lg shadow-md border border-gray-200">
             <div className="text-3xl mb-4">📱</div>
             <h4 className="text-lg font-semibold text-gray-900 mb-2">Đa nền tảng</h4>
@@ -125,7 +125,7 @@ const Home: React.FC = () => {
               <div className="text-2xl mb-2">➕</div>
               <span className="text-sm font-medium text-green-800">Thêm mới</span>
             </button>
-            
+
             <button
               onClick={() => handleView('demo')}
               className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-center"
@@ -133,7 +133,7 @@ const Home: React.FC = () => {
               <div className="text-2xl mb-2">👁️</div>
               <span className="text-sm font-medium text-blue-800">Xem thông tin</span>
             </button>
-            
+
             <button
               onClick={() => handleEdit('demo')}
               className="p-4 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors text-center"
@@ -141,7 +141,7 @@ const Home: React.FC = () => {
               <div className="text-2xl mb-2">✏️</div>
               <span className="text-sm font-medium text-yellow-800">Chỉnh sửa</span>
             </button>
-            
+
             <button
               onClick={() => handleDelete('demo')}
               className="p-4 bg-red-50 rounded-lg hover:bg-red-100 transition-colors text-center"

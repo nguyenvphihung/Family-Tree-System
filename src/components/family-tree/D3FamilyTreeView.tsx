@@ -2,6 +2,9 @@ import React, { Children, useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { FamilyMember } from '../../types/family';
 import familyService from '../../services/familyService';
+import { getPersonAvatar } from '../../assets/avatars';
+import { formatDateCompact } from '../../utils/familyUtils';
+import cameraIcon from '../../assets/avatars/camera.png';
 import AddChildModal from './AddChildModal';
 import AddParentModal from './AddParentModal';
 import AddSpouseModal from './AddSpouseModal';
@@ -121,11 +124,20 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
     const svgGroup = svg
       .attr("width", width)
       .attr("height", height)
+      .style("cursor", "grab") // Cursor khi có thể kéo
       .call(
         d3
           .zoom<SVGSVGElement, unknown>()
           .scaleExtent([0.2, 3])
+          .on("start", function () {
+            // Khi bắt đầu kéo, đổi cursor thành grabbing
+            d3.select(this).style("cursor", "grabbing");
+          })
           .on("zoom", (event) => svgMain.attr("transform", event.transform))
+          .on("end", function () {
+            // Khi kết thúc kéo, đổi cursor về grab
+            d3.select(this).style("cursor", "grab");
+          })
       )
       .append("g");
 
@@ -136,9 +148,9 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
     const spouseLinks: Array<{ source: { x: number; y: number }; target: { x: number; y: number } }> = [];
     const parentChildLinks: Array<{ source: { x: number; y: number }; target: { x: number; y: number } }> = [];
 
-    const nodeWidth = 160;
+    const nodeWidth = 200;
     const nodeHeight = 90;
-    const spouseSpacing = 220;
+    const spouseSpacing = 240;
     const generationSpacing = 180;
 
     function getCombinedChildren(person: TreeNode): TreeNode[] {
@@ -210,10 +222,10 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
         children.forEach((child: any, idx: number) => {
           const childCenterX = startX + childWidths[idx] / 2;
 
-          // Tạo liên kết từ trung tâm cha mẹ xuống con
+          // Tạo liên kết từ dưới card cha mẹ xuống con
           parentChildLinks.push({
-            source: { x: parentCenterX, y: y + nodeHeight / 2 - 46 },
-            target: { x: childCenterX, y: childY - nodeHeight / 2 }
+            source: { x: parentCenterX, y: y + nodeHeight / 50 },
+            target: { x: childCenterX, y: childY - nodeHeight / 10 }
           });
 
           calculatePositions(child as TreeNode, childCenterX, childY, generation + 1);
@@ -237,20 +249,19 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
       .attr("stroke", "#708090")
       .attr("stroke-width", 3);
 
-    // Vẽ liên kết cha mẹ-con cái
+    // Vẽ liên kết cha mẹ-con cái với dấu cộng như trong hình
     svgMain.selectAll(".parent-child-link")
       .data(parentChildLinks)
       .enter()
       .append("path")
       .attr("class", "parent-child-link")
       .attr("d", d => {
-        const intermediateY = d.source.y + 86;
-        const targetTopY = d.target.y;
+        const midY = (d.source.y + d.target.y) / 2;
 
         return `M ${d.source.x},${d.source.y} 
-               L ${d.source.x},${intermediateY} 
-               L ${d.target.x},${intermediateY} 
-               L ${d.target.x},${targetTopY}`;
+               L ${d.source.x},${midY} 
+               L ${d.target.x},${midY} 
+               L ${d.target.x},${d.target.y}`;
       })
       .attr("fill", "none")
       .attr("stroke", "#708090")
@@ -265,20 +276,21 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
       .attr("class", "node")
       .attr("transform", (d) => `translate(${isNaN(d.x) ? 0 : d.x},${isNaN(d.y) ? 0 : d.y})`)
       .style("cursor", "pointer")
-      .on("mouseover", function (event, d: any) {
-        d3.select(this).select("rect")
+      .on("mouseover", function (event, d) {
+        d3.select(this)
+          .select("rect")
           .transition()
-          .duration(200)
-          .attr("stroke-width", 4)
-          .attr("stroke", d.gender === "M" ? "#5BD1D7" : d.gender === "F" ? "#F59794" : "#333");
+          .style("filter", "drop-shadow(0 0 10px rgba(0, 0, 0, 0.2))"); // Thêm đổ bóng
       })
-      .on("mouseout", function (event, d: any) {
-        d3.select(this).select("rect")
+      .on("mouseout", function (event, d) {
+        d3.select(this)
+          .select("rect")
           .transition()
           .duration(200)
           .attr("stroke-width", 2)
-          .attr("stroke", d.gender === "M" ? "#5BD1D7" : d.gender === "F" ? "#F59794" : "#333");
-      })
+          .attr("stroke", d.gender === "M" ? "#5BD1D7" : d.gender === "F" ? "#F59794" : "#333")
+          .style("filter", "none"); // Xóa đổ bóng
+      });
     // .on("click", (event, d: any) => {
     //   event.stopPropagation();
     //   setSelectedNode(d as any);
@@ -292,31 +304,96 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
     //   }
     // });
 
-    // Vẽ background cho node
+    // Vẽ background cho node - card layout ngang
     nodeGroup
       .append("rect")
       .attr("width", nodeWidth)
       .attr("height", nodeHeight)
       .attr("x", -nodeWidth / 2)
       .attr("y", -nodeHeight / 2)
-      .attr("rx", 12)
-      .attr("ry", 12)
+      .attr("rx", 8)
+      .attr("ry", 8)
       .attr("fill", "#fff")
       .attr("stroke", (d: any) => d.gender === "M" ? "#5BD1D7" : d.gender === "F" ? "#F59794" : "#333")
       .attr("stroke-width", 2)
       .attr("filter", "url(#shadow)");
 
-    // Vẽ dấu cộng bo cong phía dưới card
+    // Avatar circle - bên trái
+    nodeGroup
+      .append("circle")
+      .attr("cx", -nodeWidth / 2 + 35)
+      .attr("cy", 0)
+      .attr("r", 28)
+      .attr("fill", "#f3f4f6")
+      .attr("stroke", (d: any) => d.gender === "M" ? "#5BD1D7" : d.gender === "F" ? "#F59794" : "#e5e7eb")
+      .attr("stroke-width", 1);
+
+    // Avatar image
+    nodeGroup
+      .append("image")
+      .attr("href", (d: any) => getPersonAvatar({
+        gender: d.gender,
+        avatarUrl: d.avatarUrl,
+        birthday: d.birthday,
+        generation: d.generation
+      }))
+      .attr("x", -nodeWidth / 2 + 7)
+      .attr("y", -28)
+      .attr("width", 56)
+      .attr("height", 56)
+      .attr("clip-path", "circle(28px at 28px 28px)");
+
+
+    // Camera icon - góc phải dưới của avatar
+    const iconSize = 21; // Tăng từ 16 lên 21
+
+    nodeGroup
+      .append("image")
+      .attr("href", cameraIcon)
+      .attr("x", -nodeWidth / 2 + 45 + 15 - iconSize / 2)
+      .attr("y", 19 + 5 - 15 - iconSize / 21)
+      .attr("width", iconSize)
+      .attr("height", iconSize)
+      .style("cursor", "pointer");
+
+    // Tên người - bên phải avatar
+    nodeGroup
+      .append("text")
+      .attr("x", -20)
+      .attr("y", -8)
+      .attr("text-middle", "start")
+      .style("font-weight", "bold")
+      .style("font-size", "14px")
+      .style("fill", "#1f2937")
+      .text((d: any) => d.name || "");
+
+    // Thông tin phụ (giới tính, năm sinh)
+    nodeGroup
+      .append("text")
+      .attr("x", -20)
+      .attr("y", 8)
+      .attr("text-middle", "start")
+      .style("font-size", "12px")
+      .style("fill", "#6b7280")
+      .text((d: any) => {
+        const genderText = d.gender === "M" ? "Nam" : d.gender === "F" ? "Nữ" : "";
+        const birthDateText = formatDateCompact(d.birthday);
+
+        if (birthDateText) {
+          return `${genderText}, ${birthDateText}`;
+        } else {
+          return genderText || "Không rõ";
+        }
+      });
+
     nodeGroup
       .append("path")
       .attr("d", `
-M -40 0
-Q -16 14 -10 16
-Q 0 18 10 16
-Q 16 14 40 0
-Z
-
-
+     M -40 0
+     Q -16 14 -10 16
+     Q 0 18 10 16
+     Q 16 14 40 0
+     Z
   `)
       .attr("transform", `translate(0, ${nodeHeight / 2 + 2})`)
       .attr("fill", "#fff")
@@ -334,11 +411,7 @@ Z
           const y = event.clientY - svgRect.top;
           setContextMenu({ isVisible: true, x, y });
         }
-      })
-
-      ;
-
-
+      });
 
     // Vẽ dấu cộng bên trong circle
     nodeGroup
@@ -350,47 +423,7 @@ Z
       .attr("font-weight", "bold")
       .attr("fill", "#152238")
       .text("+")
-      .style("pointer-events", "none")
-      .on("click", (event, d: any) => {
-        event.stopPropagation();
-        setSelectedNode(d as any);
-
-        const svgElement = svgRef.current;
-        const svgRect = svgElement?.getBoundingClientRect();
-        if (svgRect) {
-          const x = event.clientX - svgRect.left;
-          const y = event.clientY - svgRect.top;
-          setContextMenu({ isVisible: true, x, y });
-        }
-      });
-
-    // Vẽ tên
-    nodeGroup
-      .append("text")
-      .attr("dy", "-15")
-      .attr("text-anchor", "middle")
-      .style("font-weight", "bold")
-      .style("font-size", "15px")
-      .style("fill", "#222")
-      .text((d: any) => d.name || "");
-
-    // Vẽ giới tính
-    nodeGroup
-      .append("text")
-      .attr("dy", "5")
-      .attr("text-anchor", "middle")
-      .style("font-size", "15px")
-      .style("fill", "#888")
-      .text((d: any) => (d.gender === "M" ? "Nam" : d.gender === "F" ? "Nữ" : ""));
-
-    // Vẽ thế hệ
-    nodeGroup
-      .append("text")
-      .attr("dy", "25")
-      .attr("text-anchor", "middle")
-      .style("font-size", "15px")
-      .style("fill", "#888")
-      .text((d: any) => `Đời ${d.generation}`);
+      .style("pointer-events", "none");
 
   }, [treeData]);
 
@@ -572,11 +605,14 @@ Z
   return (
     <div className="relative">
       {/* D3 SVG Container with Context Menu */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden relative flex items-center justify-center" style={{ background: '#e5e7eb', minHeight: '700px' }}>
+      <div
+        className="border border-gray-200 rounded-lg overflow-hidden relative flex items-center justify-center cursor-grab hover:cursor-grab active:cursor-grabbing"
+        style={{ background: '#e5e7eb', minHeight: '700px' }}
+      >
         <svg
           ref={svgRef}
           width="1800"
-          height="800"
+          height="1200"
           className="family-tree-svg"
           style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left', background: '#e5e7eb', borderRadius: '0.75rem' }}
         />

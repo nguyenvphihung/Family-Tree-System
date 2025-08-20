@@ -10,6 +10,7 @@ export interface FamilyMember {
   createdAt?: string;
   spouses?: FamilyMember[];
   children?: FamilyMember[];
+  avatarUrl?: string;
   // Additional fields for spouses
   marriageDate?: string | null;
   divorceDate?: string | null;
@@ -29,7 +30,7 @@ export interface FamilyTreeStore {
   currentPerson: FamilyMember | null;
   isLoading: boolean;
   error: string | null;
-  
+
   // API methods
   createTreeRoot: (treeId: string, data: any) => Promise<any>;
   addChildren: (treeId: string, data: any) => Promise<any>;
@@ -37,7 +38,7 @@ export interface FamilyTreeStore {
   addSpouse: (treeId: string, spouseId: string, data: any) => Promise<any>;
   getPersonWithRelations: (treeId: string, personId: string) => Promise<any>;
   deletePerson: (personId: string) => Promise<boolean>;
-  
+
   // State management
   setCurrentPerson: (person: FamilyMember | null) => void;
   setError: (error: string | null) => void;

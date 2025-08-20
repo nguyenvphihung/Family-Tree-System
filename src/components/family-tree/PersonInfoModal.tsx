@@ -2,6 +2,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { FamilyMember } from '../../types/family';
+import { getPersonAvatar } from '../../assets/avatars';
 
 interface PersonInfoModalProps {
   isOpen: boolean;
@@ -37,27 +38,46 @@ const PersonInfoModal: React.FC<PersonInfoModalProps> = ({
         <DialogHeader>
           <DialogTitle>Thông tin chi tiết: {person.name}</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-6">
-          {/* Basic Information */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">Thông tin cơ bản</h3>
-              <div className="space-y-2 text-sm">
-                <div><span className="font-medium">Tên:</span> {person.name}</div>
-                <div><span className="font-medium">ID:</span> {person.id}</div>
-                <div><span className="font-medium">Giới tính:</span> {getGenderText(person.gender)}</div>
-                <div><span className="font-medium">Ngày sinh:</span> {formatDate(person.birthday)}</div>
-                <div><span className="font-medium">Nơi sinh:</span> {person.birthPlace || 'Không rõ'}</div>
-                <div><span className="font-medium">Thế hệ:</span> Đời {person.generation}</div>
-                <div><span className="font-medium">Ngày tạo:</span> {formatDate(person.createdAt)}</div>
+          {/* Avatar and Basic Information */}
+          <div className="flex gap-6">
+            {/* Avatar */}
+            <div className="flex-shrink-0">
+              <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-gray-200">
+                <img
+                  src={getPersonAvatar({
+                    gender: person.gender,
+                    avatarUrl: person.avatarUrl,
+                    birthday: person.birthday,
+                    generation: person.generation
+                  })}
+                  alt={`Avatar của ${person.name}`}
+                  className="w-full h-full object-cover"
+                />
               </div>
             </div>
-            
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">Thông tin bổ sung</h3>
-              <div className="space-y-2 text-sm">
-                <div><span className="font-medium">Tree ID:</span> {person.treeId || 'Không rõ'}</div>
+
+            {/* Basic Information */}
+            <div className="flex-1 grid grid-cols-2 gap-4">
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Thông tin cơ bản</h3>
+                <div className="space-y-2 text-sm">
+                  <div><span className="font-medium">Tên:</span> {person.name}</div>
+                  <div><span className="font-medium">ID:</span> {person.id}</div>
+                  <div><span className="font-medium">Giới tính:</span> {getGenderText(person.gender)}</div>
+                  <div><span className="font-medium">Ngày sinh:</span> {formatDate(person.birthday)}</div>
+                  <div><span className="font-medium">Nơi sinh:</span> {person.birthPlace || 'Không rõ'}</div>
+                  <div><span className="font-medium">Thế hệ:</span> Đời {person.generation}</div>
+                  <div><span className="font-medium">Ngày tạo:</span> {formatDate(person.createdAt)}</div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Thông tin bổ sung</h3>
+                <div className="space-y-2 text-sm">
+                  <div><span className="font-medium">Tree ID:</span> {person.treeId || 'Không rõ'}</div>
+                </div>
               </div>
             </div>
           </div>
@@ -109,12 +129,12 @@ const PersonInfoModal: React.FC<PersonInfoModalProps> = ({
           )}
 
           {/* No relationships message */}
-          {(!person.spouses || person.spouses.length === 0) && 
-           (!person.children || person.children.length === 0) && (
-            <div className="text-center text-gray-500 py-4">
-              Chưa có thông tin về vợ/chồng hoặc con cái
-            </div>
-          )}
+          {(!person.spouses || person.spouses.length === 0) &&
+            (!person.children || person.children.length === 0) && (
+              <div className="text-center text-gray-500 py-4">
+                Chưa có thông tin về vợ/chồng hoặc con cái
+              </div>
+            )}
         </div>
 
         <div className="flex justify-end pt-4">
