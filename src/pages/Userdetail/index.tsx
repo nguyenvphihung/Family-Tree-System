@@ -12,13 +12,12 @@ const players = [
 
 const UserDetail = () => {
   const navigate = useNavigate();
-  const { treeId } = useParams(); // ✅ lấy treeId từ URL
+  const { treeId } = useParams(); //  lấy treeId từ URL
 
-  const question =
-    "Câu hỏi .........................................................?";
+  const question = "Câu hỏi mẫu: Đây là câu hỏi gì?";
   const answers = ["Đáp án 1", "Đáp án 2", "Đáp án 3", "Đáp án 4"];
 
-  // ✅ Hàm gọi API demo
+  //  Hàm gọi API demo
   const callApi = async () => {
     try {
       const res = await fetch(``);
@@ -29,7 +28,7 @@ const UserDetail = () => {
     }
   };
 
-  // ✅ State cho mic và volume
+  //  State cho mic và volume
   const [micOn, setMicOn] = useState(true);
   const [volumeOn, setVolumeOn] = useState(true);
 
@@ -106,7 +105,7 @@ const UserDetail = () => {
                 <button
                   key={idx}
                   className="w-full rounded-lg px-4 py-3 bg-[#232b3e] text-white border border-[#3e4a64] text-sm font-semibold hover:bg-green-600 transition"
-                  onClick={callApi} // ✅ bấm vào sẽ gọi API demo
+                  onClick={callApi}
                 >
                   {ans}
                 </button>
