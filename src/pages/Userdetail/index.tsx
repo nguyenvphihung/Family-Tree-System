@@ -12,15 +12,24 @@ const players = [
 
 const UserDetail = () => {
   const navigate = useNavigate();
-  const { treeId } = useParams(); //  lấy treeId từ URL
+  const { treeId } = useParams(); // lấy treeId từ URL
 
   const question = "Câu hỏi mẫu: Đây là câu hỏi gì?";
   const answers = ["Đáp án 1", "Đáp án 2", "Đáp án 3", "Đáp án 4"];
 
-  //  Hàm gọi API demo
-  const callApi = async () => {
+  // Hàm gọi API demo
+  const callApi = async (answer: string) => {
     try {
-      const res = await fetch(``);
+      const res = await fetch(`/trees/${treeId}/game`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answer }),
+      });
+
+      if (!res.ok) {
+        throw new Error("API lỗi: " + res.status);
+      }
+
       const data = await res.json();
       console.log("Kết quả API:", data);
     } catch (error) {
@@ -28,7 +37,7 @@ const UserDetail = () => {
     }
   };
 
-  //  State cho mic và volume
+  // State cho mic và volume
   const [micOn, setMicOn] = useState(true);
   const [volumeOn, setVolumeOn] = useState(true);
 
@@ -105,7 +114,7 @@ const UserDetail = () => {
                 <button
                   key={idx}
                   className="w-full rounded-lg px-4 py-3 bg-[#232b3e] text-white border border-[#3e4a64] text-sm font-semibold hover:bg-green-600 transition"
-                  onClick={callApi}
+                  onClick={() => callApi(ans)}
                 >
                   {ans}
                 </button>
