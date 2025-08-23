@@ -80,13 +80,20 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
   useEffect(() => {
     if (!treeData || !svgRef.current) return;
 
+    // Lấy width/height từ sessionStorage nếu có
+    let width = 2000;
+    let height = 1200;
+    const sessionWidth = sessionStorage.getItem('familyTreeSvgWidth');
+    const sessionHeight = sessionStorage.getItem('familyTreeSvgHeight');
+    if (sessionWidth && sessionHeight) {
+      width = parseInt(sessionWidth, 10);
+      height = parseInt(sessionHeight, 10);
+    }
+
     const svg = d3.select(svgRef.current)
       .attr("viewBox", "-240 0 3400 2000") // chỉnh kích thước vùng hiển thị
-      .attr("preserveAspectRatio", "xMidYMid meet");;
+      .attr("preserveAspectRatio", "xMidYMid meet");
     svg.selectAll("*").remove();
-
-    const width = 2000;
-    const height = 1200;
 
     // Tạo gradient definitions
     const defs = svg.append("defs");
@@ -124,24 +131,39 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
     const svgGroup = svg
       .attr("width", width)
       .attr("height", height)
-      .style("cursor", "grab") // Cursor khi có thể kéo
+      .style("cursor", "grab") 
       .call(
         d3
           .zoom<SVGSVGElement, unknown>()
           .scaleExtent([0.2, 3])
           .on("start", function () {
-            // Khi bắt đầu kéo, đổi cursor thành grabbing
             d3.select(this).style("cursor", "grabbing");
           })
-          .on("zoom", (event) => svgMain.attr("transform", event.transform))
+          .on("zoom", (event) => {
+            svgMain.attr("transform", event.transform);
+            // Lưu transform vào sessionStorage
+            sessionStorage.setItem('familyTreeTransform', JSON.stringify({
+              x: event.transform.x,
+              y: event.transform.y,
+              k: event.transform.k
+            }));
+          })
           .on("end", function () {
-            // Khi kết thúc kéo, đổi cursor về grab
             d3.select(this).style("cursor", "grab");
           })
       )
       .append("g");
 
-    const svgMain = svgGroup.append("g").attr("transform", "translate(100,50)");
+    // Lấy transform từ sessionStorage nếu có
+    let initialTransform = "translate(100,50)";
+    const saved = sessionStorage.getItem('familyTreeTransform');
+    if (saved) {
+      try {
+        const { x, y, k } = JSON.parse(saved);
+        initialTransform = `translate(${x || 100},${y || 50}) scale(${k || 1})`;
+      } catch { }
+    }
+    const svgMain = svgGroup.append("g").attr("transform", initialTransform);
 
     // Thu thập node/link theo thuật toán trong file HTML
     const allNodes: Array<TreeNode & { x: number; y: number; generation: number }> = [];
@@ -449,6 +471,11 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
   const handleViewInfo = () => {
     if (selectedNode) {
       setShowPersonInfoModal(true);
+      // Lưu width/height SVG vào sessionStorage khi mở contextMenu
+      if (svgRef.current) {
+        sessionStorage.setItem('familyTreeSvgWidth', svgRef.current.clientWidth.toString());
+        sessionStorage.setItem('familyTreeSvgHeight', svgRef.current.clientHeight.toString());
+      }
     }
   };
 
