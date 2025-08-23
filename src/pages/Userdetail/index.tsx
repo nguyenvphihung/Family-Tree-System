@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Mic, Volume2 } from "lucide-react";
-import { useParams } from "react-router-dom";
+
 const players = [
   "Tên người chơi 1",
   "Tên người chơi 2",
@@ -12,26 +12,24 @@ const players = [
 
 const UserDetail = () => {
   const navigate = useNavigate();
+  const { treeId } = useParams(); // ✅ lấy treeId từ URL
 
   const question =
     "Câu hỏi .........................................................?";
   const answers = ["Đáp án 1", "Đáp án 2", "Đáp án 3", "Đáp án 4"];
 
-  const UserDetail = () => {
-    const { treeId } = useParams();
-
-    const callApi = async () => {
-      try {
-        const res = await fetch(``);
-        const data = await res.json();
-        console.log("Kết quả API:", data);
-      } catch (error) {
-        console.error("Lỗi API:", error);
-      }
-    };
-
-    // Demo toggle mic/volume (chưa kết nối gì cả)
+  // ✅ Hàm gọi API demo
+  const callApi = async () => {
+    try {
+      const res = await fetch(``);
+      const data = await res.json();
+      console.log("Kết quả API:", data);
+    } catch (error) {
+      console.error("Lỗi API:", error);
+    }
   };
+
+  // ✅ State cho mic và volume
   const [micOn, setMicOn] = useState(true);
   const [volumeOn, setVolumeOn] = useState(true);
 
@@ -108,6 +106,7 @@ const UserDetail = () => {
                 <button
                   key={idx}
                   className="w-full rounded-lg px-4 py-3 bg-[#232b3e] text-white border border-[#3e4a64] text-sm font-semibold hover:bg-green-600 transition"
+                  onClick={callApi} // ✅ bấm vào sẽ gọi API demo
                 >
                   {ans}
                 </button>
