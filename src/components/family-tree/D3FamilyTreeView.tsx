@@ -17,6 +17,7 @@ interface D3FamilyTreeViewProps {
   personId: string;
   zoomLevel?: number;
   onRefresh?: () => void;
+  onNodeClick?: (person: FamilyMember) => void; // Thêm prop này là hiển thị tên người khi click vào node
 }
 
 interface TreeNode extends FamilyMember {
@@ -28,7 +29,8 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
   treeId,
   personId,
   zoomLevel = 1,
-  onRefresh
+  onRefresh,
+  onNodeClick // Nhận prop
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [treeData, setTreeData] = useState<TreeNode | null>(null);
@@ -91,47 +93,14 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
     }
 
     const svg = d3.select(svgRef.current)
-      .attr("viewBox", "-240 0 3400 2000") // chỉnh kích thước vùng hiển thị
-      .attr("preserveAspectRatio", "xMidYMid meet");
+      .attr("width", width)
+      .attr("height", height)
+      .style("cursor", "grab");
+
     svg.selectAll("*").remove();
-
-    // Tạo gradient definitions
-    const defs = svg.append("defs");
-
-    // Gradient cho node nam
-    const maleGradient = defs.append("linearGradient")
-      .attr("id", "maleGradient")
-      .attr("x1", "0%").attr("y1", "0%")
-      .attr("x2", "0%").attr("y2", "100%");
-    maleGradient.append("stop").attr("offset", "0%").attr("stop-color", "#708090");
-    maleGradient.append("stop").attr("offset", "100%").attr("stop-color", "#708090");
-
-    // Gradient cho node nữ
-    const femaleGradient = defs.append("linearGradient")
-      .attr("id", "femaleGradient")
-      .attr("x1", "0%").attr("y1", "0%")
-      .attr("x2", "0%").attr("y2", "100%");
-    femaleGradient.append("stop").attr("offset", "0%").attr("stop-color", "#708090");
-    femaleGradient.append("stop").attr("offset", "100%").attr("stop-color", "#708090");
-
-    // Filter cho shadow
-    const filter = defs.append("filter")
-      .attr("id", "shadow")
-      .attr("x", "-50%")
-      .attr("y", "-50%")
-      .attr("width", "200%")
-      .attr("height", "200%");
-    filter.append("feDropShadow")
-      .attr("dx", "2")
-      .attr("dy", "2")
-      .attr("stdDeviation", "3")
-      .attr("flood-color", "rgba(0,0,0,0.3)");
 
     // Nhóm chính để hỗ trợ zoom/pan
     const svgGroup = svg
-      .attr("width", width)
-      .attr("height", height)
-      .style("cursor", "grab") 
       .call(
         d3
           .zoom<SVGSVGElement, unknown>()
@@ -154,15 +123,24 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
       )
       .append("g");
 
-    // Lấy transform từ sessionStorage nếu có
-    let initialTransform = "translate(100,50)";
+    // Tính toán vị trí trung tâm
+    const svgRect = svgRef.current.getBoundingClientRect();
+    const centerX = svgRect.width / 2 - 100;
+    const centerY = svgRect.height / 2 - 100;
+
+    // Lấy transform từ sessionStorage nếu có, nếu không thì dùng vị trí trung tâm
+    let initialTransform = `translate(${centerX}, ${centerY})`;
     const saved = sessionStorage.getItem('familyTreeTransform');
     if (saved) {
       try {
         const { x, y, k } = JSON.parse(saved);
-        initialTransform = `translate(${x || 100},${y || 50}) scale(${k || 1})`;
-      } catch { }
+        initialTransform = `translate(${x || centerX},${y || centerY}) scale(${k || 1})`;
+      } catch {
+        // Nếu parse lỗi, dùng vị trí trung tâmh
+        initialTransform = `translate(${centerX}, ${centerY})`;
+      }
     }
+
     const svgMain = svgGroup.append("g").attr("transform", initialTransform);
 
     // Thu thập node/link theo thuật toán trong file HTML
@@ -268,7 +246,7 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
       .attr("y1", d => d.source.y)
       .attr("x2", d => d.target.x)
       .attr("y2", d => d.target.y)
-      .attr("stroke", "#708090")
+      .attr("stroke", "#FFBA9D") // đổi sang màu cam
       .attr("stroke-width", 3);
 
     // Vẽ liên kết cha mẹ-con cái với dấu cộng như trong hình
@@ -286,7 +264,7 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
                L ${d.target.x},${d.target.y}`;
       })
       .attr("fill", "none")
-      .attr("stroke", "#708090")
+      .attr("stroke", "#FFBA9D") // đổi sang màu cam
       .attr("stroke-width", 3);
 
     // Vẽ node với hiệu ứng đẹp
@@ -302,7 +280,7 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
         d3.select(this)
           .select("rect")
           .transition()
-          .style("filter", "drop-shadow(0 0 10px rgba(0, 0, 0, 0.2))"); // Thêm đổ bóng
+          .style("filter", "drop-shadow(0 0 10px rgba(0, 0, 0, 0.2))");
       })
       .on("mouseout", function (event, d) {
         d3.select(this)
@@ -311,20 +289,14 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
           .duration(200)
           .attr("stroke-width", 2)
           .attr("stroke", d.gender === "M" ? "#5BD1D7" : d.gender === "F" ? "#F59794" : "#333")
-          .style("filter", "none"); // Xóa đổ bóng
+          .style("filter", "none");
+      })
+      .on("click", function (event, d: any) {
+        event.stopPropagation();
+        if (onNodeClick) {
+          onNodeClick(d as FamilyMember);
+        }
       });
-    // .on("click", (event, d: any) => {
-    //   event.stopPropagation();
-    //   setSelectedNode(d as any);
-
-    //   const svgElement = svgRef.current;
-    //   const svgRect = svgElement?.getBoundingClientRect();
-    //   if (svgRect) {
-    //     const x = event.clientX - svgRect.left;
-    //     const y = event.clientY - svgRect.top;
-    //     setContextMenu({ isVisible: true, x, y });
-    //   }
-    // });
 
     // Vẽ background cho node - card layout ngang
     nodeGroup
@@ -363,11 +335,17 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
       .attr("y", -28)
       .attr("width", 56)
       .attr("height", 56)
-      .attr("clip-path", "circle(28px at 28px 28px)");
-
+      .attr("clip-path", "circle(28px at 28px 28px)")
+      .style("cursor", "pointer")
+      .on("click", function (event, d: any) {
+        event.stopPropagation();
+        if (onNodeClick) {
+          onNodeClick(d as FamilyMember);
+        }
+      });
 
     // Camera icon - góc phải dưới của avatar
-    const iconSize = 21; // Tăng từ 16 lên 21
+    const iconSize = 21;
 
     nodeGroup
       .append("image")
@@ -408,6 +386,7 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
         }
       });
 
+    // Nút dấu cộng ở dưới node (cho context menu)
     nodeGroup
       .append("path")
       .attr("d", `
@@ -417,7 +396,7 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
      Q 16 14 40 0
      Z
   `)
-      .attr("transform", `translate(0, ${nodeHeight / 2 + 2})`)
+      .attr("transform", `translate(0, ${nodeHeight / 2 + 0.3})`)
       .attr("fill", "#fff")
       .attr("stroke-width", 2)
       .attr("filter", "url(#shadow)")
@@ -425,6 +404,11 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
       .on("click", function (event, d: any) {
         event.stopPropagation();
         setSelectedNode(d as any);
+
+        // Gọi callback để hiển thị thông tin node trên sidebar
+        if (onNodeClick) {
+          onNodeClick(d as FamilyMember);
+        }
 
         const svgElement = svgRef.current;
         const svgRect = svgElement?.getBoundingClientRect();
@@ -447,7 +431,7 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
       .text("+")
       .style("pointer-events", "none");
 
-  }, [treeData]);
+  }, [treeData, zoomLevel]);
 
   // Handle context menu actions
   const handleAddChild = () => {
@@ -591,7 +575,7 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
     try {
       const response = await familyService.deletePerson(selectedNode?.id as string);
 
-      if (response.code == 200) {
+      if (response.code === 200) {
         setShowDeleteConfirmModal(false);
         loadTreeData();
         onRefresh?.();

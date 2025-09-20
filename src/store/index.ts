@@ -59,8 +59,8 @@ export const useAuthStore = create<AuthStore>()(
               confirmPassword: userData.password,
             });
             set({
-              user: response.user,
-              token: response.token,
+              // user: response.user,
+              // token: response.token,
               isAuthenticated: true,
               isLoading: false,
             });

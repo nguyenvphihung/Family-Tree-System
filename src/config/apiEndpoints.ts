@@ -1,3 +1,5 @@
+import { Phone } from "lucide-react";
+
 // API Endpoints Configuration
 export const API_ENDPOINTS = {
   // Auth endpoints
@@ -9,6 +11,7 @@ export const API_ENDPOINTS = {
     ME: '/auth/me',
     FORGOT_PASSWORD: '/auth/forgot-password',
     RESET_PASSWORD: '/auth/reset-password',
+
   },
 
   // User endpoints
@@ -30,7 +33,7 @@ export const API_ENDPOINTS = {
     ADD_CHILDREN: '/trees',
     ADD_PARENT: '/trees',
     ADD_SPOUSE: '/trees',
-    
+
     // Person management
     GET_PERSON: '/trees',
   },

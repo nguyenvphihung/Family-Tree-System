@@ -64,7 +64,7 @@ const PersonInfoModal: React.FC<PersonInfoModalProps> = ({
                 <h3 className="font-semibold text-gray-900 mb-2">Thông tin cơ bản</h3>
                 <div className="space-y-2 text-sm">
                   <div><span className="font-medium">Tên:</span> {person.name}</div>
-                  <div><span className="font-medium">ID:</span> {person.id}</div>
+                  {/* <div><span className="font-medium">ID:</span> {person.id}</div> */}
                   <div><span className="font-medium">Giới tính:</span> {getGenderText(person.gender)}</div>
                   <div><span className="font-medium">Ngày sinh:</span> {formatDate(person.birthday)}</div>
                   <div><span className="font-medium">Nơi sinh:</span> {person.birthPlace || 'Không rõ'}</div>
@@ -76,7 +76,7 @@ const PersonInfoModal: React.FC<PersonInfoModalProps> = ({
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Thông tin bổ sung</h3>
                 <div className="space-y-2 text-sm">
-                  <div><span className="font-medium">Tree ID:</span> {person.treeId || 'Không rõ'}</div>
+                  {/* <div><span className="font-medium">Tree ID:</span> {person.treeId || 'Không rõ'}</div> */}
                 </div>
               </div>
             </div>

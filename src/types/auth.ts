@@ -1,3 +1,5 @@
+import { Phone } from 'lucide-react';
+
 export interface User {
   id: string;
   email: string;
@@ -16,17 +18,42 @@ export interface AuthState {
   error: string | null;
 }
 
+// Cập nhật LoginCredentials để sử dụng phone thay vì email
 export interface LoginCredentials {
-  email: string;
+  phone: string;
   password: string;
 }
 
 export interface RegisterCredentials {
-  email: string;
-  password: string;
   name: string;
   phone: string;
+  email: string;
+  password: string;
   confirmPassword: string;
+}
+
+export interface RegisterResponse {
+  code: number;
+  status: string;
+  message: string;
+  data: {
+    name: string;
+    phone: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+  }
+}
+
+// Thêm LoginResponse interface mới
+export interface LoginResponse {
+  code: number;
+  status: string;
+  message: string;
+  data: {
+    token: string;
+    authenticated: boolean;
+  }
 }
 
 export interface AuthResponse {

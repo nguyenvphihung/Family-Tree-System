@@ -1,10 +1,20 @@
 import React, { useState } from "react";
 import { D3FamilyTreeView } from "../../components/family-tree";
+import { FamilyMember } from "../../types/family";
+import PersonInfoModal from "../../components/family-tree/PersonInfoModal";
+import AddChildModal from "../../components/family-tree/AddChildModal";
 
 const FamilyTreeDemo: React.FC = () => {
-  const treeId = "ea9a8a77-4cf0-4acc-a6f1-e2939e7cfb22";
-  const personId = "3a7bc596-afe5-4090-99ac-a2e09c8873eb";
+  const treeId = "0226ba13-99b2-4ffc-a24f-cdb1a775217f";
+  const personId = "a9c25ec0-e43b-43b3-9a65-ad48756f4138";
   const [zoomLevel, setZoomLevel] = useState(1);
+
+  // State để lưu thông tin node được chọn
+  const [selectedPerson, setSelectedPerson] = useState<FamilyMember | null>(null);
+
+  // State cho modal xem thông tin và modal thêm thành viên
+  const [showPersonInfoModal, setShowPersonInfoModal] = useState(false);
+  const [showAddChildModal, setShowAddChildModal] = useState(false);
 
   const handleZoomIn = () => {
     setZoomLevel((prev) => Math.min(prev + 0.2, 3));
@@ -19,11 +29,48 @@ const FamilyTreeDemo: React.FC = () => {
   };
 
   const handleZoomFit = () => {
-    setZoomLevel(0.8);
+    setZoomLevel(0.5);
   };
 
   const handleZoomCenter = () => {
     setZoomLevel(1);
+  };
+
+  // Function để xử lý khi click vào node
+  const handleNodeClick = (person: FamilyMember) => {
+    setSelectedPerson(person);
+    console.log('Selected person:', person);
+  };
+
+  // Xử lý khi click nút Profile ở sidebar
+  const handleProfileClick = () => {
+    if (selectedPerson) setShowPersonInfoModal(true);
+  };
+
+  // Xử lý khi click nút Add ở sidebar
+  const handleAddClick = () => {
+    if (selectedPerson) setShowAddChildModal(true);
+  };
+
+  // Function để tính tuổi từ ngày sinh
+  const calculateAge = (birthday?: string) => {
+    if (!birthday) return null;
+    const birth = new Date(birthday);
+    const today = new Date();
+    let age = 0;
+    age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate() && monthDiff > 1)) {
+      age--;
+    }
+    return age;
+  };
+
+  // Function để format ngày sinh
+  const formatBirthday = (birthday?: string) => {
+    if (!birthday) return null;
+    const date = new Date(birthday);
+    return date.getFullYear();
   };
 
   return (
@@ -101,7 +148,7 @@ const FamilyTreeDemo: React.FC = () => {
           className="w-56 bg-white border-r border-gray-200 p-3 shadow-lg flex flex-col"
           style={{ height: "100%", overflow: "hidden" }}
         >
-          {/* Personal Info Section */}
+          {/* Personal Info Section - CẬP NHẬT */}
           <div className="mb-2">
             <div className="flex flex-col items-center py-2">
               <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-300">
@@ -118,7 +165,7 @@ const FamilyTreeDemo: React.FC = () => {
                       cx="32"
                       cy="32"
                       r="30"
-                      stroke="#B0B7C3"
+                      stroke={selectedPerson?.gender === 'M' ? "#5BD1D7" : selectedPerson?.gender === 'F' ? "#F59794" : "#B0B7C3"}
                       strokeWidth="2"
                       fill="#fff"
                     />
@@ -126,18 +173,18 @@ const FamilyTreeDemo: React.FC = () => {
                       cx="32"
                       cy="26"
                       r="10"
-                      stroke="#B0B7C3"
+                      stroke={selectedPerson?.gender === 'M' ? "#5BD1D7" : selectedPerson?.gender === 'F' ? "#F59794" : "#B0B7C3"}
                       strokeWidth="1.5"
                       fill="#F5F6F7"
                     />
                     <path
                       d="M16 50c0-6.5 8-12 16-12s16 5.5 16 12"
-                      stroke="#B0B7C3"
+                      stroke={selectedPerson?.gender === 'M' ? "#5BD1D7" : selectedPerson?.gender === 'F' ? "#F59794" : "#B0B7C3"}
                       strokeWidth="1.5"
                       fill="#F5F6F7"
                     />
                   </svg>
-                  {/* Icon máy ảnh hiện đại nằm ngoài viền avatar - removed padding */}
+                  {/* Icon máy ảnh hiện đại nằm ngoài viền avatar */}
                   <button
                     style={{
                       position: "absolute",
@@ -177,86 +224,91 @@ const FamilyTreeDemo: React.FC = () => {
                 </div>
               </div>
               <div className="mt-2 text-center">
+                {/* Hiển thị thông tin động từ selectedPerson */}
                 <div className="font-bold text-gray-900 text-base leading-tight">
-                  phuc Vo
+                  {selectedPerson?.name || "Chọn một người"}
                 </div>
-                <div className="text-xs text-gray-500">This is you</div>
+                <div className="text-xs text-gray-500">
+                  {selectedPerson ? (
+                    selectedPerson.id === personId ? "This is you" : "Family member"
+                  ) : (
+                    "Click vào thành viên để xem thông tin"
+                  )}
+                </div>
                 <div className="text-xs text-gray-700 mt-1">
-                  ★ 2003 (age ~22)
+                  {selectedPerson?.birthday && (
+
+                    <>
+                      ★ {formatBirthday(selectedPerson.birthday)}
+                      {calculateAge(selectedPerson.birthday) > 0 && (
+                        <span> (age ~{calculateAge(selectedPerson.birthday)})</span>
+                      )}
+                    </>
+                  )}
                 </div>
-                <button className="text-xs text-rose-700 font-semibold mt-1 hover:underline">
-                  Research this person »
-                </button>
+                {selectedPerson?.gender && (
+                  <div className="text-xs text-gray-600 mt-1">
+                    {selectedPerson.gender === 'M' ? '♂ Nam' : selectedPerson.gender === 'F' ? '♀ Nữ' : 'Không rõ'}
+                  </div>
+                )}
+                {selectedPerson?.birthPlace && (
+                  <div className="text-xs text-gray-600 mt-1">
+                    📍 {selectedPerson.birthPlace}
+                  </div>
+                )}
+                {selectedPerson && (
+
+                  <button className="text-xs text-rose-700 font-semibold mt-1 hover:underline">
+                    Research this person »
+                  </button>
+                )}
               </div>
               <div className="flex items-center justify-center gap-4 mt-3 mb-2">
-                <button className="flex flex-col items-center text-gray-700 hover:text-rose-700">
+                {/* Nút Profile */}
+                <button
+                  className="flex flex-col items-center text-gray-700 hover:text-rose-700"
+                  onClick={handleProfileClick}
+                  disabled={!selectedPerson}
+                >
                   <span className="bg-gray-100 rounded-full p-2 mb-1">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
+                    {/* icon profile giữ nguyên */}
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                   </span>
                   <span className="text-xs">Profile</span>
                 </button>
-                <button className="flex flex-col items-center text-gray-700 hover:text-rose-700">
+                {/* Nút Edit giữ nguyên */}
+                <button
+                  className="flex flex-col items-center text-gray-700 hover:text-rose-700"
+                >
                   <span className="bg-gray-100 rounded-full p-2 mb-1">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-                      />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                     </svg>
                   </span>
                   <span className="text-xs">Edit</span>
                 </button>
-                <button className="flex flex-col items-center text-gray-700 hover:text-rose-700">
+                {/* Nút Add: icon dấu + */}
+                <button
+                  className="flex flex-col items-center text-gray-700 hover:text-rose-700"
+                  onClick={handleAddClick}
+                  disabled={!selectedPerson}
+                >
                   <span className="bg-gray-100 rounded-full p-2 mb-1">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 4.5v15m7.5-7.5h-15"
-                      />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12M6 12h12" />
                     </svg>
                   </span>
                   <span className="text-xs">Add</span>
                 </button>
+                {/* Nút More: icon dấu ba chấm */}
                 <button className="flex flex-col items-center text-gray-700 hover:text-rose-700">
                   <span className="bg-gray-100 rounded-full p-2 mb-1">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"
-                      />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <circle cx="5" cy="12" r="1.5" />
+                      <circle cx="12" cy="12" r="1.5" />
+                      <circle cx="19" cy="12" r="1.5" />
                     </svg>
                   </span>
                   <span className="text-xs">More</span>
@@ -348,10 +400,17 @@ const FamilyTreeDemo: React.FC = () => {
                 </button>
               </div>
               <div className="text-[11px] text-gray-600">
-                <div className="flex items-center space-x-2">
-                  <span className="font-medium">1939 Birth</span>
-                  <span className="text-gray-400">1939</span>
-                </div>
+                {selectedPerson?.birthday ? (
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium">Birth</span>
+                    <span className="text-gray-400">{formatBirthday(selectedPerson.birthday)}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium">1939 Birth</span>
+                    <span className="text-gray-400">1939</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -359,9 +418,9 @@ const FamilyTreeDemo: React.FC = () => {
           {/* DNA Test Button */}
           <div
             className="flex-1 justify-center mx-auto"
-            style={{ marginTop: "20px" }}
+            style={{ marginTop: "8px", width: "fit-content" }}
           >
-            <button className="px-4 py-2 bg-white border border-rose-300 rounded-full text-rose-700 hover:bg-rose-50 transition-colors">
+            <button className="px-4 py-2 w-full bg-white border border-rose-300 rounded-full text-rose-700 hover:bg-rose-50 transition-colors">
               Order DNA test
             </button>
           </div>
@@ -477,7 +536,8 @@ const FamilyTreeDemo: React.FC = () => {
               treeId={treeId}
               personId={personId}
               zoomLevel={zoomLevel}
-              onRefresh={() => {}}
+              onRefresh={() => { }}
+              onNodeClick={handleNodeClick} // Truyền callback function
             />
           </div>
 
@@ -587,6 +647,21 @@ const FamilyTreeDemo: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal xem thông tin node */}
+      <PersonInfoModal
+        isOpen={showPersonInfoModal}
+        onClose={() => setShowPersonInfoModal(false)}
+        person={selectedPerson}
+      />
+      {/* Modal thêm thành viên */}
+      <AddChildModal
+        isOpen={showAddChildModal}
+        onClose={() => setShowAddChildModal(false)}
+        onSave={handleAddClick}
+        parentName={selectedPerson?.name}
+      />
+
     </div>
   );
 };

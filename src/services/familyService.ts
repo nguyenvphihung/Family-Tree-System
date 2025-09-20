@@ -15,10 +15,9 @@ class FamilyService {
       return result.data;
     } catch (error: any) {
       throw error;
-
-
     }
   }
+  
 
   // Create root person in a tree
   async createTreeRoot(treeId: string, data: any): Promise<any> {

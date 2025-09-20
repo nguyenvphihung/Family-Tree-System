@@ -1,206 +1,366 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Eye,
+  EyeOff,
+  UserCheck,
+  Phone,
+  Lock,
+  TreePine,
+  Shield,
+  Users,
+  Sparkles,
+  ArrowLeft,
+  CheckCircle,
+} from "lucide-react";
+import { LoginCredentials } from "@/types";
+import { authService } from "@/services";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
+  // States
+  const [formData, setFormData] = useState<LoginCredentials>({
+    phone: "",
+    password: "",
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  // Input handler
+  const handleInputChange = (field: keyof LoginCredentials, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Client-side validation
+  const validateForm = (): string | null => {
+    if (!formData.phone || !formData.password) {
+      return "Vui lòng điền đầy đủ thông tin";
+    }
+
+    const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+    if (!phoneRegex.test(formData.phone)) {
+      return "Số điện thoại không đúng định dạng";
+    }
+
+    return null;
+  };
+
+  // Submit handler với nhiều debug hơn
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+
+    // Validation
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // TODO: Implement actual login logic with API
-      console.log("Login attempt:", { email, password });
+      console.log('🚀 BẮT ĐẦU LOGIN PROCESS');
+      console.log('📋 Form data:', formData);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Debug localStorage trước khi login
+      console.log('📱 LocalStorage TRƯỚC login:');
+      authService.debugLocalStorage();
 
-      // TODO: Handle successful login
-      console.log("Login successful");
-    } catch (error) {
-      console.error("Login failed:", error);
+      // GỌI SERVICE
+      const result = await authService.login(formData, rememberMe);
+
+      console.log('📨 Kết quả từ authService.login:', result);
+
+      if (result.success) {
+        console.log('✅ Login service trả về success');
+
+        // Debug localStorage sau khi login
+        console.log('📱 LocalStorage SAU login:');
+        authService.debugLocalStorage();
+
+        // Kiểm tra token có thực sự được lưu không
+        const savedToken = authService.getToken();
+        const isAuth = authService.isAuthenticated();
+
+        console.log('🔍 Kiểm tra cuối cùng:', {
+          savedToken: !!savedToken,
+          isAuthenticated: isAuth
+        });
+
+        setSuccess(true);
+        setTimeout(() => {
+          navigate("/dashboard", { replace: true });
+        }, 2000);
+      } else {
+        console.log('❌ Login service trả về fail:', result.message);
+        setError(result.message);
+      }
+    } catch (error: any) {
+      console.error('💥 Exception trong handleSubmit:', error);
+      setError(error.message || "Đã có lỗi xảy ra");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Check already logged in
+  useEffect(() => {
+    if (authService.isAuthenticated()) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [navigate]);
+
   return (
-    <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        {/* Logo */}
-        <div className="flex justify-center">
-          <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center">
-            <svg
-              className="w-8 h-8 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
-          </div>
-        </div>
-
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Đăng nhập vào tài khoản
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Hoặc{" "}
-          <Link
-            to="/register"
-            className="font-medium text-green-600 hover:text-green-500"
-          >
-            đăng ký tài khoản mới
-          </Link>
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex flex-col relative overflow-hidden">
+      {/* Background decorations */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-emerald-300/20 to-teal-300/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-cyan-300/20 to-blue-300/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-emerald-200/10 to-teal-200/10 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
+      {/* Main Content Container */}
+      <div className="flex-1 flex items-center justify-center p-4 relative z-10 py-8">
+        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+          {/* Left Panel */}
+          <div className="hidden lg:flex flex-col justify-center space-y-8 p-8">
+            <div className="space-y-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <TreePine className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                    Family Tree System
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    Quản lý cây gia phả hiện đại
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h2 className="text-4xl font-bold text-gray-900 leading-tight">
+                  Chào mừng trở lại!
+                  <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                    {" "}
+                    Đăng nhập ngay
+                  </span>
+                </h2>
+                <p className="text-lg text-gray-600 leading-relaxed">
+                  Tiếp tục hành trình lưu giữ và chia sẻ những kỷ niệm quý báu của
+                  gia đình. Truy cập vào cây gia phả và kết nối với những người
+                  thân yêu.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                    <Shield className="w-4 h-4 text-emerald-600" />
+                  </div>
+                  <span className="text-gray-700">Bảo mật thông tin tuyệt đối</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
+                    <Users className="w-4 h-4 text-teal-600" />
+                  </div>
+                  <span className="text-gray-700">Kết nối gia đình dễ dàng</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-cyan-100 rounded-full flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-cyan-600" />
+                  </div>
+                  <span className="text-gray-700">Trải nghiệm tuyệt vời</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 bg-white/60 backdrop-blur-sm border border-white/20 rounded-2xl shadow-lg">
+              <p className="text-sm text-gray-600 mb-2">Chưa có tài khoản?</p>
+              <Link
+                to="/register"
+                className="inline-flex items-center text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
               >
-                Địa chỉ email
-              </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                  placeholder="Nhập email của bạn"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Mật khẩu
-              </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                  placeholder="Nhập mật khẩu của bạn"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                />
-                <label
-                  htmlFor="remember-me"
-                  className="ml-2 block text-sm text-gray-900"
+                Tạo tài khoản ngay
+                <svg
+                  className="w-4 h-4 ml-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  Ghi nhớ đăng nhập
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a
-                  href="#"
-                  className="font-medium text-green-600 hover:text-green-500"
-                >
-                  Quên mật khẩu?
-                </a>
-              </div>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </Link>
             </div>
+          </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
-              </button>
-            </div>
-          </form>
+          {/* Right Panel - Login Form */}
+          <div className="flex items-center justify-center">
+            <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="space-y-2 text-center pb-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+                  <UserCheck className="w-8 h-8 text-white" />
+                </div>
+                <CardTitle className="text-2xl font-bold">Đăng nhập</CardTitle>
+                <CardDescription className="text-base">
+                  Nhập thông tin để truy cập tài khoản
+                </CardDescription>
+              </CardHeader>
 
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
-                  Hoặc đăng nhập với
-                </span>
-              </div>
-            </div>
+              <CardContent className="space-y-6">
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
 
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <div>
-                <a
-                  href="#"
-                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                >
-                  <svg
-                    className="w-5 h-5 "
-                    aria-hidden="true"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      fill="#1877F2"
-                      d="M22.675 0h-21.35C.6 0 0 .6 0 1.326v21.348C0 23.4.6 24 1.326 24h11.495v-9.294H9.691v-3.622h3.13V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.797.143v3.24l-1.918.001c-1.504 0-1.797.715-1.797 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116C23.4 24 24 23.4 24 22.674V1.326C24 .6 23.4 0 22.675 0"
+                {success && (
+                  <Alert className="border-emerald-200 bg-emerald-50">
+                    <CheckCircle className="h-4 w-4 text-emerald-600" />
+                    <AlertDescription className="text-emerald-800">
+                      Đăng nhập thành công! Đang chuyển hướng...
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Số điện thoại */}
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-sm font-medium">
+                      Số điện thoại
+                    </Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="Nhập số điện thoại"
+                        value={formData.phone}
+                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        className="pl-10 h-11"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Mật khẩu */}
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-sm font-medium">
+                      Mật khẩu
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Nhập mật khẩu"
+                        value={formData.password}
+                        onChange={(e) => handleInputChange('password', e.target.value)}
+                        className="pl-10 pr-10 h-11"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Remember me */}
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="rememberMe"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
                     />
-                  </svg>
-                  <span className="ml-2">Facebook</span>
-                </a>
-              </div>
-              <div>
-                <a
-                  href="#"
-                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                >
-                  <svg
-                    className="w-5 h-5 "
-                    aria-hidden="true"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
+                    <Label htmlFor="rememberMe" className="text-sm text-gray-600">
+                      Ghi nhớ đăng nhập
+                    </Label>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={isLoading || success}
+                    className="w-full h-11 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
                   >
-                    <path
-                      fill="#EA4335"
-                      d="M21.35 11.1h-9.18v2.92h5.26c-.23 1.23-1.39 3.61-5.26 3.61-3.17 0-5.75-2.62-5.75-5.85s2.58-5.85 5.75-5.85c1.81 0 3.02.77 3.72 1.43l2.54-2.47C17.13 3.58 15.36 2.7 13.17 2.7 7.88 2.7 3.7 6.88 3.7 12.15s4.18 9.45 9.47 9.45c5.47 0 9.09-3.85 9.09-9.27 0-.62-.07-1.09-.16-1.23z"
-                    />
-                  </svg>
-                  <span className="ml-2">Google</span>
-                </a>
-              </div>
-            </div>
+                    {isLoading ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Đang đăng nhập...</span>
+                      </div>
+                    ) : success ? (
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Đăng nhập thành công!</span>
+                      </div>
+                    ) : (
+                      "Đăng nhập"
+                    )}
+                  </Button>
+                </form>
+
+                {/* Navigation */}
+                <div className="space-y-4 pt-2">
+                  <div className="text-center">
+                    <Link to="/forgot-password" className="text-sm text-emerald-600 hover:text-emerald-700 font-medium">
+                      Quên mật khẩu?
+                    </Link>
+                  </div>
+
+                  <div className="text-center lg:hidden">
+                    <p className="text-sm text-gray-600 mb-2">Chưa có tài khoản?</p>
+                    <Link to="/register" className="text-emerald-600 hover:text-emerald-700 font-medium">
+                      Tạo tài khoản ngay
+                    </Link>
+                  </div>
+
+                  <Link
+                    to="/"
+                    className="inline-flex items-center justify-center w-full px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-emerald-300 rounded-lg text-gray-700 hover:text-emerald-600 font-medium transition-all duration-300"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Quay về trang chủ
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
+
+      {/* Response Area */}
+      <div id="response-area" style={{ display: 'none' }} className="fixed bottom-4 right-4 p-4 rounded-lg shadow-lg max-w-md bg-white border"></div>
     </div>
   );
 };
