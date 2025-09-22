@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap");
 
 /* Tailwind CSS directives */
 @tailwind base;
@@ -82,9 +83,8 @@
 
 /* Background Images */
 .bg-family-tree {
-  background-image: 
-    linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
-    url('./assets/family-bg.jpg');
+  background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("./assets/family-bg.jpg");
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -92,9 +92,11 @@
 }
 
 .bg-family-tree-light {
-  background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)),
-    url('./assets/family-bg.jpg');
+  background-image: linear-gradient(
+      rgba(255, 255, 255, 0.9),
+      rgba(255, 255, 255, 0.9)
+    ),
+    url("./assets/family-bg.jpg");
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -102,9 +104,12 @@
 }
 
 .bg-family-tree-overlay {
-  background-image: 
-    linear-gradient(135deg, rgba(59, 130, 246, 0.8), rgba(147, 51, 234, 0.8)),
-    url('./assets/family-bg.jpg');
+  background-image: linear-gradient(
+      135deg,
+      rgba(59, 130, 246, 0.8),
+      rgba(147, 51, 234, 0.8)
+    ),
+    url("./assets/family-bg.jpg");
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -112,9 +117,12 @@
 }
 
 .bg-family-tree-warm {
-  background-image: 
-    linear-gradient(135deg, rgba(245, 158, 11, 0.7), rgba(239, 68, 68, 0.7)),
-    url('./assets/family-bg.jpg');
+  background-image: linear-gradient(
+      135deg,
+      rgba(245, 158, 11, 0.7),
+      rgba(239, 68, 68, 0.7)
+    ),
+    url("./assets/family-bg.jpg");
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -122,9 +130,12 @@
 }
 
 .bg-family-tree-nature {
-  background-image: 
-    linear-gradient(135deg, rgba(34, 197, 94, 0.7), rgba(16, 185, 129, 0.7)),
-    url('./assets/family-bg.jpg');
+  background-image: linear-gradient(
+      135deg,
+      rgba(34, 197, 94, 0.7),
+      rgba(16, 185, 129, 0.7)
+    ),
+    url("./assets/family-bg.jpg");
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -133,9 +144,12 @@
 
 /* Additional beautiful backgrounds */
 .bg-family-tree-elegant {
-  background-image: 
-    linear-gradient(135deg, rgba(75, 85, 99, 0.8), rgba(31, 41, 55, 0.8)),
-    url('./assets/family-bg.jpg');
+  background-image: linear-gradient(
+      135deg,
+      rgba(75, 85, 99, 0.8),
+      rgba(31, 41, 55, 0.8)
+    ),
+    url("./assets/family-bg.jpg");
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -143,9 +157,12 @@
 }
 
 .bg-family-tree-romantic {
-  background-image: 
-    linear-gradient(135deg, rgba(236, 72, 153, 0.7), rgba(244, 63, 94, 0.7)),
-    url('./assets/family-bg.jpg');
+  background-image: linear-gradient(
+      135deg,
+      rgba(236, 72, 153, 0.7),
+      rgba(244, 63, 94, 0.7)
+    ),
+    url("./assets/family-bg.jpg");
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -153,9 +170,12 @@
 }
 
 .bg-family-tree-ocean {
-  background-image: 
-    linear-gradient(135deg, rgba(14, 165, 233, 0.7), rgba(6, 182, 212, 0.7)),
-    url('./assets/family-bg.jpg');
+  background-image: linear-gradient(
+      135deg,
+      rgba(14, 165, 233, 0.7),
+      rgba(6, 182, 212, 0.7)
+    ),
+    url("./assets/family-bg.jpg");
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -163,9 +183,12 @@
 }
 
 .bg-family-tree-sunset {
-  background-image: 
-    linear-gradient(135deg, rgba(251, 146, 60, 0.7), rgba(249, 115, 22, 0.7)),
-    url('./assets/family-bg.jpg');
+  background-image: linear-gradient(
+      135deg,
+      rgba(251, 146, 60, 0.7),
+      rgba(249, 115, 22, 0.7)
+    ),
+    url("./assets/family-bg.jpg");
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -237,7 +260,8 @@
 
 /* Floating particles animation */
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px);
   }
   50% {
@@ -289,22 +313,29 @@
 /* Family Tree View Styles */
 
 .font-inter {
-  font-family: 'Inter', sans-serif !important;
+  font-family: "Inter", sans-serif !important;
+}
+
+.font-playfair {
+  font-family: "Playfair Display", serif;
+  font-weight: 700;
+  letter-spacing: -0.01em; /* Điều chỉnh khoảng cách giữa chữ */
 }
 
 .family-tree-svg {
   shape-rendering: crispEdges !important;
   vector-effect: non-scaling-stroke !important;
   image-rendering: crisp-edges !important;
-  font-family: 'Inter', sans-serif !important;
+  font-family: "Inter", sans-serif !important;
 }
 
 .family-tree-svg text {
-  font-family: 'Inter', sans-serif !important;
+  font-family: "Inter", sans-serif !important;
   text-rendering: optimizeLegibility !important;
 }
 
-.family-tree-svg rect, .family-tree-svg circle {
+.family-tree-svg rect,
+.family-tree-svg circle {
   shape-rendering: crispEdges !important;
   vector-effect: non-scaling-stroke !important;
 }
@@ -314,7 +345,9 @@
   transition: fill 0.2s ease-in-out !important;
 }
 
-html, body, .min-h-screen {
+html,
+body,
+.min-h-screen {
   zoom: 1 !important;
   transform: scale(1) !important;
   transform-origin: top left !important;

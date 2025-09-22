@@ -12,7 +12,7 @@ import DocumentsPage from "../pages/Documents";
 import StoriesPage from "../pages/Stories";
 import MembersPage from "../pages/Members";
 import Logout from "@/pages/Logout/Logout";
-
+import SnapshotEditor from "@/pages/SnapshotEditor";
 
 export const publicRoutes: RouteObject[] = [
   { path: "/", element: <Home /> },
@@ -27,8 +27,8 @@ export const publicRoutes: RouteObject[] = [
   { path: "/documents", element: <DocumentsPage /> },
   { path: "/stories", element: <StoriesPage /> },
   { path: "/members", element: <MembersPage /> },
-  { path: "/logout", element: <Logout /> }
-  
+  { path: "/logout", element: <Logout /> },
+  { path: "/snapshot-editor", element: <SnapshotEditor /> },
 ];
 
 export default publicRoutes;
