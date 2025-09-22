@@ -59,6 +59,32 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
     loadTreeData();
   }, [treeId, personId]);
 
+  // Function to center the tree view
+  const centerTreeView = () => {
+    if (svgRef.current) {
+      const svg = d3.select(svgRef.current);
+      const width = parseInt(svg.attr("width")) || 2000;
+      const height = parseInt(svg.attr("height")) || 1200;
+      const centerX = width / 2;
+      const centerY = height / 2;
+      
+      const svgGroup = svg.select("g");
+      svgGroup.transition()
+        .duration(750)
+        .attr("transform", `translate(${centerX}, ${centerY}) scale(1)`);
+      
+      // Clear saved transform
+      sessionStorage.removeItem('familyTreeTransform');
+    }
+  };
+
+  // Expose center function to parent component
+  useEffect(() => {
+    if (svgRef.current) {
+      (svgRef.current as any).centerTreeView = centerTreeView;
+    }
+  }, [treeData]);
+
   const loadTreeData = async () => {
     try {
       setIsLoading(true);
@@ -123,22 +149,29 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
       )
       .append("g");
 
-    // Tính toán vị trí trung tâm
-    const svgRect = svgRef.current.getBoundingClientRect();
-    const centerX = svgRect.width / 2 - 100;
-    const centerY = svgRect.height / 2 - 100;
+    // Tính toán vị trí trung tâm - căn giữa cây gia phả
+    const centerX = width / 2;
+    const centerY = height / 2;
 
-    // Lấy transform từ sessionStorage nếu có, nếu không thì dùng vị trí trung tâm
-    let initialTransform = `translate(${centerX}, ${centerY})`;
+    // Luôn bắt đầu với vị trí trung tâm để đảm bảo cây hiển thị ở giữa
+    let initialTransform = `translate(${centerX}, ${centerY}) scale(1)`;
+    
+    // Chỉ load transform từ sessionStorage nếu user đã tương tác trước đó
+    // và không phải lần đầu vào trang
     const saved = sessionStorage.getItem('familyTreeTransform');
-    if (saved) {
+    const isFirstLoad = !sessionStorage.getItem('familyTreeInitialized');
+    
+    if (saved && !isFirstLoad) {
       try {
         const { x, y, k } = JSON.parse(saved);
         initialTransform = `translate(${x || centerX},${y || centerY}) scale(${k || 1})`;
       } catch {
-        // Nếu parse lỗi, dùng vị trí trung tâmh
-        initialTransform = `translate(${centerX}, ${centerY})`;
+        // Nếu parse lỗi, dùng vị trí trung tâm
+        initialTransform = `translate(${centerX}, ${centerY}) scale(1)`;
       }
+    } else {
+      // Đánh dấu đã khởi tạo để lần sau có thể load transform
+      sessionStorage.setItem('familyTreeInitialized', 'true');
     }
 
     const svgMain = svgGroup.append("g").attr("transform", initialTransform);
@@ -182,7 +215,7 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
       return Math.max(selfWidth, childrenTotal);
     }
 
-    function calculatePositions(person: TreeNode, x = width / 2, y = 100, generation = 0) {
+    function calculatePositions(person: TreeNode, x = 0, y = 0, generation = 0) {
       const mainNode = { ...(person as any), x, y, generation } as TreeNode & {
         x: number;
         y: number;
@@ -234,7 +267,8 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
       }
     }
 
-    calculatePositions(treeData as TreeNode);
+    // Bắt đầu tính toán từ vị trí (0, 0) để cây được căn giữa tự nhiên
+    calculatePositions(treeData as TreeNode, 0, 0);
 
     // Vẽ liên kết vợ/chồng
     svgMain.selectAll(".spouse-link")

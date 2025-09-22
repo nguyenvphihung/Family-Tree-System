@@ -1,8 +1,6 @@
 import { API_ENDPOINTS } from "../config/apiEndpoints";
 import {
   LoginCredentials,
-  AuthResponse,
-  RefreshTokenResponse,
   RegisterCredentials,
   RegisterResponse,
   LoginResponse
@@ -10,57 +8,44 @@ import {
 import { makeRequest } from "../utils";
 
 class AuthService {
-
   private readonly TOKEN_KEY = 'auth_token';
-  private readonly REFRESH_TOKEN_KEY = 'refresh_token';
   private readonly IS_AUTHENTICATED_KEY = 'isAuthenticated';
   private readonly REMEMBER_ME_KEY = 'rememberMe';
 
-  
-  saveTokens(token: string, refreshToken?: string, rememberMe: boolean = false): void {
-    console.log('🔧 Đang lưu token:', { token: token.substring(0, 20) + '...', rememberMe });
+  // lưu token
+  saveTokens(token: string, rememberMe: boolean = false): void {
+    console.log('Đang lưu token:', { token: token.substring(0, 20) + '...', rememberMe });
 
     localStorage.setItem(this.TOKEN_KEY, token);
     localStorage.setItem(this.IS_AUTHENTICATED_KEY, 'true');
-
-    if (refreshToken) {
-      localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
-    }
 
     if (rememberMe) {
       localStorage.setItem(this.REMEMBER_ME_KEY, 'true');
     }
 
-    // Verify token đã được lưu
     const savedToken = localStorage.getItem(this.TOKEN_KEY);
     const savedAuth = localStorage.getItem(this.IS_AUTHENTICATED_KEY);
 
-    console.log('✅ Token đã được lưu vào localStorage:', {
+    console.log('Token đã được lưu vào localStorage:', {
       tokenSaved: !!savedToken,
       authSaved: savedAuth,
       tokenPreview: savedToken?.substring(0, 20) + '...'
     });
   }
 
-  // Method để xóa token
+  // xóa token
   clearTokens(): void {
     localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem(this.IS_AUTHENTICATED_KEY);
     localStorage.removeItem(this.REMEMBER_ME_KEY);
-    console.log('🗑️ Token đã được xóa khỏi localStorage');
+    console.log('Token đã được xóa khỏi localStorage');
   }
 
   // Method để lấy token
   getToken(): string | null {
     const token = localStorage.getItem(this.TOKEN_KEY);
-    console.log('🔍 Lấy token từ localStorage:', token ? 'Có token' : 'Không có token');
+    console.log('Lấy token từ localStorage:', token ? 'Có token' : 'Không có token');
     return token;
-  }
-
-  // Method để lấy refresh token
-  getRefreshToken(): string | null {
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
   }
 
   // Method để kiểm tra trạng thái đăng nhập
@@ -68,7 +53,7 @@ class AuthService {
     const token = this.getToken();
     const isAuth = localStorage.getItem(this.IS_AUTHENTICATED_KEY);
     const result = !!(token && isAuth === 'true');
-    console.log('🔐 Kiểm tra authentication:', { hasToken: !!token, isAuth, result });
+    console.log('Kiểm tra authentication:', { hasToken: !!token, isAuth, result });
     return result;
   }
 
@@ -77,29 +62,29 @@ class AuthService {
     return localStorage.getItem(this.REMEMBER_ME_KEY) === 'true';
   }
 
-  
+  // API Login
   async loginAPI(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
-      console.log('📡 Gọi API login với credentials:', { phone: credentials.phone });
+      console.log('Gọi API login với credentials:', { phone: credentials.phone });
 
       const result = await makeRequest(API_ENDPOINTS.AUTH.LOGIN, 'POST', credentials, 'response-area');
 
-      console.log('📨 Raw result từ makeRequest:', result);
+      console.log('Raw result từ makeRequest:', result);
 
       if (result.error) {
-        console.error('❌ Lỗi từ makeRequest:', result.error);
+        console.error('Lỗi từ makeRequest:', result.error);
         throw new Error(result.error.message);
       }
 
-      console.log('✅ Response data từ API:', result.data);
+      console.log('Response data từ API:', result.data);
       return result.data;
     } catch (error: any) {
-      console.error('❌ Lỗi gọi API login:', error);
+      console.error('Lỗi gọi API login:', error);
       throw error;
     }
   }
 
-
+  // API Register
   async registerAPI(credentials: RegisterCredentials): Promise<RegisterResponse> {
     try {
       const result = await makeRequest(API_ENDPOINTS.AUTH.REGISTER, 'POST', credentials, 'response-area');
@@ -108,12 +93,12 @@ class AuthService {
       }
       return result.data;
     } catch (error: any) {
-      console.error('❌ Lỗi gọi API register:', error);
+      console.error('Lỗi gọi API register:', error);
       throw error;
     }
   }
 
-  
+  // API Get Current User
   async getCurrentUserAPI(): Promise<any> {
     try {
       const result = await makeRequest(API_ENDPOINTS.AUTH.ME, 'GET', null, 'response-area');
@@ -122,21 +107,7 @@ class AuthService {
       }
       return result.data;
     } catch (error: any) {
-      console.error('❌ Lỗi gọi API getCurrentUser:', error);
-      throw error;
-    }
-  }
-
-  // API Refresh token
-  async refreshTokenAPI(refreshToken: string): Promise<RefreshTokenResponse> {
-    try {
-      const result = await makeRequest(API_ENDPOINTS.AUTH.REFRESH, 'POST', { refreshToken }, 'response-area');
-      if (result.error) {
-        throw new Error(result.error.message);
-      }
-      return result.data;
-    } catch (error: any) {
-      console.error('❌ Lỗi gọi API refresh token:', error);
+      console.error('Lỗi gọi API getCurrentUser:', error);
       throw error;
     }
   }
@@ -150,12 +121,10 @@ class AuthService {
       }
       return result.data;
     } catch (error: any) {
-      console.error('❌ Lỗi gọi API logout:', error);
+      console.error('Lỗi gọi API logout:', error);
       throw error;
     }
   }
-
-  // ==================== BUSINESS LOGIC METHODS ====================
 
   // Xử lý đăng nhập hoàn chỉnh
   async login(credentials: LoginCredentials, rememberMe: boolean = false): Promise<{
@@ -164,12 +133,12 @@ class AuthService {
     data?: any;
   }> {
     try {
-      console.log('🚀 Bắt đầu process đăng nhập...');
+      console.log('Bắt đầu process đăng nhập...');
 
       // 1. Gọi API đăng nhập
       const response = await this.loginAPI(credentials);
 
-      console.log('📋 Response từ API:', {
+      console.log('Response từ API:', {
         code: response.code,
         status: response.status,
         message: response.message,
@@ -178,21 +147,15 @@ class AuthService {
         hasToken: !!response.data?.token
       });
 
-      // 2. Kiểm tra response - DEBUG CHI TIẾT
-      console.log('🔍 Kiểm tra conditions:');
-      console.log('- response.code === 0:', response.code === 0);
-      console.log('- response.data.authenticated:', response.data?.authenticated);
-      console.log('- response.data.token exists:', !!response.data?.token);
-
       if (response.data?.authenticated && response.data?.token) {
-        console.log('✅ Tất cả conditions đều OK, tiến hành lưu token...');
+        console.log('Tất cả conditions đều OK, tiến hành lưu token...');
 
         // 3. Lưu token
-        this.saveTokens(response.data.token, undefined, rememberMe);
+        this.saveTokens(response.data.token, rememberMe);
 
         // 4. Verify token đã được lưu
         const verifyToken = this.getToken();
-        console.log('🔍 Verify token sau khi lưu:', !!verifyToken);
+        console.log('Verify token sau khi lưu:', !!verifyToken);
 
         return {
           success: true,
@@ -200,14 +163,14 @@ class AuthService {
           data: response.data
         };
       } else {
-        console.log('❌ Một hoặc nhiều conditions fail, không lưu token');
+        console.log('Một hoặc nhiều conditions fail, không lưu token');
         return {
           success: false,
           message: response.message || 'Đăng nhập thất bại'
         };
       }
     } catch (error: any) {
-      console.error('💥 Exception trong login process:', error);
+      console.error('Exception trong login process:', error);
       return {
         success: false,
         message: error.message || 'Đăng nhập thất bại. Vui lòng thử lại sau.'
@@ -282,13 +245,13 @@ class AuthService {
     }
   }
 
-  // Xử lý đăng xuất hoàn chỉnh - CHỈ XÓA TOKEN
+  // Xử lý đăng xuất 
   async logout(): Promise<{
     success: boolean;
     message: string;
   }> {
     try {
-      console.log('🚪 Đăng xuất - chỉ xóa token local');
+      console.log('Đăng xuất - chỉ xóa token local');
 
       // xóa token khỏi localStorage
       this.clearTokens();
@@ -307,77 +270,13 @@ class AuthService {
     }
   }
 
-  // Hoặc tạo method logout đồng bộ đơn giản hơn
-  logoutSync(): void {
-    console.log('🚪 Đăng xuất đồng bộ - xóa token');
-    this.clearTokens();
-  }
-
-  // Refresh token với xử lý logic
-  async refreshToken(): Promise<{
-    success: boolean;
-    message: string;
-  }> {
-    try {
-      const refreshToken = this.getRefreshToken();
-      if (!refreshToken) {
-        return {
-          success: false,
-          message: 'Không có refresh token'
-        };
-      }
-
-      // Gọi API refresh
-      const response = await this.refreshTokenAPI(refreshToken);
-
-      // Lưu token mới
-      if (response.token) {
-        this.saveTokens(response.token, response.refreshToken, this.isRememberMe());
-        return {
-          success: true,
-          message: 'Refresh token thành công'
-        };
-      } else {
-        this.clearTokens();
-        return {
-          success: false,
-          message: 'Không thể refresh token'
-        };
-      }
-    } catch (error: any) {
-      this.clearTokens();
-      return {
-        success: false,
-        message: error.message || 'Refresh token thất bại'
-      };
-    }
-  }
-
-  // Validate và auto refresh token
-  async validateAndRefreshToken(): Promise<boolean> {
-    if (!this.isAuthenticated()) {
-      return false;
-    }
-
-    // Thử lấy thông tin user để test token
-    const userResult = await this.getCurrentUser();
-
-    if (userResult.success) {
-      return true;
-    }
-
-    // Nếu fail, thử refresh token
-    const refreshResult = await this.refreshToken();
-    return refreshResult.success;
-  }
-
+ 
   // Method để debug localStorage
   debugLocalStorage(): void {
-    console.log('🔍 DEBUG LOCALSTORAGE:');
+    console.log('DEBUG LOCALSTORAGE:');
     console.log('- auth_token:', localStorage.getItem(this.TOKEN_KEY) ? 'CÓ' : 'KHÔNG');
     console.log('- isAuthenticated:', localStorage.getItem(this.IS_AUTHENTICATED_KEY));
     console.log('- rememberMe:', localStorage.getItem(this.REMEMBER_ME_KEY));
-    console.log('- refresh_token:', localStorage.getItem(this.REFRESH_TOKEN_KEY) ? 'CÓ' : 'KHÔNG');
   }
 }
 

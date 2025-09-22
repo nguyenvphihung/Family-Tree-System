@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { D3FamilyTreeView } from "../../components/family-tree";
 import { FamilyMember } from "../../types/family";
 import PersonInfoModal from "../../components/family-tree/PersonInfoModal";
@@ -15,6 +15,18 @@ const FamilyTreeDemo: React.FC = () => {
   // State cho modal xem thông tin và modal thêm thành viên
   const [showPersonInfoModal, setShowPersonInfoModal] = useState(false);
   const [showAddChildModal, setShowAddChildModal] = useState(false);
+
+  // Auto center tree when component mounts
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const svgElement = document.querySelector('.family-tree-svg') as any;
+      if (svgElement && svgElement.centerTreeView) {
+        svgElement.centerTreeView();
+      }
+    }, 1000); // Wait for tree to load
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleZoomIn = () => {
     setZoomLevel((prev) => Math.min(prev + 0.2, 3));
@@ -34,6 +46,11 @@ const FamilyTreeDemo: React.FC = () => {
 
   const handleZoomCenter = () => {
     setZoomLevel(1);
+    // Center the tree view
+    const svgElement = document.querySelector('.family-tree-svg') as any;
+    if (svgElement && svgElement.centerTreeView) {
+      svgElement.centerTreeView();
+    }
   };
 
   // Function để xử lý khi click vào node
