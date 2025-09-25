@@ -29,13 +29,13 @@ export const useAuthStore = create<AuthStore>()(
         isLoading: false,
         error: null,
 
-        login: async (email: string, password: string) => {
+        login: async (phone: string, password: string) => {
           try {
             set({ isLoading: true, error: null });
-            const response = await authService.login({ email, password });
+            const response = await authService.login({ phone, password });
             set({
-              user: response.user,
-              token: response.token,
+              user: response.data.user,
+              token: response.data.token,
               isAuthenticated: true,
               isLoading: false,
             });

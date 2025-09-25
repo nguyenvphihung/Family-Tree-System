@@ -87,7 +87,7 @@ class FamilyService {
   // Get person with relations
   async getPersonWithRelations(treeId: string, personId: string): Promise<any> {
     try {
-      const result = await makeRequest(`/relations/trees/${treeId}/persons/${personId}`, 'GET', null, 'response-area', { maxDepth: 5 });
+      const result = await makeRequest(`/relations/trees/${treeId}`, 'GET', null, 'response-area', { maxDepth: 7 });
       if (result.error) {
         // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
         throw new Error(result.error.message);

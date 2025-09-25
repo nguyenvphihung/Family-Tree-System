@@ -33,13 +33,13 @@ function App() {
       'bg-family-tree-sunset',
       'bg-gradient-animated'
     );
-    
+
     // Add current theme class
     document.body.classList.add(`bg-${currentTheme}`);
   }, [currentTheme]);
 
   return (
-    <div className={`h-screen overflow-hidden ${currentTheme === 'gradient-animated' ? 'bg-gradient-animated' : `bg-${currentTheme}`}`}>
+    <div className={`min-h-screen ${currentTheme === 'gradient-animated' ? 'bg-gradient-animated' : `bg-${currentTheme}`}`}>
       <AppRouter />
     </div>
   );
