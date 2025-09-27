@@ -173,7 +173,7 @@ export interface GetTreeRelationsResponse {
       generation: number;
       createdAt: string;
       marriageDate: string;
-      divorceDate: string;
+      divorceDate?: string | null; // Có thể null nếu chưa ly hôn
     }>;
     children: string[];
   };
@@ -202,7 +202,7 @@ export interface GetPersonTreeRelationsResponse {
       generation: number;
       createdAt: string;
       marriageDate: string;
-      divorceDate: string;
+      divorceDate?: string | null; // Có thể null nếu chưa ly hôn
     }>;
     children: string[];
   };

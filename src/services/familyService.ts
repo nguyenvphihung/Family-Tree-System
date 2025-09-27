@@ -102,8 +102,9 @@ class FamilyService {
   // GET /relations/trees/{treeId}?maxDepth={maxDepth} - Get tree relations
   async getTreeRelations(treeId: string, maxDepth: number = 7): Promise<GetTreeRelationsResponse['data']> {
     try {
+     
       const response = await api.get<GetTreeRelationsResponse>(`/relations/trees/${treeId}?maxDepth=${maxDepth}`);
-
+      //  console.log("sss" + treeId);
       if (response.data.code === 0) {
         console.log('Tree relations fetched successfully:', response.data.message);
         return response.data.data;
