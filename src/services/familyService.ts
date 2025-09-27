@@ -1,4 +1,4 @@
-import api from '../config/axios';
+import { API_ENDPOINTS } from '../config/apiEndpoints';
 import {
   CreateTreeRequest,
   CreateTreeResponse,
@@ -29,280 +29,230 @@ import {
   DeleteImageResponse,
   DeletePersonResponse
 } from '../types/family';
+import { makeRequest } from '../utils';
 
 class FamilyService {
   // POST /trees - Create a new tree
   async createTree(data: CreateTreeRequest): Promise<CreateTreeResponse['data']> {
     try {
-      const response = await api.post<CreateTreeResponse>('/trees', data);
-
-      if (response.data.code === 0) {
-        console.log('Tree created successfully:', response.data.message);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to create tree');
+      const result = await makeRequest(API_ENDPOINTS.RELATIONS.CREATE_TREE, 'POST', data, 'response-area');
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+      console.log(result.success);
+      return result.data.data;
     } catch (error: any) {
-      console.error('Error creating tree:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to create tree');
+      throw error;
     }
   }
 
   // GET /trees?userId={userId} - Get all trees of a user
   async getUserTrees(userId: string): Promise<GetUserTreesResponse['data']> {
     try {
-      const response = await api.get<GetUserTreesResponse>(`/trees?userId=${userId}`);
-
-      if (response.data.code === 0) {
-        console.log('User trees fetched successfully:', response.data.message);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to fetch user trees');
+      const result = await makeRequest(API_ENDPOINTS.RELATIONS.GET_USER_TREES, 'GET', null, 'response-area', { userId });
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+      console.log(result.success);
+      return result.data.data;
     } catch (error: any) {
-      console.error('Error fetching user trees:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to fetch user trees');
+      throw error;
     }
   }
 
   // PUT /trees/{treeId} - Update tree information
   async updateTree(treeId: string, data: UpdateTreeRequest): Promise<UpdateTreeResponse['data']> {
     try {
-      const response = await api.put<UpdateTreeResponse>(`/trees/${treeId}`, data);
-
-      if (response.data.code === 0) {
-        console.log('Tree updated successfully:', response.data.message);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to update tree');
+      const result = await makeRequest(`${API_ENDPOINTS.RELATIONS.UPDATE_TREE}/${treeId}`, 'PUT', data, 'response-area');
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+      console.log(result.success);
+      return result.data.data;
     } catch (error: any) {
-      console.error('Error updating tree:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to update tree');
+      throw error;
     }
   }
 
   // DELETE /trees/{treeId} - Delete tree
   async deleteTree(treeId: string): Promise<DeleteTreeResponse['data']> {
     try {
-      const response = await api.delete<DeleteTreeResponse>(`/trees/${treeId}`);
-
-      if (response.data.code === 0) {
-        console.log('Tree deleted successfully:', response.data.message);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to delete tree');
+      const result = await makeRequest(`${API_ENDPOINTS.RELATIONS.DELETE_TREE}/${treeId}`, 'DELETE', null, 'response-area');
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+      console.log(result.success);
+      return result.data.data;
     } catch (error: any) {
-      console.error('Error deleting tree:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to delete tree');
+      throw error;
     }
   }
 
   // GET /relations/trees/{treeId}?maxDepth={maxDepth} - Get tree relations
-  async getTreeRelations(treeId: string, maxDepth: number = 7): Promise<GetTreeRelationsResponse['data']> {
+  async getTreeRelations(treeId: string, maxDepth: number = 7): Promise<any> {
     try {
-     
-      const response = await api.get<GetTreeRelationsResponse>(`/relations/trees/${treeId}?maxDepth=${maxDepth}`);
-      //  console.log("sss" + treeId);
-      if (response.data.code === 0) {
-        console.log('Tree relations fetched successfully:', response.data.message);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to fetch tree relations');
+      const result = await makeRequest(`${API_ENDPOINTS.RELATIONS.GET_TREE_RELATIONS}/${treeId}`, 'GET', null, 'response-area', { maxDepth });
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+      console.log(result.success);
+      return result.data;
     } catch (error: any) {
-      console.error('Error fetching tree relations:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to fetch tree relations');
+      throw error;
     }
   }
 
   // GET /relations/trees/{treeId}/persons/{personId}?maxDepth={maxDepth} - Get person tree relations
   async getPersonTreeRelations(treeId: string, personId: string, maxDepth: number = 7): Promise<GetPersonTreeRelationsResponse['data']> {
     try {
-      const response = await api.get<GetPersonTreeRelationsResponse>(`/relations/trees/${treeId}/persons/${personId}?maxDepth=${maxDepth}`);
-
-      if (response.data.code === 0) {
-        console.log('Person tree relations fetched successfully:', response.data.message);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to fetch person tree relations');
+      const result = await makeRequest(`${API_ENDPOINTS.RELATIONS.GET_PERSON_TREE_RELATIONS}/${treeId}/persons/${personId}`, 'GET', null, 'response-area', { maxDepth });
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+      console.log(result.success);
+      return result.data.data;
     } catch (error: any) {
-      console.error('Error fetching person tree relations:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to fetch person tree relations');
+      throw error;
     }
   }
 
   // POST /relations/trees/{treeId}/children - Add child to tree
   async addChild(treeId: string, data: AddChildRequest): Promise<AddChildResponse['data']> {
     try {
-      const response = await api.post<AddChildResponse>(`/relations/trees/${treeId}/children`, data);
-
-      if (response.data.code === 0) {
-        console.log('Child added successfully:', response.data.message);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to add child');
+      const result = await makeRequest(`${API_ENDPOINTS.RELATIONS.ADD_CHILD}/${treeId}/children`, 'POST', data, 'response-area');
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+      console.log(result.success);
+      return result.data.data;
     } catch (error: any) {
-      console.error('Error adding child:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to add child');
+      throw error;
     }
   }
 
   // POST /relations/trees/{treeId}/parent - Add parent to tree
   async addParent(treeId: string, data: AddParentRequest): Promise<AddParentResponse['data']> {
     try {
-      const response = await api.post<AddParentResponse>(`/relations/trees/${treeId}/parent`, data);
-
-      if (response.data.code === 0) {
-        console.log('Parent added successfully:', response.data.message);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to add parent');
+      const result = await makeRequest(`${API_ENDPOINTS.RELATIONS.ADD_PARENT}/${treeId}/parent`, 'POST', data, 'response-area');
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+      console.log(result.success);
+      return result.data.data;
     } catch (error: any) {
-      console.error('Error adding parent:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to add parent');
+      throw error;
     }
   }
 
   // POST /relations/trees/{treeId}/root - Create root person in tree
   async createRootPerson(treeId: string, data: CreateRootPersonRequest): Promise<CreateRootPersonResponse['data']> {
     try {
-      const response = await api.post<CreateRootPersonResponse>(`/relations/trees/${treeId}/root`, data);
-
-      if (response.data.code === 0) {
-        console.log('Root person created successfully:', response.data.message);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to create root person');
+      const result = await makeRequest(`${API_ENDPOINTS.RELATIONS.CREATE_ROOT_PERSON}/${treeId}/root`, 'POST', data, 'response-area');
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+      console.log(result.success);
+      return result.data.data;
     } catch (error: any) {
-      console.error('Error creating root person:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to create root person');
+      throw error;
     }
   }
 
   // POST /relations/trees/{treeId}/spouses/{spouseId} - Add spouse marriage
   async addSpouse(treeId: string, spouseId: string, data: AddSpouseRequest): Promise<AddSpouseResponse['data']> {
     try {
-      const response = await api.post<AddSpouseResponse>(`/relations/trees/${treeId}/spouses/${spouseId}`, data);
-
-      if (response.data.code === 0) {
-        console.log('Spouse added successfully:', response.data.message);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to add spouse');
+      const result = await makeRequest(`${API_ENDPOINTS.RELATIONS.ADD_SPOUSE}/${treeId}/spouses/${spouseId}`, 'POST', data, 'response-area');
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+      console.log(result.success);
+      return result.data.data;
     } catch (error: any) {
-      console.error('Error adding spouse:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to add spouse');
+      throw error;
     }
   }
 
   // POST /albums - Create a new album
   async createAlbum(data: CreateAlbumRequest): Promise<CreateAlbumResponse['data']> {
     try {
-      const response = await api.post<CreateAlbumResponse>('/albums', data);
-
-      if (response.data.code === 0) {
-        console.log('Album created successfully:', response.data.message);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to create album');
+      const result = await makeRequest(API_ENDPOINTS.ALBUMS.CREATE_ALBUM, 'POST', data, 'response-area');
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+      console.log(result.success);
+      return result.data.data;
     } catch (error: any) {
-      console.error('Error creating album:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to create album');
+      throw error;
     }
   }
 
   // PUT /albums/{albumId} - Update album information
   async updateAlbum(albumId: string, data: UpdateAlbumRequest): Promise<UpdateAlbumResponse['data']> {
     try {
-      const response = await api.put<UpdateAlbumResponse>(`/albums/${albumId}`, data);
-
-      if (response.data.code === 0) {
-        console.log('Album updated successfully:', response.data.message);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to update album');
+      const result = await makeRequest(`${API_ENDPOINTS.ALBUMS.UPDATE_ALBUM}/${albumId}`, 'PUT', data, 'response-area');
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+      console.log(result.success);
+      return result.data.data;
     } catch (error: any) {
-      console.error('Error updating album:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to update album');
+      throw error;
     }
   }
 
   // DELETE /albums/{albumId} - Delete album
   async deleteAlbum(albumId: string): Promise<DeleteAlbumResponse['data']> {
     try {
-      const response = await api.delete<DeleteAlbumResponse>(`/albums/${albumId}`);
-
-      if (response.data.code === 0) {
-        console.log('Album deleted successfully:', response.data.message);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to delete album');
+      const result = await makeRequest(`${API_ENDPOINTS.ALBUMS.DELETE_ALBUM}/${albumId}`, 'DELETE', null, 'response-area');
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+      console.log(result.success);
+      return result.data.data;
     } catch (error: any) {
-      console.error('Error deleting album:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to delete album');
+      throw error;
     }
   }
 
   // GET /albums?userId={userId} - Get all albums of a user
   async getUserAlbums(userId: string): Promise<GetUserAlbumsResponse['data']> {
     try {
-      const response = await api.get<GetUserAlbumsResponse>(`/albums?userId=${userId}`);
-
-      if (response.data.code === 0) {
-        console.log('User albums fetched successfully:', response.data.message);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to fetch user albums');
+      const result = await makeRequest(API_ENDPOINTS.ALBUMS.GET_USER_ALBUMS, 'GET', null, 'response-area', { userId });
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+      console.log(result.success);
+      return result.data.data;
     } catch (error: any) {
-      console.error('Error fetching user albums:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to fetch user albums');
+      throw error;
     }
   }
 
   // GET /images/{imageId} - Get image by ID
   async getImage(imageId: string): Promise<GetImageResponse['data']> {
     try {
-      const response = await api.get<GetImageResponse>(`/images/${imageId}`);
-
-      if (response.data.code === 0) {
-        console.log('Image fetched successfully:', response.data.message);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to fetch image');
+      const result = await makeRequest(`${API_ENDPOINTS.IMAGES.GET_IMAGE}/${imageId}`, 'GET', null, 'response-area');
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+      console.log(result.success);
+      return result.data.data;
     } catch (error: any) {
-      console.error('Error fetching image:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to fetch image');
+      throw error;
     }
   }
 
   // GET /images/by-album - Get images by albumId
   async getImagesByAlbum(albumId: string): Promise<GetImagesByAlbumResponse['data']> {
     try {
-      const response = await api.get<GetImagesByAlbumResponse>(`/images/by-album`, {
-        params: { albumId }
-      });
-
-      if (response.data.code === 0) {
-        console.log('Images by album fetched successfully:', response.data.message);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to fetch images by album');
+      const result = await makeRequest(API_ENDPOINTS.IMAGES.GET_IMAGES_BY_ALBUM, 'GET', null, 'response-area', { albumId });
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+      console.log(result.success);
+      return result.data.data;
     } catch (error: any) {
-      console.error('Error fetching images by album:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to fetch images by album');
+      throw error;
     }
   }
 
@@ -310,56 +260,44 @@ class FamilyService {
   async uploadImage(data: UploadImageRequest): Promise<UploadImageResponse['data']> {
     try {
       const { file, name, albumId } = data;
-      const response = await api.post<UploadImageResponse>(`/images/upload`,
-        { file },
-        {
-          params: { name, albumId }
-        }
-      );
-
-      if (response.data.code === 0) {
-        console.log('Image uploaded successfully:', response.data.message);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to upload image');
+      // Sử dụng makeRequest với endpoint có query params
+      const endpoint = `${API_ENDPOINTS.IMAGES.UPLOAD_IMAGE}?name=${encodeURIComponent(name)}&albumId=${encodeURIComponent(albumId)}`;
+      const result = await makeRequest(endpoint, 'POST', { file }, 'response-area');
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+      console.log(result.success);
+      return result.data.data;
     } catch (error: any) {
-      console.error('Error uploading image:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to upload image');
+      throw error;
     }
   }
 
   // DELETE /images/{imageId} - Delete image by ID
   async deleteImage(imageId: string): Promise<DeleteImageResponse['data']> {
     try {
-      const response = await api.delete<DeleteImageResponse>(`/images/${imageId}`);
-
-      if (response.data.code === 0) {
-        console.log('Image deleted successfully:', response.data.message);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to delete image');
+      const result = await makeRequest(`${API_ENDPOINTS.IMAGES.DELETE_IMAGE}/${imageId}`, 'DELETE', null, 'response-area');
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+      console.log(result.success);
+      return result.data.data;
     } catch (error: any) {
-      console.error('Error deleting image:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to delete image');
+      throw error;
     }
   }
 
   // DELETE /persons/{personId} - Delete person by ID
   async deletePerson(personId: string): Promise<DeletePersonResponse['data']> {
     try {
-      const response = await api.delete<DeletePersonResponse>(`/persons/${personId}`);
-
-      if (response.data.code === 0) {
-        console.log('Person deleted successfully:', response.data.message);
-        return response.data.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to delete person');
+      const result = await makeRequest(`${API_ENDPOINTS.RELATIONS.DELETE_PERSON}/${personId}`, 'DELETE', null, 'response-area');
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+      console.log(result.success);
+      return result.data.data;
     } catch (error: any) {
-      console.error('Error deleting person:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Failed to delete person');
+      throw error;
     }
   }
 }

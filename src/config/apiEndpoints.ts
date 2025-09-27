@@ -29,13 +29,36 @@ export const API_ENDPOINTS = {
   RELATIONS: {
     // Tree management
     CREATE_TREE: '/trees',
-    CREATE_TREE_ROOT: '/trees',
-    ADD_CHILDREN: '/trees',
-    ADD_PARENT: '/trees',
-    ADD_SPOUSE: '/trees',
+    GET_USER_TREES: '/trees',
+    UPDATE_TREE: '/trees',
+    DELETE_TREE: '/trees',
+    GET_TREE_RELATIONS: '/relations/trees',
+    GET_PERSON_TREE_RELATIONS: '/relations/trees',
+
+    // Tree relations
+    ADD_CHILD: '/relations/trees',
+    ADD_PARENT: '/relations/trees',
+    CREATE_ROOT_PERSON: '/relations/trees',
+    ADD_SPOUSE: '/relations/trees',
 
     // Person management
-    GET_PERSON: '/trees',
+    DELETE_PERSON: '/persons',
+  },
+
+  // Album endpoints
+  ALBUMS: {
+    CREATE_ALBUM: '/albums',
+    UPDATE_ALBUM: '/albums',
+    DELETE_ALBUM: '/albums',
+    GET_USER_ALBUMS: '/albums',
+  },
+
+  // Image endpoints
+  IMAGES: {
+    GET_IMAGE: '/images',
+    GET_IMAGES_BY_ALBUM: '/images/by-album',
+    UPLOAD_IMAGE: '/images/upload',
+    DELETE_IMAGE: '/images',
   },
 
   // Onboarding endpoints

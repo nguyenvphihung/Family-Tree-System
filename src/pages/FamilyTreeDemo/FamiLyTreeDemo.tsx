@@ -6,7 +6,6 @@ import AddChildModal from "../../components/family-tree/AddChildModal";
 
 const FamilyTreeDemo: React.FC = () => {
   const treeId = "0226ba13-99b2-4ffc-a24f-cdb1a775217f";
-  const personId = "a9c25ec0-e43b-43b3-9a65-ad48756f4138";
   const [zoomLevel, setZoomLevel] = useState(1);
 
   // State để lưu thông tin node được chọn
@@ -247,7 +246,7 @@ const FamilyTreeDemo: React.FC = () => {
                 </div>
                 <div className="text-xs text-gray-500">
                   {selectedPerson ? (
-                    selectedPerson.id === personId ? "This is you" : "Family member"
+                    "Family member"
                   ) : (
                     "Click vào thành viên để xem thông tin"
                   )}
@@ -551,7 +550,7 @@ const FamilyTreeDemo: React.FC = () => {
           >
             <D3FamilyTreeView
               treeId={treeId}
-              personId={personId}
+              personId={selectedPerson?.id || ""}
               zoomLevel={zoomLevel}
               onRefresh={() => { }}
               onNodeClick={handleNodeClick} // Truyền callback function

@@ -1,33 +1,70 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { Children, useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
+import { FamilyMember } from '../../types/family';
 import familyService from '../../services/familyService';
+import { getPersonAvatar } from '../../assets/avatars';
+import { formatDateCompact } from '../../utils/familyUtils';
+import cameraIcon from '../../assets/avatars/camera.png';
+import AddChildModal from './AddChildModal';
+import AddParentModal from './AddParentModal';
+import AddSpouseModal from './AddSpouseModal';
+import PersonInfoModal from './PersonInfoModal';
+import DeleteConfirmModal from './DeleteConfirmModal';
+import ContextMenu from './ContextMenu';
 
 interface D3FamilyTreeViewProps {
-  treeId: string;
-  personId?: string;
+  treeId: string
+  personId: string;
   zoomLevel?: number;
   onRefresh?: () => void;
-  onNodeClick?: (person: any) => void;
+  onNodeClick?: (person: FamilyMember) => void; // Thêm prop này là hiển thị tên người khi click vào node
+}
+
+interface TreeNode extends FamilyMember {
+  x?: number;
+  y?: number;
 }
 
 const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
   treeId,
-  personId,
+
   zoomLevel = 1,
   onRefresh,
-  onNodeClick
+  onNodeClick // Nhận prop
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
-  const [treeData, setTreeData] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [treeData, setTreeData] = useState<TreeNode | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Center tree function
+  // Modal states
+  const [showAddChildModal, setShowAddChildModal] = useState(false);
+  const [showAddParentModal, setShowAddParentModal] = useState(false);
+  const [showAddSpouseModal, setShowAddSpouseModal] = useState(false);
+  const [showPersonInfoModal, setShowPersonInfoModal] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState({
+    isVisible: false,
+    x: 0,
+    y: 0
+  });
+
+  // Selected node for operations
+  const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
+
+  // Load tree data from API
+  useEffect(() => {
+    loadTreeData();
+  }, [treeId]);
+
+  // Function to center the tree view
   const centerTreeView = () => {
     if (svgRef.current) {
       const svg = d3.select(svgRef.current);
-      const width = parseInt(svg.attr("width")) || 1400;
-      const height = parseInt(svg.attr("height")) || 800;
+      const width = parseInt(svg.attr("width")) || 2000;
+      const height = parseInt(svg.attr("height")) || 1200;
       const centerX = width / 2;
       const centerY = height / 2;
 
@@ -36,591 +73,643 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
         .duration(750)
         .attr("transform", `translate(${centerX}, ${centerY}) scale(1)`);
 
+      // Clear saved transform
       sessionStorage.removeItem('familyTreeTransform');
     }
   };
 
-  // Expose center function
+  // Expose center function to parent component
   useEffect(() => {
     if (svgRef.current) {
       (svgRef.current as any).centerTreeView = centerTreeView;
     }
-  }, []);
+  }, [treeData]);
 
-  // Fetch family tree data
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!treeId || loading) return;
-
-      setLoading(true);
+  const loadTreeData = async () => {
+    try {
+      setIsLoading(true);
       setError(null);
-      setTreeData(null);
 
-      try {
-        let result;
-
-        if (personId) {
-          console.log(` Calling familyService.getPersonTreeRelations(${treeId}, ${personId})`);
-          result = await familyService.getPersonTreeRelations(treeId, personId);
-        } else {
-          console.log(` Calling familyService.getTreeRelations(${treeId})`);
-          result = await familyService.getTreeRelations(treeId);
-        }
-
-        console.log(' API Response:', result);
-
-        if (result) {
-          setTreeData(result);
-          setError(null);
-        } else {
-          setError('No data returned from API');
-        }
-
-      } catch (err: any) {
-        console.error(' API Error:', err);
-        setError(err.message || 'API call failed');
-      } finally {
-        setLoading(false);
+      const result = await familyService.getTreeRelations(treeId);
+      if (result.code === 200) {
+        setTreeData(result.data);
+      } else {
+        setError(result.message || 'Lỗi tải dữ liệu');
       }
-    };
+    } catch (err) {
+      setError('Lỗi kết nối server');
+      console.error('Error loading tree data:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchData();
-  }, [treeId, personId]);
-
-  // Render D3 Family Tree
+  // D3 tree rendering với SVG đẹp hơn
   useEffect(() => {
     if (!treeData || !svgRef.current) return;
 
-    console.log(' Rendering D3 family tree...', treeData);
+    // Lấy width/height từ sessionStorage nếu có
+    let width = 2000;
+    let height = 1200;
+    const sessionWidth = sessionStorage.getItem('familyTreeSvgWidth');
+    const sessionHeight = sessionStorage.getItem('familyTreeSvgHeight');
+    if (sessionWidth && sessionHeight) {
+      width = parseInt(sessionWidth, 10);
+      height = parseInt(sessionHeight, 10);
+    }
 
-    const svg = d3.select(svgRef.current);
-    const width = 1400;
-    const height = 800;
-
-    svg.attr("width", width)
+    const svg = d3.select(svgRef.current)
+      .attr("width", width)
       .attr("height", height)
-      .style("background", "#f8fafc")
       .style("cursor", "grab");
 
     svg.selectAll("*").remove();
 
-    // Add zoom functionality
-    const zoom = d3.zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.2, 3])
-      .on("start", function () {
-        d3.select(this).style("cursor", "grabbing");
-      })
-      .on("zoom", (event) => {
-        svgMain.attr("transform", event.transform);
-        sessionStorage.setItem('familyTreeTransform', JSON.stringify({
-          x: event.transform.x,
-          y: event.transform.y,
-          k: event.transform.k
-        }));
-      })
-      .on("end", function () {
-        d3.select(this).style("cursor", "grab");
-      });
+    // Nhóm chính để hỗ trợ zoom/pan
+    const svgGroup = svg
+      .call(
+        d3
+          .zoom<SVGSVGElement, unknown>()
+          .scaleExtent([0.2, 3])
+          .on("start", function () {
+            d3.select(this).style("cursor", "grabbing");
+          })
+          .on("zoom", (event) => {
+            svgMain.attr("transform", event.transform);
+            // Lưu transform vào sessionStorage
+            sessionStorage.setItem('familyTreeTransform', JSON.stringify({
+              x: event.transform.x,
+              y: event.transform.y,
+              k: event.transform.k
+            }));
+          })
+          .on("end", function () {
+            d3.select(this).style("cursor", "grab");
+          })
+      )
+      .append("g");
 
-    const svgGroup = svg.call(zoom).append("g");
-
+    // Tính toán vị trí trung tâm - căn giữa cây gia phả
     const centerX = width / 2;
     const centerY = height / 2;
 
-    // Check for saved transform
+    // Luôn bắt đầu với vị trí trung tâm để đảm bảo cây hiển thị ở giữa
     let initialTransform = `translate(${centerX}, ${centerY}) scale(1)`;
+
+    // Chỉ load transform từ sessionStorage nếu user đã tương tác trước đó
+    // và không phải lần đầu vào trang
     const saved = sessionStorage.getItem('familyTreeTransform');
-    if (saved) {
+    const isFirstLoad = !sessionStorage.getItem('familyTreeInitialized');
+
+    if (saved && !isFirstLoad) {
       try {
         const { x, y, k } = JSON.parse(saved);
-        initialTransform = `translate(${x || centerX}, ${y || centerY}) scale(${k || 1})`;
+        initialTransform = `translate(${x || centerX},${y || centerY}) scale(${k || 1})`;
       } catch {
+        // Nếu parse lỗi, dùng vị trí trung tâm
         initialTransform = `translate(${centerX}, ${centerY}) scale(1)`;
       }
+    } else {
+      // Đánh dấu đã khởi tạo để lần sau có thể load transform
+      sessionStorage.setItem('familyTreeInitialized', 'true');
     }
 
     const svgMain = svgGroup.append("g").attr("transform", initialTransform);
 
-    // Render main person (center)
-    const mainPersonGroup = svgMain.append("g")
-      .attr("class", "main-person")
-      .style("cursor", "pointer")
-      .on("click", () => {
-        console.log(' Main person clicked:', treeData);
-        if (onNodeClick) onNodeClick(treeData);
+    // Thu thập node/link theo thuật toán trong file HTML
+    const allNodes: Array<TreeNode & { x: number; y: number; generation: number }> = [];
+    const spouseLinks: Array<{ source: { x: number; y: number }; target: { x: number; y: number } }> = [];
+    const parentChildLinks: Array<{ source: { x: number; y: number }; target: { x: number; y: number } }> = [];
+
+    const nodeWidth = 200;
+    const nodeHeight = 90;
+    const spouseSpacing = 240;
+    const generationSpacing = 180;
+
+    function getCombinedChildren(person: TreeNode): TreeNode[] {
+      const directChildren = (person.children || []) as TreeNode[];
+      const spouseChildrenArrays = (person.spouses || []).map((s: any) => (s.children || []) as TreeNode[]);
+      const combined = [...directChildren, ...spouseChildrenArrays.flat()];
+      const uniqueById = new Map<string, TreeNode>();
+      combined.forEach((child: any) => {
+        if (child && child.id && !uniqueById.has(child.id)) {
+          uniqueById.set(child.id, child as TreeNode);
+        }
+      });
+      return Array.from(uniqueById.values());
+    }
+
+    function calculateSubtreeWidth(person: TreeNode): number {
+      const spouseSpacing = 500;
+      const minChildSpacing = 300;
+      const spouses = person.spouses || [];
+      const children = getCombinedChildren(person);
+      const selfWidth = nodeWidth + spouses.length * spouseSpacing;
+
+      if (children.length === 0) return Math.max(selfWidth, minChildSpacing);
+
+      let childrenTotal = 0;
+      children.forEach((c) => {
+        childrenTotal += calculateSubtreeWidth(c as TreeNode);
+      });
+      return Math.max(selfWidth, childrenTotal);
+    }
+
+    function calculatePositions(person: TreeNode, x = 0, y = 0, generation = 0) {
+      const mainNode = { ...(person as any), x, y, generation } as TreeNode & {
+        x: number;
+        y: number;
+        generation: number;
+      };
+      allNodes.push(mainNode);
+
+      // Vẽ spouse ngang
+      const spouses = person.spouses || [];
+      spouses.forEach((spouse: any, index: number) => {
+        const spouseX = x + (index + 1) * spouseSpacing;
+        const spouseNode = { ...(spouse as any), x: spouseX, y, generation };
+        allNodes.push(spouseNode);
+
+        // Tạo liên kết vợ/chồng
+        spouseLinks.push({
+          source: { x, y },
+          target: { x: spouseX, y }
+        });
       });
 
-    // Main person rectangle
-    mainPersonGroup.append("rect")
-      .attr("x", -90)
-      .attr("y", -50)
-      .attr("width", 180)
-      .attr("height", 100)
-      .attr("fill", treeData.gender === 'M' ? "#3B82F6" : "#EC4899")
-      .attr("stroke", "#FBBF24")
-      .attr("stroke-width", 4)
-      .attr("rx", 10)
-      .style("filter", "drop-shadow(3px 3px 6px rgba(0,0,0,0.3))");
+      // Tính vị trí trung tâm cha mẹ
+      let parentCenterX = x;
+      if (spouses.length > 0) {
+        const lastSpouseX = x + spouses.length * spouseSpacing;
+        parentCenterX = (x + lastSpouseX) / 2;
+      }
 
-    // Main person name
-    mainPersonGroup.append("text")
-      .attr("text-anchor", "middle")
-      .attr("y", -20)
-      .attr("fill", "white")
-      .attr("font-size", "16px")
-      .attr("font-weight", "bold")
-      .text(treeData.name || 'Unknown Person');
+      // Vẽ các node con căn giữa dưới cha mẹ
+      const children = getCombinedChildren(person);
+      if (children.length > 0) {
+        const childY = y + generationSpacing;
+        const childWidths = children.map((c) => calculateSubtreeWidth(c as TreeNode));
+        const totalChildrenWidth = childWidths.reduce((s, w) => s + w, 0);
+        let startX = parentCenterX - totalChildrenWidth / 2;
 
-    // Main person birthday
-    if (treeData.birthday) {
-      mainPersonGroup.append("text")
-        .attr("text-anchor", "middle")
-        .attr("y", 0)
-        .attr("fill", "white")
-        .attr("font-size", "12px")
-        .text(` ${treeData.birthday}`);
+        children.forEach((child: any, idx: number) => {
+          const childCenterX = startX + childWidths[idx] / 2;
+
+          // Tạo liên kết từ dưới card cha mẹ xuống con
+          parentChildLinks.push({
+            source: { x: parentCenterX, y: y + nodeHeight / 50 },
+            target: { x: childCenterX, y: childY - nodeHeight / 10 }
+          });
+
+          calculatePositions(child as TreeNode, childCenterX, childY, generation + 1);
+          startX += childWidths[idx];
+        });
+      }
     }
 
-    // Main person birth place
-    if (treeData.birthPlace) {
-      mainPersonGroup.append("text")
-        .attr("text-anchor", "middle")
-        .attr("y", 20)
-        .attr("fill", "white")
-        .attr("font-size", "11px")
-        .text(` ${treeData.birthPlace}`);
-    }
+    // Bắt đầu tính toán từ vị trí (0, 0) để cây được căn giữa tự nhiên
+    calculatePositions(treeData as TreeNode, 0, 0);
 
-    // Generation badge
-    mainPersonGroup.append("circle")
-      .attr("cx", 75)
-      .attr("cy", -40)
-      .attr("r", 18)
-      .attr("fill", "#10B981")
-      .attr("stroke", "white")
+    // Vẽ liên kết vợ/chồng
+    svgMain.selectAll(".spouse-link")
+      .data(spouseLinks)
+      .enter()
+      .append("line")
+      .attr("class", "spouse-link")
+      .attr("x1", d => d.source.x)
+      .attr("y1", d => d.source.y)
+      .attr("x2", d => d.target.x)
+      .attr("y2", d => d.target.y)
+      .attr("stroke", "#FFBA9D") // đổi sang màu cam
       .attr("stroke-width", 3);
 
-    mainPersonGroup.append("text")
-      .attr("x", 75)
-      .attr("y", -35)
-      .attr("text-anchor", "middle")
-      .attr("fill", "white")
-      .attr("font-size", "12px")
-      .attr("font-weight", "bold")
-      .text(treeData.generation || '1');
+    // Vẽ liên kết cha mẹ-con cái với dấu cộng như trong hình
+    svgMain.selectAll(".parent-child-link")
+      .data(parentChildLinks)
+      .enter()
+      .append("path")
+      .attr("class", "parent-child-link")
+      .attr("d", d => {
+        const midY = (d.source.y + d.target.y) / 2;
 
-    // Render spouses (to the right)
-    if (treeData.spouses && treeData.spouses.length > 0) {
-      console.log(' Rendering spouses:', treeData.spouses);
+        return `M ${d.source.x},${d.source.y} 
+               L ${d.source.x},${midY} 
+               L ${d.target.x},${midY} 
+               L ${d.target.x},${d.target.y}`;
+      })
+      .attr("fill", "none")
+      .attr("stroke", "#FFBA9D") // đổi sang màu cam
+      .attr("stroke-width", 3);
 
-      treeData.spouses.forEach((spouse: any, index: number) => {
-        const spouseX = 280 + (index * 220);
+    // Vẽ node với hiệu ứng đẹp
+    const nodeGroup = svgMain
+      .selectAll(".node")
+      .data(allNodes)
+      .enter()
+      .append("g")
+      .attr("class", "node")
+      .attr("transform", (d) => `translate(${isNaN(d.x) ? 0 : d.x},${isNaN(d.y) ? 0 : d.y})`)
+      .style("cursor", "pointer")
+      .on("mouseover", function (event, d) {
+        d3.select(this)
+          .select("rect")
+          .transition()
+          .style("filter", "drop-shadow(0 0 10px rgba(0, 0, 0, 0.2))");
+      })
+      .on("mouseout", function (event, d) {
+        d3.select(this)
+          .select("rect")
+          .transition()
+          .duration(200)
+          .attr("stroke-width", 2)
+          .attr("stroke", d.gender === "M" ? "#5BD1D7" : d.gender === "F" ? "#F59794" : "#333")
+          .style("filter", "none");
+      })
+      .on("click", function (event, d: any) {
+        event.stopPropagation();
+        if (onNodeClick) {
+          onNodeClick(d as FamilyMember);
+        }
+      });
 
-        const spouseGroup = svgMain.append("g")
-          .attr("transform", `translate(${spouseX}, 0)`)
-          .style("cursor", "pointer")
-          .on("click", () => {
-            console.log(' Spouse clicked:', spouse);
-            if (onNodeClick) onNodeClick(spouse);
-          });
+    // Vẽ background cho node - card layout ngang
+    nodeGroup
+      .append("rect")
+      .attr("width", nodeWidth)
+      .attr("height", nodeHeight)
+      .attr("x", -nodeWidth / 2)
+      .attr("y", -nodeHeight / 2)
+      .attr("rx", 8)
+      .attr("ry", 8)
+      .attr("fill", "#fff")
+      .attr("stroke", (d: any) => d.gender === "M" ? "#5BD1D7" : d.gender === "F" ? "#F59794" : "#333")
+      .attr("stroke-width", 2)
+      .attr("filter", "url(#shadow)");
 
-        // Spouse rectangle
-        spouseGroup.append("rect")
-          .attr("x", -80)
-          .attr("y", -45)
-          .attr("width", 160)
-          .attr("height", 90)
-          .attr("fill", spouse.gender === 'M' ? "#3B82F6" : "#EC4899")
-          .attr("stroke", "#10B981")
-          .attr("stroke-width", 3)
-          .attr("rx", 8)
-          .style("filter", "drop-shadow(2px 2px 4px rgba(0,0,0,0.2))");
+    // Avatar circle - bên trái
+    nodeGroup
+      .append("circle")
+      .attr("cx", -nodeWidth / 2 + 35)
+      .attr("cy", 0)
+      .attr("r", 28)
+      .attr("fill", "#f3f4f6")
+      .attr("stroke", (d: any) => d.gender === "M" ? "#5BD1D7" : d.gender === "F" ? "#F59794" : "#e5e7eb")
+      .attr("stroke-width", 1);
 
-        // Spouse name
-        spouseGroup.append("text")
-          .attr("text-anchor", "middle")
-          .attr("y", -15)
-          .attr("fill", "white")
-          .attr("font-size", "14px")
-          .attr("font-weight", "bold")
-          .text(spouse.name || 'Unknown Spouse');
+    // Avatar image
+    nodeGroup
+      .append("image")
+      .attr("href", (d: any) => getPersonAvatar({
+        gender: d.gender,
+        avatarUrl: d.avatarUrl,
+        birthday: d.birthday,
+        generation: d.generation
+      }))
+      .attr("x", -nodeWidth / 2 + 7)
+      .attr("y", -28)
+      .attr("width", 56)
+      .attr("height", 56)
+      .attr("clip-path", "circle(28px at 28px 28px)")
+      .style("cursor", "pointer")
+      .on("click", function (event, d: any) {
+        event.stopPropagation();
+        if (onNodeClick) {
+          onNodeClick(d as FamilyMember);
+        }
+      });
 
-        // Spouse birthday
-        if (spouse.birthday) {
-          spouseGroup.append("text")
-            .attr("text-anchor", "middle")
-            .attr("y", 5)
-            .attr("fill", "white")
-            .attr("font-size", "11px")
-            .text(` ${spouse.birthday}`);
+    // Camera icon - góc phải dưới của avatar
+    const iconSize = 21;
+
+    nodeGroup
+      .append("image")
+      .attr("href", cameraIcon)
+      .attr("x", -nodeWidth / 2 + 45 + 15 - iconSize / 2)
+      .attr("y", 19 + 5 - 15 - iconSize / 21)
+      .attr("width", iconSize)
+      .attr("height", iconSize)
+      .style("cursor", "pointer");
+
+    // Tên người - bên phải avatar
+    nodeGroup
+      .append("text")
+      .attr("x", -20)
+      .attr("y", -8)
+      .attr("text-middle", "start")
+      .style("font-weight", "bold")
+      .style("font-size", "14px")
+      .style("fill", "#1f2937")
+      .text((d: any) => d.name || "");
+
+    // Thông tin phụ (giới tính, năm sinh)
+    nodeGroup
+      .append("text")
+      .attr("x", -20)
+      .attr("y", 8)
+      .attr("text-middle", "start")
+      .style("font-size", "12px")
+      .style("fill", "#6b7280")
+      .text((d: any) => {
+        const genderText = d.gender === "M" ? "Nam" : d.gender === "F" ? "Nữ" : "";
+        const birthDateText = formatDateCompact(d.birthday);
+
+        if (birthDateText) {
+          return `${genderText}, ${birthDateText}`;
+        } else {
+          return genderText || "Không rõ";
+        }
+      });
+
+    // Nút dấu cộng ở dưới node (cho context menu)
+    nodeGroup
+      .append("path")
+      .attr("d", `
+     M -40 0
+     Q -16 14 -10 16
+     Q 0 18 10 16
+     Q 16 14 40 0
+     Z
+  `)
+      .attr("transform", `translate(0, ${nodeHeight / 2 + 0.3})`)
+      .attr("fill", "#fff")
+      .attr("stroke-width", 2)
+      .attr("filter", "url(#shadow)")
+      .style("cursor", "pointer")
+      .on("click", function (event, d: any) {
+        event.stopPropagation();
+        setSelectedNode(d as any);
+
+        // Gọi callback để hiển thị thông tin node trên sidebar
+        if (onNodeClick) {
+          onNodeClick(d as FamilyMember);
         }
 
-        // Marriage date
-        if (spouse.marriageDate) {
-          spouseGroup.append("text")
-            .attr("text-anchor", "middle")
-            .attr("y", 25)
-            .attr("fill", "white")
-            .attr("font-size", "10px")
-            .text(` ${spouse.marriageDate}`);
+        const svgElement = svgRef.current;
+        const svgRect = svgElement?.getBoundingClientRect();
+        if (svgRect) {
+          const x = event.clientX - svgRect.left;
+          const y = event.clientY - svgRect.top;
+          setContextMenu({ isVisible: true, x, y });
         }
-
-        // Generation badge for spouse
-        spouseGroup.append("circle")
-          .attr("cx", 65)
-          .attr("cy", -35)
-          .attr("r", 15)
-          .attr("fill", "#10B981")
-          .attr("stroke", "white")
-          .attr("stroke-width", 2);
-
-        spouseGroup.append("text")
-          .attr("x", 65)
-          .attr("y", -30)
-          .attr("text-anchor", "middle")
-          .attr("fill", "white")
-          .attr("font-size", "10px")
-          .attr("font-weight", "bold")
-          .text(spouse.generation || treeData.generation || '1');
-
-        // Marriage connection line (curved)
-        const marriagePath = d3.path();
-        marriagePath.moveTo(90, 0);
-        marriagePath.quadraticCurveTo((90 + spouseX - 80) / 2, -40, spouseX - 80, 0);
-
-        svgMain.append("path")
-          .attr("d", marriagePath.toString())
-          .attr("stroke", "#10B981")
-          .attr("stroke-width", 4)
-          .attr("fill", "none")
-          .attr("stroke-dasharray", "8,4")
-          .style("filter", "drop-shadow(1px 1px 2px rgba(0,0,0,0.1))");
-
-        // Heart symbol on marriage line
-        svgMain.append("text")
-          .attr("x", (90 + spouseX - 80) / 2)
-          .attr("y", -30)
-          .attr("text-anchor", "middle")
-          .attr("font-size", "20px")
-          .text("");
       });
-    }
 
-    // Render children (below main person)
-    if (treeData.children && treeData.children.length > 0) {
-      console.log('👶 Rendering children:', treeData.children);
-
-      const childrenY = 180;
-      const childSpacing = 180;
-      const startX = -(treeData.children.length - 1) * childSpacing / 2;
-
-      // Children header
-      svgMain.append("text")
-        .attr("x", 0)
-        .attr("y", 120)
-        .attr("text-anchor", "middle")
-        .attr("font-size", "16px")
-        .attr("font-weight", "bold")
-        .attr("fill", "#4B5563")
-        .text(` ${treeData.children.length} ${treeData.children.length === 1 ? 'Child' : 'Children'}`);
-
-      treeData.children.forEach((childId: string, index: number) => {
-        const childX = startX + (index * childSpacing);
-
-        const childGroup = svgMain.append("g")
-          .attr("transform", `translate(${childX}, ${childrenY})`)
-          .style("cursor", "pointer")
-          .on("click", () => {
-            console.log(' Child clicked:', childId);
-            if (onNodeClick) onNodeClick({ id: childId, name: `Child ${index + 1}` });
-          });
-
-        // Child placeholder rectangle (dashed since we only have ID)
-        childGroup.append("rect")
-          .attr("x", -75)
-          .attr("y", -40)
-          .attr("width", 150)
-          .attr("height", 80)
-          .attr("fill", "#9CA3AF")
-          .attr("stroke", "#6B7280")
-          .attr("stroke-width", 3)
-          .attr("stroke-dasharray", "6,4")
-          .attr("rx", 8)
-          .attr("opacity", 0.9)
-          .style("filter", "drop-shadow(2px 2px 4px rgba(0,0,0,0.2))");
-
-        // Child placeholder text
-        childGroup.append("text")
-          .attr("text-anchor", "middle")
-          .attr("y", -15)
-          .attr("fill", "white")
-          .attr("font-size", "14px")
-          .attr("font-weight", "bold")
-          .text(`Child ${index + 1}`);
-
-        // Child ID (shortened)
-        childGroup.append("text")
-          .attr("text-anchor", "middle")
-          .attr("y", 5)
-          .attr("fill", "white")
-          .attr("font-size", "9px")
-          .text(`ID: ${childId.substring(0, 12)}...`);
-
-        // Generation info for child
-        childGroup.append("text")
-          .attr("text-anchor", "middle")
-          .attr("y", 20)
-          .attr("fill", "white")
-          .attr("font-size", "8px")
-          .text(`Gen: ${(treeData.generation || 1) + 1}`);
-
-        // Parent-child connection line
-        svgMain.append("line")
-          .attr("x1", 0)
-          .attr("y1", 50)
-          .attr("x2", childX)
-          .attr("y2", childrenY - 40)
-          .attr("stroke", "#6B7280")
-          .attr("stroke-width", 3)
-          .attr("stroke-dasharray", "4,2");
-
-        // Child number badge
-        childGroup.append("circle")
-          .attr("cx", 60)
-          .attr("cy", -30)
-          .attr("r", 12)
-          .attr("fill", "#F59E0B")
-          .attr("stroke", "white")
-          .attr("stroke-width", 2);
-
-        childGroup.append("text")
-          .attr("x", 60)
-          .attr("y", -25)
-          .attr("text-anchor", "middle")
-          .attr("fill", "white")
-          .attr("font-size", "10px")
-          .attr("font-weight", "bold")
-          .text(index + 1);
-      });
-    }
-
-    // Tree title
-    svgMain.append("text")
+    // Vẽ dấu cộng bên trong circle
+    nodeGroup
+      .append("text")
       .attr("x", 0)
-      .attr("y", -height / 2 + 50)
+      .attr("y", nodeHeight / 2 + 16)
       .attr("text-anchor", "middle")
-      .attr("font-size", "24px")
+      .attr("font-size", "20px")
       .attr("font-weight", "bold")
-      .attr("fill", "#1F2937")
-      .text(`🌳 ${treeData.name}'s Family Tree`);
+      .attr("fill", "#152238")
+      .text("+")
+      .style("pointer-events", "none");
 
-    // API success indicator
-    svgMain.append("rect")
-      .attr("x", -width / 2 + 20)
-      .attr("y", -height / 2 + 70)
-      .attr("width", 250)
-      .attr("height", 30)
-      .attr("fill", "#10B981")
-      .attr("rx", 15)
-      .attr("opacity", 0.1);
+  }, [treeData, zoomLevel]);
 
-    svgMain.append("text")
-      .attr("x", -width / 2 + 30)
-      .attr("y", -height / 2 + 90)
-      .attr("font-size", "12px")
-      .attr("font-weight", "bold")
-      .attr("fill", "#10B981")
-      .text(`✅ API Success - TreeID: ${treeId.substring(0, 8)}...`);
+  // Handle context menu actions
+  const handleAddChild = () => {
+    if (selectedNode) {
+      setShowAddChildModal(true);
+    }
+  };
 
-    console.log('✅ D3 family tree rendered successfully!');
+  const handleAddParent = () => {
+    if (selectedNode) {
+      setShowAddParentModal(true);
+    }
+  };
 
-  }, [treeData, onNodeClick, treeId]);
+  const handleAddSpouse = () => {
+    if (selectedNode) {
+      setShowAddSpouseModal(true);
+    }
+  };
 
-  // Loading state
-  if (loading) {
+  const handleViewInfo = () => {
+    if (selectedNode) {
+      setShowPersonInfoModal(true);
+      // Lưu width/height SVG vào sessionStorage khi mở contextMenu
+      if (svgRef.current) {
+        sessionStorage.setItem('familyTreeSvgWidth', svgRef.current.clientWidth.toString());
+        sessionStorage.setItem('familyTreeSvgHeight', svgRef.current.clientHeight.toString());
+      }
+    }
+  };
+
+  const handleDelete = () => {
+    if (selectedNode) {
+      setShowDeleteConfirmModal(true);
+    }
+  };
+
+  // Handle form submissions with API calls
+  const handleAddChildSubmit = async (data: any) => {
+    try {
+      function findPartnerId(root: any, spouseId: string | undefined | null): string | null {
+        if (!root || !spouseId) return null;
+        const spouses: any[] = root.spouses || [];
+        const found = spouses.find((s: any) => s.id === spouseId);
+        if (found) return root.id;
+        const children: any[] = root.children || [];
+        for (const child of children) {
+          const partnerId = findPartnerId(child, spouseId);
+          if (partnerId) return partnerId;
+        }
+        return null;
+      }
+
+      const selectedId = selectedNode?.id || null;
+      const directSpouseId = selectedNode?.spouses?.[0]?.id || null;
+      const partnerFromTree = findPartnerId(treeData, selectedId);
+
+      const childrenType = data.childrenType;
+      let parent1Id = selectedId;
+      let parent2Id: string | null = directSpouseId || partnerFromTree || null;
+
+      if (childrenType == 'SINGLE_PARENT') {
+        parent2Id = null;
+      } else if (childrenType == 'BIOLOGICAL') {
+        if (!parent1Id || !parent2Id) {
+          console.error('BIOLOGICAL requires both parents but one is missing.');
+          return;
+        }
+      }
+
+      const response = await familyService.addChild(treeId, {
+        parent1Id,
+        parent2Id,
+        child: {
+          name: data.name,
+          gender: data.gender,
+          birthday: data.birthday,
+          birthPlace: data.birthPlace,
+        },
+        childrenType,
+        adoptionDate: data.adoptionDate,
+        notes: data.notes,
+      });
+
+      if (response) {
+        setShowAddChildModal(false);
+        loadTreeData();
+        onRefresh?.();
+      }
+    } catch (error) {
+      console.error('Error adding child:', error);
+    }
+  };
+
+  const handleAddParentSubmit = async (data: any) => {
+    try {
+      const response = await familyService.addParent(treeId, {
+        childId: selectedNode?.id,
+        newParent: {
+          name: data.name,
+          gender: data.gender,
+          birthday: data.birthday,
+          birthPlace: data.birthPlace,
+        },
+      });
+
+      if (response) {
+        setShowAddParentModal(false);
+        loadTreeData();
+        onRefresh?.();
+      }
+    } catch (error) {
+      console.error('Error adding parent:', error);
+    }
+  };
+
+  const handleAddSpouseSubmit = async (data: any) => {
+    try {
+      const response = await familyService.addSpouse(treeId, selectedNode?.id as string, {
+        newSpouse: {
+          name: data.name,
+          gender: data.gender,
+          birthday: data.birthday,
+          birthPlace: data.birthPlace,
+        },
+        marriageDate: data.marriageDate,
+        divorceDate: data.divorceDate,
+      });
+
+      if (response) {
+        setShowAddSpouseModal(false);
+        loadTreeData();
+        onRefresh?.();
+      }
+    } catch (error) {
+      console.error('Error adding spouse:', error);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      const response = await familyService.deletePerson(selectedNode?.id as string);
+
+      // If response is a string, just check if it's truthy or matches a success message
+      if (response) {
+        setShowDeleteConfirmModal(false);
+        loadTreeData();
+        onRefresh?.();
+      }
+    } catch (error) {
+      console.error('Error deleting person:', error);
+    }
+  };
+
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-96 bg-blue-50 rounded-lg border-2 border-blue-200">
+      <div className="flex items-center justify-center h-96">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-6"></div>
-          <h3 className="text-xl font-bold text-blue-800 mb-3">🔄 Loading Family Tree</h3>
-          <p className="text-blue-600 mb-2">
-            {personId ? 'Getting person relations...' : 'Getting tree relations...'}
-          </p>
-          <div className="bg-blue-100 rounded-lg p-4 text-sm text-blue-700">
-            <p><strong>TreeID:</strong> {treeId}</p>
-            {personId && <p><strong>PersonID:</strong> {personId}</p>}
-            <p><strong>API:</strong> familyService.{personId ? 'getPersonTreeRelations' : 'getTreeRelations'}</p>
-            <p><strong>Endpoint:</strong> /relations/trees/{treeId}{personId ? `/persons/${personId}` : ''}</p>
-          </div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang tải cây gia phả...</p>
         </div>
       </div>
     );
   }
 
-  // Error state
   if (error) {
     return (
-      <div className="flex items-center justify-center h-96 bg-red-50 rounded-lg border-2 border-red-200">
-        <div className="text-center max-w-lg">
-          <div className="text-red-500 text-6xl mb-4">❌</div>
-          <h3 className="text-2xl font-bold text-red-800 mb-4">API Error</h3>
-
-          <div className="bg-red-100 rounded-lg p-4 mb-6 text-left">
-            <p className="text-red-800 font-bold mb-3">Error Details:</p>
-            <p className="text-red-700 text-sm mb-4 bg-white p-3 rounded border">{error}</p>
-
-            <div className="text-xs text-red-600 space-y-1 border-t border-red-200 pt-3">
-              <p><strong>TreeID:</strong> {treeId}</p>
-              {personId && <p><strong>PersonID:</strong> {personId}</p>}
-              <p><strong>API Method:</strong> familyService.{personId ? 'getPersonTreeRelations' : 'getTreeRelations'}</p>
-              <p><strong>Endpoint:</strong> /relations/trees/{treeId}{personId ? `/persons/${personId}` : ''}</p>
-              <p><strong>Base URL:</strong> {import.meta.env.VITE_API_BASE_URL || 'https://geneology-web-be.onrender.com/api'}</p>
-            </div>
-          </div>
-
-          <div className="space-x-4">
-            <button
-              onClick={() => {
-                setError(null);
-                setTreeData(null);
-                if (onRefresh) onRefresh();
-              }}
-              className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 font-semibold transition-colors"
-            >
-              🔄 Try Again
-            </button>
-
-            <button
-              onClick={() => {
-                console.log('🐛 Full Debug Info:', {
-                  treeId,
-                  personId,
-                  error,
-                  baseURL: import.meta.env.VITE_API_BASE_URL,
-                  treeData
-                });
-              }}
-              className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-semibold transition-colors"
-            >
-              🐛 Debug Console
-            </button>
-          </div>
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <div className="text-red-600 text-xl mb-4">⚠️</div>
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={loadTreeData}
+            className="px-4 py-2 bg-red-200 text-red-700 rounded hover:bg-red-300"
+          >
+            Thử lại
+          </button>
         </div>
       </div>
     );
   }
 
-  // Success state with family tree
-  if (treeData) {
-    return (
-      <div className="w-full">
-        {/* Tree Info Header */}
-        <div className="mb-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="text-xl font-bold text-green-800 mb-2">
-                🌳 {treeData.name} - Generation {treeData.generation}
-              </h3>
-              <div className="flex space-x-6 text-sm text-green-600">
-                <span className="flex items-center">
-                  <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-                  Main Person
-                </span>
-                <span className="flex items-center">
-                  <span className="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
-                  {treeData.spouses?.length || 0} Spouse(s)
-                </span>
-                <span className="flex items-center">
-                  <span className="w-3 h-3 bg-gray-500 rounded-full mr-2"></span>
-                  {treeData.children?.length || 0} Children
-                </span>
-              </div>
-              <p className="text-xs text-green-500 mt-2">
-                ✅ Loaded via familyService.{personId ? 'getPersonTreeRelations' : 'getTreeRelations'}
-              </p>
-            </div>
-            <div className="text-right text-xs text-green-600">
-              <p>TreeID: {treeId.substring(0, 12)}...</p>
-              {personId && <p>PersonID: {personId.substring(0, 12)}...</p>}
-              {treeData.birthday && <p>Born: {treeData.birthday}</p>}
-              {treeData.birthPlace && <p>Place: {treeData.birthPlace}</p>}
-            </div>
-          </div>
-        </div>
-
-        {/* D3 Family Tree SVG */}
-        <div className="bg-white rounded-lg shadow-lg border-2 border-gray-200 overflow-hidden">
-          <svg
-            ref={svgRef}
-            className="w-full family-tree-svg"
-            style={{
-              minHeight: '700px',
-              cursor: 'grab'
-            }}
-          />
-        </div>
-
-        {/* Control Panel */}
-        <div className="mt-6 bg-gray-50 rounded-lg p-4">
-          <div className="flex justify-center space-x-4">
-            <button
-              onClick={() => {
-                console.log('🔍 Tree Data:', treeData);
-                alert(`Family Tree Data:\n\nName: ${treeData.name}\nGeneration: ${treeData.generation}\nBirthday: ${treeData.birthday || 'N/A'}\nBirth Place: ${treeData.birthPlace || 'N/A'}\nSpouses: ${treeData.spouses?.length || 0}\nChildren: ${treeData.children?.length || 0}`);
-              }}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-semibold transition-colors"
-            >
-              🔍 View Details
-            </button>
-
-            <button
-              onClick={centerTreeView}
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm font-semibold transition-colors"
-            >
-              🎯 Center Tree
-            </button>
-
-            <button
-              onClick={() => {
-                setTreeData(null);
-                setError(null);
-              }}
-              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm font-semibold transition-colors"
-            >
-              🔄 Refresh Tree
-            </button>
-
-            <button
-              onClick={() => {
-                console.log('🌳 Family Tree Component State:', {
-                  treeId,
-                  personId,
-                  hasData: !!treeData,
-                  dataKeys: treeData ? Object.keys(treeData) : [],
-                  spousesCount: treeData?.spouses?.length || 0,
-                  childrenCount: treeData?.children?.length || 0
-                });
-              }}
-              className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm font-semibold transition-colors"
-            >
-              🐛 Debug
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Fallback state
   return (
-    <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg border-2 border-gray-300">
-      <div className="text-center">
-        <div className="text-gray-400 text-5xl mb-4">🌳</div>
-        <h3 className="text-xl font-semibold text-gray-600 mb-3">Family Tree Ready</h3>
-        <p className="text-gray-500 text-sm mb-2">TreeID: {treeId}</p>
-        {personId && <p className="text-gray-500 text-sm mb-2">PersonID: {personId}</p>}
-        <p className="text-gray-400 text-xs">Waiting for data...</p>
+    <div className="relative">
+      {/* D3 SVG Container with Context Menu */}
+      <div
+        className="border border-gray-200 rounded-lg overflow-hidden relative flex items-center justify-center cursor-grab hover:cursor-grab active:cursor-grabbing"
+        style={{ background: '#e5e7eb', minHeight: '700px' }}
+      >
+        <svg
+          ref={svgRef}
+          width="1800"
+          height="1200"
+          className="family-tree-svg"
+          style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left', background: '#e5e7eb', borderRadius: '0.75rem' }}
+        />
+
+        <ContextMenu
+          isVisible={contextMenu.isVisible}
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onAddChild={handleAddChild}
+          onAddParent={handleAddParent}
+          onAddSpouse={handleAddSpouse}
+          onViewInfo={handleViewInfo}
+          onDelete={handleDelete}
+          onClose={() => setContextMenu({ ...contextMenu, isVisible: false })}
+        />
       </div>
+
+      {/* Modals */}
+      <AddChildModal
+        isOpen={showAddChildModal}
+        onClose={() => setShowAddChildModal(false)}
+        onSave={handleAddChildSubmit}
+        parentName={selectedNode?.name}
+      />
+
+      <AddParentModal
+        isOpen={showAddParentModal}
+        onClose={() => setShowAddParentModal(false)}
+        onSave={handleAddParentSubmit}
+        childName={selectedNode?.name || ""}
+      />
+
+      <AddSpouseModal
+        isOpen={showAddSpouseModal}
+        onClose={() => setShowAddSpouseModal(false)}
+        onSave={handleAddSpouseSubmit}
+        personName={selectedNode?.name}
+      />
+
+      <PersonInfoModal
+        isOpen={showPersonInfoModal}
+        onClose={() => setShowPersonInfoModal(false)}
+        person={selectedNode as any}
+      />
+
+      <DeleteConfirmModal
+        isOpen={showDeleteConfirmModal}
+        onClose={() => setShowDeleteConfirmModal(false)}
+        onConfirm={handleDeleteConfirm}
+        person={selectedNode as any}
+      />
     </div>
   );
 };

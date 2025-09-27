@@ -24,7 +24,7 @@ export interface FamilyTree {
   createdAt: string;
   updatedAt?: string;
   members?: FamilyMember[];
-  rootPersonId?: string;
+  
 }
 
 // Album interface
