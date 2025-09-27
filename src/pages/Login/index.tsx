@@ -63,7 +63,7 @@ const Login = () => {
     return null;
   };
 
-  // Submit handler với nhiều debug hơn
+  // Submit handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -78,44 +78,17 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      console.log('🚀 BẮT ĐẦU LOGIN PROCESS');
-      console.log('📋 Form data:', formData);
-
-      // Debug localStorage trước khi login
-      console.log('📱 LocalStorage TRƯỚC login:');
-      authService.debugLocalStorage();
-
-      // GỌI SERVICE
       const result = await authService.login(formData, rememberMe);
 
-      console.log('📨 Kết quả từ authService.login:', result);
-
       if (result.success) {
-        console.log('✅ Login service trả về success');
-
-        // Debug localStorage sau khi login
-        console.log('📱 LocalStorage SAU login:');
-        authService.debugLocalStorage();
-
-        // Kiểm tra token có thực sự được lưu không
-        const savedToken = authService.getToken();
-        const isAuth = authService.isAuthenticated();
-
-        console.log('🔍 Kiểm tra cuối cùng:', {
-          savedToken: !!savedToken,
-          isAuthenticated: isAuth
-        });
-
         setSuccess(true);
         setTimeout(() => {
           navigate("/dashboard", { replace: true });
         }, 2000);
       } else {
-        console.log('❌ Login service trả về fail:', result.message);
         setError(result.message);
       }
     } catch (error: any) {
-      console.error('💥 Exception trong handleSubmit:', error);
       setError(error.message || "Đã có lỗi xảy ra");
     } finally {
       setIsLoading(false);

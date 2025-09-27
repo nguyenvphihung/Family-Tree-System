@@ -7,6 +7,7 @@ import grandparentMaleAvatar from './avt5.png';
 import grandparentFemaleAvatar from './avt6.png';
 import homePageImage from './HomePage.png';
 import introduceImage from './Introduce.png';
+import mapImage from './map.png';
 import { calculateAge } from '../../utils/familyUtils';
 
 // Age groups enum
@@ -80,5 +81,9 @@ export const getDefaultAvatar = (gender: 'M' | 'F'): string => {
     return AVATAR_MAP[AgeGroup.PARENT][gender];
 };
 
-// Export homepage and introduce images
-export { homePageImage, introduceImage };
+// Export homepage, introduce, and map images
+export {
+
+    introduceImage,
+    mapImage
+};
