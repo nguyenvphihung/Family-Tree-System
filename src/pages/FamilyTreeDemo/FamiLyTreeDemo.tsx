@@ -94,20 +94,29 @@ const FamilyTreeDemo: React.FC = () => {
       const trees = await familyService.getUserTrees('current-user-id');
       console.log('User trees loaded:', trees);
 
+      setUserTrees(trees);
+
       if (trees && trees.length > 0) {
-        const firstTreeId = trees[0]?.id;
-        setCurrentTreeId(firstTreeId);
-        setUserTrees(trees);
-        // Load tree data for the first tree
-        await loadTreeDataForTree(firstTreeId);
+        // Nếu chưa có currentTreeId hoặc currentTreeId không tồn tại trong danh sách
+        if (!currentTreeId || !trees.find(tree => tree.id === currentTreeId)) {
+          const firstTreeId = trees[0]?.id;
+          setCurrentTreeId(firstTreeId);
+          // Load tree data for the first tree
+          await loadTreeDataForTree(firstTreeId);
+        }
       } else {
-        setError('No trees found. Please create a new tree.');
+        // Không có cây nào
+        setCurrentTreeId(null);
+        setHasTreeData(false);
+        setSelectedPerson(null);
+        setError(null); // Clear error khi không có cây
       }
     } catch (error: any) {
       console.error('Error loading user trees:', error);
       setError(error.message || 'Failed to load user trees');
     }
   };
+
 
   // Hàm chỉ refresh danh sách cây mà không tự động chọn cây đầu tiên
   const refreshTreeList = async () => {
@@ -185,9 +194,25 @@ const FamilyTreeDemo: React.FC = () => {
     await loadTreeDataForTree(currentTreeId);
   };
 
-  // Function để refresh tree data
-  const handleRefreshTree = () => {
-    loadTreeData();
+
+  const handleRefreshTree = async () => {
+    try {
+      setLoading(true);
+
+      await getTrees();
+
+      if (currentTreeId) {
+        await loadTreeDataForTree(currentTreeId);
+      }
+
+    } catch (error: any) {
+      console.error('Error refreshing tree:', error);
+      setError(error.message || 'Failed to refresh tree');
+    } finally {
+      setLoading(false);
+   
+      showSuccessNotification('✅ Đã làm mới cây gia đình');
+    }
   };
 
   const handleZoomIn = () => {
@@ -1274,21 +1299,6 @@ const FamilyTreeDemo: React.FC = () => {
               <div className="flex items-center justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-500"></div>
                 <span className="ml-2 text-gray-600">Loading tree data...</span>
-              </div>
-            )}
-
-            {error && (
-              <div className="flex flex-col items-center justify-center text-red-600">
-                <svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.856-.833-2.598 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-                <span className="text-sm">{error}</span>
-                <button
-                  onClick={initializeComponent}
-                  className="mt-2 px-3 py-1 bg-rose-500 text-white rounded text-xs hover:bg-rose-600"
-                >
-                  Retry
-                </button>
               </div>
             )}
 
