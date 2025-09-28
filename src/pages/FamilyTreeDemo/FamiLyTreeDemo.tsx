@@ -32,6 +32,8 @@ const FamilyTreeDemo: React.FC = () => {
   const [albumImages, setAlbumImages] = useState<any[]>([]);
   const [showPhotoManager, setShowPhotoManager] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<any>(null);
+  const [showImageDetailModal, setShowImageDetailModal] = useState(false);
 
   // State để lưu thông tin node được chọn
   const [selectedPerson, setSelectedPerson] = useState<FamilyMember | null>(null);
@@ -44,6 +46,8 @@ const FamilyTreeDemo: React.FC = () => {
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [showAddRootModal, setShowAddRootModal] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [personTreeData, setPersonTreeData] = useState<any>(null);
+  const [showPersonTreeModal, setShowPersonTreeModal] = useState(false);
 
   // Function để hiển thị thông báo thành công
   const showSuccessNotification = (message: string) => {
@@ -114,6 +118,18 @@ const FamilyTreeDemo: React.FC = () => {
     } catch (error: any) {
       console.error('Error loading user trees:', error);
       setError(error.message || 'Failed to load user trees');
+    }
+  };
+
+  // Load all trees (no userId parameter) - Alternative method
+  const getAllTrees = async () => {
+    try {
+      const trees = await familyService.getTrees();
+      console.log('All trees loaded:', trees);
+      setUserTrees(trees);
+    } catch (error: any) {
+      console.error('Error loading all trees:', error);
+      setError(error.message || 'Failed to load all trees');
     }
   };
 
@@ -192,6 +208,24 @@ const FamilyTreeDemo: React.FC = () => {
     }
 
     await loadTreeDataForTree(currentTreeId);
+  };
+
+  // Function để load person tree relations
+  const loadPersonTreeRelations = async (personId: string) => {
+    if (!currentTreeId || !personId) return;
+
+    try {
+      setLoading(true);
+      const data = await familyService.getPersonTreeRelations(currentTreeId, personId, 7);
+      console.log('Person tree relations loaded:', data);
+      setPersonTreeData(data);
+      setShowPersonTreeModal(true);
+    } catch (error: any) {
+      console.error('Error loading person tree relations:', error);
+      setError(error.message || 'Failed to load person tree relations');
+    } finally {
+      setLoading(false);
+    }
   };
 
 
@@ -291,6 +325,11 @@ const FamilyTreeDemo: React.FC = () => {
   // Delete tree (internal logic for state management)
   const handleDeleteTree = async (treeId: string) => {
     try {
+      setLoading(true);
+
+      // Call API to delete tree
+      await familyService.deleteTree(treeId);
+
       // Nếu cây đang được chọn bị xóa, reset currentTreeId
       if (currentTreeId === treeId) {
         setCurrentTreeId(null);
@@ -303,8 +342,11 @@ const FamilyTreeDemo: React.FC = () => {
       await refreshTreeList();
 
       console.log('Tree deleted and tree list refreshed successfully');
-    } catch (error) {
-      console.error('Error refreshing tree list after delete:', error);
+    } catch (error: any) {
+      console.error('Error deleting tree:', error);
+      setError(error.message || 'Failed to delete tree');
+    } finally {
+      setLoading(false);
     }
   };  // Switch to different tree
   const handleSwitchTree = async (treeId: string) => {
@@ -412,6 +454,22 @@ const FamilyTreeDemo: React.FC = () => {
     }
   };
 
+  // Load album detail by ID
+  const loadAlbumDetail = async (albumId: string) => {
+    try {
+      setLoading(true);
+      const albumDetail = await familyService.getAlbumById(albumId);
+      console.log('Album detail loaded:', albumDetail);
+      // You can set this to a state if needed for displaying album details
+      // setSelectedAlbumDetail(albumDetail);
+    } catch (error: any) {
+      console.error('Error loading album detail:', error);
+      setError(error.message || 'Failed to load album detail');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Upload image
   const handleUploadImage = async (imageData: any) => {
     try {
@@ -456,6 +514,22 @@ const FamilyTreeDemo: React.FC = () => {
     } catch (error: any) {
       console.error('Error deleting image:', error);
       setError(error.message || 'Failed to delete image');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load image detail
+  const loadImageDetail = async (imageId: string) => {
+    try {
+      setLoading(true);
+      const imageData = await familyService.getImage(imageId);
+      console.log('Image detail loaded:', imageData);
+      setSelectedImage(imageData);
+      setShowImageDetailModal(true);
+    } catch (error: any) {
+      console.error('Error loading image detail:', error);
+      setError(error.message || 'Failed to load image detail');
     } finally {
       setLoading(false);
     }
@@ -1038,7 +1112,7 @@ const FamilyTreeDemo: React.FC = () => {
 
                   {/* Dropdown Menu */}
                   {showMoreMenu && selectedPerson && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[120px]">
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[140px]">
                       <button
                         onClick={() => {
                           handleAddParentClick();
@@ -1056,6 +1130,15 @@ const FamilyTreeDemo: React.FC = () => {
                         className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
                       >
                         Add Spouse
+                      </button>
+                      <button
+                        onClick={() => {
+                          loadPersonTreeRelations(selectedPerson.id);
+                          setShowMoreMenu(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50"
+                      >
+                        View Relations
                       </button>
                       <button
                         onClick={() => {
@@ -1745,7 +1828,9 @@ const FamilyTreeDemo: React.FC = () => {
                       <img
                         src={`data:image/jpeg;base64,${image.base64}`}
                         alt={image.name}
-                        className="w-full h-24 object-cover rounded border"
+                        className="w-full h-24 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => loadImageDetail(image.id)}
+                        title="Click to view details"
                       />
                       <button
                         onClick={() => handleDeleteImage(image.id)}
@@ -1853,6 +1938,85 @@ const FamilyTreeDemo: React.FC = () => {
             setSelectedTreeForDelete(null);
           }}
         />
+      )}
+
+      {/* Person Tree Relations Modal */}
+      {showPersonTreeModal && personTreeData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold">Person Tree Relations</h2>
+              <button
+                onClick={() => {
+                  setShowPersonTreeModal(false);
+                  setPersonTreeData(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="bg-gray-100 p-4 rounded-lg">
+                <h3 className="font-medium mb-2">Person: {selectedPerson?.name}</h3>
+                <div className="bg-white p-3 rounded border">
+                  <pre className="text-sm overflow-auto max-h-96">
+                    {JSON.stringify(personTreeData, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Detail Modal */}
+      {showImageDetailModal && selectedImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[500px] max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold">Image Details</h2>
+              <button
+                onClick={() => {
+                  setShowImageDetailModal(false);
+                  setSelectedImage(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-4">
+              {selectedImage.base64 && (
+                <div className="text-center">
+                  <img
+                    src={`data:image/jpeg;base64,${selectedImage.base64}`}
+                    alt={selectedImage.name}
+                    className="max-w-full h-auto rounded-lg shadow-md"
+                  />
+                </div>
+              )}
+              <div>
+                <h3 className="font-medium mb-2">Image Information:</h3>
+                <div className="bg-gray-100 p-4 rounded-lg space-y-2 text-sm">
+                  <div><strong>Name:</strong> {selectedImage.name || 'N/A'}</div>
+                  <div><strong>ID:</strong> {selectedImage.id || 'N/A'}</div>
+                  <div><strong>Album ID:</strong> {selectedImage.albumId || 'N/A'}</div>
+                  {selectedImage.createdAt && (
+                    <div><strong>Created:</strong> {new Date(selectedImage.createdAt).toLocaleString()}</div>
+                  )}
+                  {selectedImage.size && (
+                    <div><strong>Size:</strong> {(selectedImage.size / 1024).toFixed(2)} KB</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

@@ -6,7 +6,6 @@ import {
   UpdateTreeResponse,
   DeleteTreeResponse,
   GetUserTreesResponse,
-  GetTreeRelationsResponse,
   GetPersonTreeRelationsResponse,
   AddChildRequest,
   AddChildResponse,
@@ -39,7 +38,7 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ Tree created successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -53,21 +52,21 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ User trees loaded successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
     }
   }
 
-  // GET /trees?userId={userId} - Get all trees of a user
+  // GET /trees - Get all trees of current user (no parameters)
   async getTrees(): Promise<GetUserTreesResponse['data']> {
     try {
       const result = await makeRequest(API_ENDPOINTS.RELATIONS.GET_USER_TREES, 'GET', null, 'response-area');
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ All trees loaded successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -81,7 +80,7 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ Tree updated successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -95,7 +94,7 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ Tree deleted successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -109,7 +108,7 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ Tree relations loaded successfully:', result.success);
       return result.data;
     } catch (error: any) {
       throw error;
@@ -123,7 +122,7 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ Person tree relations loaded successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -137,7 +136,7 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ Child added successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -151,7 +150,7 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ Parent added successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -165,7 +164,8 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ Root person created successfully:', result.success);
+
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -179,7 +179,7 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ Spouse added successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -193,7 +193,7 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ Album created successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -207,7 +207,7 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ Album updated successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -221,7 +221,7 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ Album deleted successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -235,7 +235,21 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ User albums loaded successfully:', result.success);
+      return result.data.data;
+    } catch (error: any) {
+      throw error;
+    }
+  }
+
+  // GET /albums/{albumId} - Get album by ID
+  async getAlbumById(albumId: string): Promise<any> {
+    try {
+      const result = await makeRequest(`${API_ENDPOINTS.ALBUMS.GET_ALBUM_BY_ID}/${albumId}`, 'GET', null, 'response-area');
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+      console.log('✅ Album details loaded successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -249,7 +263,7 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ Image loaded successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -263,7 +277,7 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ Album images loaded successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -280,7 +294,7 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ Image uploaded successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -294,7 +308,7 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ Image deleted successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -308,7 +322,7 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log(result.success);
+      console.log('✅ Person deleted successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;

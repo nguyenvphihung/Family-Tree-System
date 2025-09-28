@@ -51,6 +51,7 @@ export const API_ENDPOINTS = {
     UPDATE_ALBUM: '/albums',
     DELETE_ALBUM: '/albums',
     GET_USER_ALBUMS: '/albums',
+    GET_ALBUM_BY_ID: '/albums',
   },
 
   // Image endpoints
