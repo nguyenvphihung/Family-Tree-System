@@ -7,6 +7,7 @@ import AddParentModal from "../../components/family-tree/AddParentModal";
 import AddSpouseModal from "../../components/family-tree/AddSpouseModal";
 import DeleteConfirmModal from "../../components/family-tree/DeleteConfirmModal";
 import familyService from "../../services/familyService";
+import { get } from "http";
 
 const FamilyTreeDemo: React.FC = () => {
   const [currentTreeId, setCurrentTreeId] = useState("0226ba13-99b2-4ffc-a24f-cdb1a775217f");
@@ -39,6 +40,7 @@ const FamilyTreeDemo: React.FC = () => {
 
   // Auto center tree when component mounts
   useEffect(() => {
+
     const timer = setTimeout(() => {
       const svgElement = document.querySelector('.family-tree-svg') as any;
       if (svgElement && svgElement.centerTreeView) {
@@ -51,8 +53,23 @@ const FamilyTreeDemo: React.FC = () => {
 
   // Load tree data when component mounts
   useEffect(() => {
+    getTrees();
     loadTreeData();
   }, []);
+
+  const getTrees = async () => {
+    try {
+      setLoading(true);
+      const trees = await familyService.getTrees();
+      console.log('User trees loaded:', trees);
+      setCurrentTreeId(trees[0]?.id || '');
+    } catch (error: any) {
+      console.error('Error loading user trees:', error);
+      setError(error.message || 'Failed to load user trees');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Close more menu when clicking outside
   useEffect(() => {
@@ -118,7 +135,7 @@ const FamilyTreeDemo: React.FC = () => {
     console.log('Selected person:', person);
   };
 
-  
+
   const loadUserTrees = async (userId: string) => {
     try {
       setLoading(true);
@@ -138,7 +155,6 @@ const FamilyTreeDemo: React.FC = () => {
     try {
       setLoading(true);
       const newTree = await familyService.createTree({
-        userId: 'current-user-id', 
         name: treeData.name
       });
 
@@ -204,7 +220,7 @@ const FamilyTreeDemo: React.FC = () => {
     }
   };
 
- 
+
   const loadUserAlbums = async (userId: string) => {
     try {
       setLoading(true);
@@ -273,7 +289,7 @@ const FamilyTreeDemo: React.FC = () => {
     }
   };
 
- 
+
   const loadAlbumImages = async (albumId: string) => {
     try {
       setLoading(true);
@@ -1150,12 +1166,12 @@ const FamilyTreeDemo: React.FC = () => {
               className="w-8 h-8 bg-white border border-gray-200 hover:bg-gray-100 rounded-full shadow-sm flex items-center justify-center hover:shadow transition-all duration-200"
               title="Center Family Tree"
             >
-             
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"
-                />
+
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"
+              />
             </button>
             <button
               className="w-8 h-8 bg-white border border-gray-200 hover:bg-gray-100 rounded-full shadow-sm flex items-center justify-center hover:shadow transition-all duration-200"

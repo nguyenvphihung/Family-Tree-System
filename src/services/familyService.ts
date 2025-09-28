@@ -60,6 +60,20 @@ class FamilyService {
     }
   }
 
+  // GET /trees?userId={userId} - Get all trees of a user
+  async getTrees(): Promise<GetUserTreesResponse['data']> {
+    try {
+      const result = await makeRequest(API_ENDPOINTS.RELATIONS.GET_USER_TREES, 'GET', null, 'response-area');
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+      console.log(result.success);
+      return result.data.data;
+    } catch (error: any) {
+      throw error;
+    }
+  }
+
   // PUT /trees/{treeId} - Update tree information
   async updateTree(treeId: string, data: UpdateTreeRequest): Promise<UpdateTreeResponse['data']> {
     try {

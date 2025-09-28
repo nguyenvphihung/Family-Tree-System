@@ -75,6 +75,6 @@
     "tailwindcss": "^3.4.17",
     "tempo-devtools": "^2.0.109",
     "typescript": "^5.8.3",
-    "vite": "^6.3.5"
+    "vite": "^6.3.6"
   }
 }
