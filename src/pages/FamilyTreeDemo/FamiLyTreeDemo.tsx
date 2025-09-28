@@ -3,10 +3,28 @@ import { D3FamilyTreeView } from "../../components/family-tree";
 import { FamilyMember } from "../../types/family";
 import PersonInfoModal from "../../components/family-tree/PersonInfoModal";
 import AddChildModal from "../../components/family-tree/AddChildModal";
+import AddParentModal from "../../components/family-tree/AddParentModal";
+import AddSpouseModal from "../../components/family-tree/AddSpouseModal";
+import DeleteConfirmModal from "../../components/family-tree/DeleteConfirmModal";
+import familyService from "../../services/familyService";
 
 const FamilyTreeDemo: React.FC = () => {
-  const treeId = "0226ba13-99b2-4ffc-a24f-cdb1a775217f";
+  const [currentTreeId, setCurrentTreeId] = useState("0226ba13-99b2-4ffc-a24f-cdb1a775217f");
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Tree management states
+  const [userTrees, setUserTrees] = useState<any[]>([]);
+  const [showTreeSelector, setShowTreeSelector] = useState(false);
+  const [showCreateTreeModal, setShowCreateTreeModal] = useState(false);
+
+  // Album & Image management states
+  const [userAlbums, setUserAlbums] = useState<any[]>([]);
+  const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
+  const [albumImages, setAlbumImages] = useState<any[]>([]);
+  const [showPhotoManager, setShowPhotoManager] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   // State để lưu thông tin node được chọn
   const [selectedPerson, setSelectedPerson] = useState<FamilyMember | null>(null);
@@ -14,6 +32,10 @@ const FamilyTreeDemo: React.FC = () => {
   // State cho modal xem thông tin và modal thêm thành viên
   const [showPersonInfoModal, setShowPersonInfoModal] = useState(false);
   const [showAddChildModal, setShowAddChildModal] = useState(false);
+  const [showAddParentModal, setShowAddParentModal] = useState(false);
+  const [showAddSpouseModal, setShowAddSpouseModal] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   // Auto center tree when component mounts
   useEffect(() => {
@@ -27,6 +49,48 @@ const FamilyTreeDemo: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Load tree data when component mounts
+  useEffect(() => {
+    loadTreeData();
+  }, []);
+
+  // Close more menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showMoreMenu && !(event.target as Element)?.closest('.relative')) {
+        setShowMoreMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMoreMenu]);
+
+  // Function để load dữ liệu cây gia đình
+  const loadTreeData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Load tree relations data
+      const data = await familyService.getTreeRelations(currentTreeId, 7);
+
+      console.log('Tree data loaded:', data);
+    } catch (error: any) {
+      console.error('Error loading tree data:', error);
+      setError(error.message || 'Failed to load tree data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function để refresh tree data
+  const handleRefreshTree = () => {
+    loadTreeData();
+  };
+
   const handleZoomIn = () => {
     setZoomLevel((prev) => Math.min(prev + 0.2, 3));
   };
@@ -37,10 +101,6 @@ const FamilyTreeDemo: React.FC = () => {
 
   const handleZoomReset = () => {
     setZoomLevel(1);
-  };
-
-  const handleZoomFit = () => {
-    setZoomLevel(0.5);
   };
 
   const handleZoomCenter = () => {
@@ -58,6 +118,221 @@ const FamilyTreeDemo: React.FC = () => {
     console.log('Selected person:', person);
   };
 
+  
+  const loadUserTrees = async (userId: string) => {
+    try {
+      setLoading(true);
+      const trees = await familyService.getUserTrees(userId);
+      setUserTrees(trees);
+      console.log('User trees loaded:', trees);
+    } catch (error: any) {
+      console.error('Error loading user trees:', error);
+      setError(error.message || 'Failed to load user trees');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Create new tree
+  const handleCreateTree = async (treeData: any) => {
+    try {
+      setLoading(true);
+      const newTree = await familyService.createTree({
+        userId: 'current-user-id', 
+        name: treeData.name
+      });
+
+      // Refresh user trees
+      await loadUserTrees('current-user-id'); // Replace with actual user ID
+      setShowCreateTreeModal(false);
+      console.log('Tree created successfully:', newTree);
+    } catch (error: any) {
+      console.error('Error creating tree:', error);
+      setError(error.message || 'Failed to create tree');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update tree
+  const handleUpdateTree = async (treeId: string, treeData: any) => {
+    try {
+      setLoading(true);
+      const updatedTree = await familyService.updateTree(treeId, {
+        treeId: treeId,
+        name: treeData.name
+      });
+
+      // Refresh user trees
+      await loadUserTrees('current-user-id');
+      console.log('Tree updated successfully:', updatedTree);
+    } catch (error: any) {
+      console.error('Error updating tree:', error);
+      setError(error.message || 'Failed to update tree');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete tree
+  const handleDeleteTree = async (treeId: string) => {
+    try {
+      setLoading(true);
+      await familyService.deleteTree(treeId);
+
+      // Refresh user trees
+      await loadUserTrees('current-user-id');
+      console.log('Tree deleted successfully');
+    } catch (error: any) {
+      console.error('Error deleting tree:', error);
+      setError(error.message || 'Failed to delete tree');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Switch to different tree
+  const handleSwitchTree = async (treeId: string) => {
+    try {
+      setCurrentTreeId(treeId);
+      await loadTreeData();
+      setShowTreeSelector(false);
+      console.log('Switched to tree:', treeId);
+    } catch (error: any) {
+      console.error('Error switching tree:', error);
+      setError(error.message || 'Failed to switch tree');
+    }
+  };
+
+ 
+  const loadUserAlbums = async (userId: string) => {
+    try {
+      setLoading(true);
+      const albums = await familyService.getUserAlbums(userId);
+      setUserAlbums(albums);
+      console.log('User albums loaded:', albums);
+    } catch (error: any) {
+      console.error('Error loading albums:', error);
+      setError(error.message || 'Failed to load albums');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Create album
+  const handleCreateAlbum = async (albumData: any) => {
+    try {
+      setLoading(true);
+      const newAlbum = await familyService.createAlbum({
+        userId: 'current-user-id', // Replace with actual user ID
+        name: albumData.name
+      });
+
+      await loadUserAlbums('current-user-id');
+      console.log('Album created:', newAlbum);
+    } catch (error: any) {
+      console.error('Error creating album:', error);
+      setError(error.message || 'Failed to create album');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update album
+  const handleUpdateAlbum = async (albumId: string, albumData: any) => {
+    try {
+      setLoading(true);
+      const updatedAlbum = await familyService.updateAlbum(albumId, {
+        albumId: albumId,
+        name: albumData.name
+      });
+
+      await loadUserAlbums('current-user-id');
+      console.log('Album updated:', updatedAlbum);
+    } catch (error: any) {
+      console.error('Error updating album:', error);
+      setError(error.message || 'Failed to update album');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete album
+  const handleDeleteAlbum = async (albumId: string) => {
+    try {
+      setLoading(true);
+      await familyService.deleteAlbum(albumId);
+
+      await loadUserAlbums('current-user-id');
+      console.log('Album deleted successfully');
+    } catch (error: any) {
+      console.error('Error deleting album:', error);
+      setError(error.message || 'Failed to delete album');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+ 
+  const loadAlbumImages = async (albumId: string) => {
+    try {
+      setLoading(true);
+      const images = await familyService.getImagesByAlbum(albumId);
+      setAlbumImages(images);
+      console.log('Album images loaded:', images);
+    } catch (error: any) {
+      console.error('Error loading album images:', error);
+      setError(error.message || 'Failed to load album images');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Upload image
+  const handleUploadImage = async (imageData: any) => {
+    try {
+      setLoading(true);
+      const uploadedImage = await familyService.uploadImage({
+        file: imageData.file, // base64 content
+        name: imageData.name,
+        albumId: imageData.albumId
+      });
+
+      // Refresh album images if album is selected
+      if (selectedAlbum) {
+        await loadAlbumImages(selectedAlbum.id);
+      }
+
+      setShowUploadModal(false);
+      console.log('Image uploaded:', uploadedImage);
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      setError(error.message || 'Failed to upload image');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete image
+  const handleDeleteImage = async (imageId: string) => {
+    try {
+      setLoading(true);
+      await familyService.deleteImage(imageId);
+
+      // Refresh album images if album is selected
+      if (selectedAlbum) {
+        await loadAlbumImages(selectedAlbum.id);
+      }
+
+      console.log('Image deleted successfully');
+    } catch (error: any) {
+      console.error('Error deleting image:', error);
+      setError(error.message || 'Failed to delete image');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Xử lý khi click nút Profile ở sidebar
   const handleProfileClick = () => {
     if (selectedPerson) setShowPersonInfoModal(true);
@@ -66,6 +341,175 @@ const FamilyTreeDemo: React.FC = () => {
   // Xử lý khi click nút Add ở sidebar
   const handleAddClick = () => {
     if (selectedPerson) setShowAddChildModal(true);
+  };
+
+  // Xử lý khi click thêm parent
+  const handleAddParentClick = () => {
+    if (selectedPerson) setShowAddParentModal(true);
+  };
+
+  // Xử lý khi click thêm spouse
+  const handleAddSpouseClick = () => {
+    if (selectedPerson) setShowAddSpouseModal(true);
+  };
+
+  // Xử lý khi click xóa person
+  const handleDeleteClick = () => {
+    if (selectedPerson) setShowDeleteConfirmModal(true);
+  };
+
+  // Xử lý xác nhận xóa
+  const handleConfirmDelete = async () => {
+    if (!selectedPerson) return;
+
+    try {
+      setLoading(true);
+
+
+      // Gọi API xóa thông qua makeRequest để có thông báo thành công
+      await familyService.deletePerson(selectedPerson.id);
+
+      // Hiển thị thông báo thành công
+      const responseArea = document.getElementById('response-area');
+      if (responseArea) {
+        responseArea.textContent = `✅ Đã xóa thành công ${selectedPerson.name}`;
+        responseArea.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-green-50 border border-green-300 text-green-800 rounded-lg p-3 shadow-lg max-w-sm text-center text-sm font-medium';
+        responseArea.style.display = 'block';
+
+        // Tự động ẩn sau 3 giây
+        setTimeout(() => {
+          responseArea.style.display = 'none';
+        }, 3000);
+      }
+
+      // Đóng modal
+      setShowDeleteConfirmModal(false);
+
+      // Reload tree data
+      await loadTreeData();
+
+      // Clear selection
+      setSelectedPerson(null);
+
+      console.log('Person deleted successfully');
+    } catch (error: any) {
+      console.error('Error deleting person:', error);
+      setError(error.message || 'Failed to delete person');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function để xử lý thêm con
+  const handleAddChild = async (childData: any) => {
+    try {
+      setLoading(true);
+
+      if (!selectedPerson?.id) {
+        throw new Error('No parent selected');
+      }
+
+
+      const addChildRequest = {
+        parent1Id: selectedPerson.id,
+        parent2Id: selectedPerson.spouses?.[0]?.id || "", // Sử dụng spouse nếu có
+        child: {
+          name: childData.name || "",
+          gender: childData.gender || "M",
+          birthday: childData.birthday || new Date().toISOString().split('T')[0],
+          birthPlace: childData.birthPlace || ""
+        },
+        childrenType: "BIOLOGICAL" as const,
+        adoptionDate: "",
+        notes: ""
+      };
+
+      // Call API to add child
+      await familyService.addChild(currentTreeId, addChildRequest);
+
+      // Refresh tree data
+      await loadTreeData();
+
+      // Close modal
+      setShowAddChildModal(false);
+
+      console.log('Child added successfully');
+    } catch (error: any) {
+      console.error('Error adding child:', error);
+      setError(error.message || 'Failed to add child');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function để xử lý thêm cha/mẹ
+  const handleAddParent = async (parentData: any) => {
+    try {
+      setLoading(true);
+
+      if (!selectedPerson?.id) {
+        throw new Error('No child selected');
+      }
+
+      // Prepare data according to AddParentRequest interface
+      const addParentRequest = {
+        childId: selectedPerson.id,
+        newParent: {
+          name: parentData.name || "",
+          gender: parentData.gender || "M",
+          birthday: parentData.birthday || new Date().toISOString().split('T')[0],
+          birthPlace: parentData.birthPlace || ""
+        }
+      };
+
+      await familyService.addParent(currentTreeId, addParentRequest);
+      await loadTreeData();
+
+      // Close modal
+      setShowAddParentModal(false);
+
+      console.log('Parent added successfully');
+    } catch (error: any) {
+      console.error('Error adding parent:', error);
+      setError(error.message || 'Failed to add parent');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function để thêm spouse
+  const handleAddSpouse = async (spouseData: any) => {
+    try {
+      setLoading(true);
+
+      if (!selectedPerson?.id) {
+        throw new Error('No person selected');
+      }
+
+      const addSpouseRequest = {
+        newSpouse: {
+          name: spouseData.name || "",
+          gender: spouseData.gender || "F",
+          birthday: spouseData.birthday || new Date().toISOString().split('T')[0],
+          birthPlace: spouseData.birthPlace || ""
+        },
+        marriageDate: spouseData.marriageDate || new Date().toISOString().split('T')[0],
+        divorceDate: spouseData.divorceDate || ""
+      };
+
+      await familyService.addSpouse(currentTreeId, selectedPerson.id, addSpouseRequest);
+      await loadTreeData();
+
+      // Close modal
+      setShowAddSpouseModal(false);
+
+      console.log('Spouse added successfully');
+    } catch (error: any) {
+      console.error('Error adding spouse:', error);
+      setError(error.message || 'Failed to add spouse');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Function để tính tuổi từ ngày sinh
@@ -91,6 +535,36 @@ const FamilyTreeDemo: React.FC = () => {
 
   return (
     <div className="fixed inset-0 w-screen h-screen bg-gray-50 overflow-hidden">
+      {/* Error Message Toast */}
+      {error && (
+        <div className="fixed top-4 right-4 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg max-w-md">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.856-.833-2.598 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <span className="text-sm">{error}</span>
+            </div>
+            <button
+              onClick={() => setError(null)}
+              className="ml-4 text-red-500 hover:text-red-700"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Response area for makeRequest - Hidden by default */}
+      <div
+        id="response-area"
+        style={{ display: 'none' }}
+        className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-white border border-gray-300 rounded-lg p-3 shadow-lg max-w-sm text-center text-sm font-medium"
+      >
+        {/* This will be populated by makeRequest utility but kept minimal */}
+      </div>
       {/* Top Header Bar - Dark Gray */}
       <div
         className="text-white px-6 py-2 border-b border-gray-700 shadow-sm"
@@ -150,6 +624,30 @@ const FamilyTreeDemo: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-4">
+            {/* Tree Selector Button */}
+            <button
+              onClick={() => setShowTreeSelector(true)}
+              className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 shadow-sm"
+            >
+              Switch Tree
+            </button>
+
+            {/* Create Tree Button */}
+            <button
+              onClick={() => setShowCreateTreeModal(true)}
+              className="bg-green-100 hover:bg-green-200 text-green-800 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 shadow-sm"
+            >
+              New Tree
+            </button>
+
+            {/* Photo Manager Button */}
+            <button
+              onClick={() => setShowPhotoManager(true)}
+              className="bg-purple-100 hover:bg-purple-200 text-purple-800 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 shadow-sm"
+            >
+              Photos
+            </button>
+
             <button className="bg-rose-200 hover:bg-rose-300 text-rose-800 mr-6 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 shadow-sm">
               Go Premium
             </button>
@@ -282,9 +780,9 @@ const FamilyTreeDemo: React.FC = () => {
               <div className="flex items-center justify-center gap-4 mt-3 mb-2">
                 {/* Nút Profile */}
                 <button
-                  className="flex flex-col items-center text-gray-700 hover:text-rose-700"
+                  className="flex flex-col items-center text-gray-700 hover:text-rose-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleProfileClick}
-                  disabled={!selectedPerson}
+                  disabled={!selectedPerson || loading}
                 >
                   <span className="bg-gray-100 rounded-full p-2 mb-1">
                     {/* icon profile giữ nguyên */}
@@ -296,7 +794,8 @@ const FamilyTreeDemo: React.FC = () => {
                 </button>
                 {/* Nút Edit giữ nguyên */}
                 <button
-                  className="flex flex-col items-center text-gray-700 hover:text-rose-700"
+                  className="flex flex-col items-center text-gray-700 hover:text-rose-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!selectedPerson || loading}
                 >
                   <span className="bg-gray-100 rounded-full p-2 mb-1">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
@@ -307,28 +806,71 @@ const FamilyTreeDemo: React.FC = () => {
                 </button>
                 {/* Nút Add: icon dấu + */}
                 <button
-                  className="flex flex-col items-center text-gray-700 hover:text-rose-700"
+                  className="flex flex-col items-center text-gray-700 hover:text-rose-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleAddClick}
-                  disabled={!selectedPerson}
+                  disabled={!selectedPerson || loading}
                 >
                   <span className="bg-gray-100 rounded-full p-2 mb-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12M6 12h12" />
-                    </svg>
+                    {loading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-rose-500"></div>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12M6 12h12" />
+                      </svg>
+                    )}
                   </span>
                   <span className="text-xs">Add</span>
                 </button>
-                {/* Nút More: icon dấu ba chấm */}
-                <button className="flex flex-col items-center text-gray-700 hover:text-rose-700">
-                  <span className="bg-gray-100 rounded-full p-2 mb-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <circle cx="5" cy="12" r="1.5" />
-                      <circle cx="12" cy="12" r="1.5" />
-                      <circle cx="19" cy="12" r="1.5" />
-                    </svg>
-                  </span>
-                  <span className="text-xs">More</span>
-                </button>
+                {/* Nút More: icon dấu ba chấm với dropdown */}
+                <div className="relative">
+                  <button
+                    className="flex flex-col items-center text-gray-700 hover:text-rose-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!selectedPerson || loading}
+                    onClick={() => setShowMoreMenu(!showMoreMenu)}
+                  >
+                    <span className="bg-gray-100 rounded-full p-2 mb-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <circle cx="5" cy="12" r="1.5" />
+                        <circle cx="12" cy="12" r="1.5" />
+                        <circle cx="19" cy="12" r="1.5" />
+                      </svg>
+                    </span>
+                    <span className="text-xs">More</span>
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {showMoreMenu && selectedPerson && (
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[120px]">
+                      <button
+                        onClick={() => {
+                          handleAddParentClick();
+                          setShowMoreMenu(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-t-lg"
+                      >
+                        Add Parent
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleAddSpouseClick();
+                          setShowMoreMenu(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        Add Spouse
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleDeleteClick();
+                          setShowMoreMenu(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 rounded-b-lg"
+                      >
+                        Delete Person
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -548,13 +1090,57 @@ const FamilyTreeDemo: React.FC = () => {
             className="border-2 border-gray-200 rounded-xl overflow-hidden shadow-lg w-full h-full flex items-center justify-center"
             style={{ background: "#e5e7eb" }}
           >
-            <D3FamilyTreeView
-              treeId={treeId}
-              personId={selectedPerson?.id || ""}
-              zoomLevel={zoomLevel}
-              onRefresh={() => { }}
-              onNodeClick={handleNodeClick} // Truyền callback function
-            />
+            {loading && (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-500"></div>
+                <span className="ml-2 text-gray-600">Loading tree data...</span>
+              </div>
+            )}
+
+            {error && (
+              <div className="flex flex-col items-center justify-center text-red-600">
+                <svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.856-.833-2.598 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <span className="text-sm">{error}</span>
+                <button
+                  onClick={loadTreeData}
+                  className="mt-2 px-3 py-1 bg-rose-500 text-white rounded text-xs hover:bg-rose-600"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {!loading && !error && (
+              <D3FamilyTreeView
+                treeId={currentTreeId}
+                personId={selectedPerson?.id || ""}
+                zoomLevel={zoomLevel}
+                onRefresh={handleRefreshTree}
+                onNodeClick={handleNodeClick}
+                onAddChild={(person) => {
+                  setSelectedPerson(person);
+                  setShowAddChildModal(true);
+                }}
+                onAddParent={(person) => {
+                  setSelectedPerson(person);
+                  setShowAddParentModal(true);
+                }}
+                onAddSpouse={(person) => {
+                  setSelectedPerson(person);
+                  setShowAddSpouseModal(true);
+                }}
+                onViewInfo={(person) => {
+                  setSelectedPerson(person);
+                  setShowPersonInfoModal(true);
+                }}
+                onDeletePerson={(person) => {
+                  setSelectedPerson(person);
+                  setShowDeleteConfirmModal(true);
+                }}
+              />
+            )}
           </div>
 
           {/* Zoom Controls - Bottom Right */}
@@ -564,19 +1150,12 @@ const FamilyTreeDemo: React.FC = () => {
               className="w-8 h-8 bg-white border border-gray-200 hover:bg-gray-100 rounded-full shadow-sm flex items-center justify-center hover:shadow transition-all duration-200"
               title="Center Family Tree"
             >
-              <svg
-                className="w-4 h-4 text-gray-700"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
+             
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"
                 />
-              </svg>
             </button>
             <button
               className="w-8 h-8 bg-white border border-gray-200 hover:bg-gray-100 rounded-full shadow-sm flex items-center justify-center hover:shadow transition-all duration-200"
@@ -670,13 +1249,361 @@ const FamilyTreeDemo: React.FC = () => {
         onClose={() => setShowPersonInfoModal(false)}
         person={selectedPerson}
       />
-      {/* Modal thêm thành viên */}
+
+      {/* Modal thêm con */}
       <AddChildModal
         isOpen={showAddChildModal}
         onClose={() => setShowAddChildModal(false)}
-        onSave={handleAddClick}
+        onSave={handleAddChild}
         parentName={selectedPerson?.name}
       />
+
+      {/* Modal thêm cha/mẹ */}
+      <AddParentModal
+        isOpen={showAddParentModal}
+        onClose={() => setShowAddParentModal(false)}
+        onSave={handleAddParent}
+        childName={selectedPerson?.name}
+      />
+
+      {/* Modal thêm vợ/chồng */}
+      <AddSpouseModal
+        isOpen={showAddSpouseModal}
+        onClose={() => setShowAddSpouseModal(false)}
+        onSave={handleAddSpouse}
+        personName={selectedPerson?.name}
+      />
+
+      {/* Modal xác nhận xóa */}
+      <DeleteConfirmModal
+        isOpen={showDeleteConfirmModal}
+        onClose={() => setShowDeleteConfirmModal(false)}
+        onConfirm={handleConfirmDelete}
+        person={selectedPerson}
+      />
+
+      {/* Tree Selector Modal */}
+      {showTreeSelector && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 max-h-96 overflow-y-auto">
+            <h2 className="text-lg font-bold mb-4">Select Family Tree</h2>
+            {userTrees.length > 0 ? (
+              <div className="space-y-2">
+                {userTrees.map((tree: any) => (
+                  <div
+                    key={tree.id}
+                    className={`w-full p-3 rounded-lg border flex items-center justify-between ${tree.id === currentTreeId ? 'bg-blue-50 border-blue-300' : 'hover:bg-gray-50'}`}
+                  >
+                    <div
+                      onClick={() => handleSwitchTree(tree.id)}
+                      className="flex-1 cursor-pointer"
+                    >
+                      <div className="font-medium">{tree.name}</div>
+                      <div className="text-sm text-gray-500">Created: {new Date(tree.createdAt).toLocaleDateString()}</div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center space-x-1">
+                      {/* Edit Tree Button */}
+                      <button
+                        onClick={() => {
+                          const newName = window.prompt(`Enter new name for "${tree.name}":`, tree.name);
+                          if (newName && newName.trim() && newName !== tree.name) {
+                            handleUpdateTree(tree.id, { name: newName.trim() });
+                          }
+                        }}
+                        className="p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded"
+                        title="Edit Tree Name"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+
+                      {/* Delete Tree Button */}
+                      {tree.id !== currentTreeId && (
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Are you sure you want to delete tree "${tree.name}"? This action cannot be undone.`)) {
+                              handleDeleteTree(tree.id);
+                            }
+                          }}
+                          className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
+                          title="Delete Tree"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                No trees found. Click "Load Trees" to fetch your trees.
+              </div>
+            )}
+            <div className="mt-4 flex justify-between">
+              <button
+                onClick={() => loadUserTrees('current-user-id')}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Load Trees
+              </button>
+              <button
+                onClick={() => setShowTreeSelector(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Tree Modal */}
+      {showCreateTreeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <h2 className="text-lg font-bold mb-4">Create New Family Tree</h2>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target as HTMLFormElement);
+              handleCreateTree({
+                name: formData.get('name') as string
+              });
+            }}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Tree Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                  placeholder="Enter tree name"
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateTreeModal(false)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                >
+                  Create Tree
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Photo Manager Modal */}
+      {showPhotoManager && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-3/4 h-3/4 max-w-4xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold">Photo Manager</h2>
+              <button
+                onClick={() => setShowPhotoManager(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex h-full space-x-4">
+              {/* Albums List */}
+              <div className="w-1/3 border-r pr-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-medium">Albums</h3>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => {
+                        const albumName = window.prompt('Enter album name:');
+                        if (albumName?.trim()) {
+                          handleCreateAlbum({ name: albumName.trim() });
+                        }
+                      }}
+                      className="text-sm bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+                    >
+                      New Album
+                    </button>
+                    <button
+                      onClick={() => loadUserAlbums('current-user-id')}
+                      className="text-sm bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                    >
+                      Refresh
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {userAlbums.map((album: any) => (
+                    <div
+                      key={album.id}
+                      className={`flex items-center justify-between p-2 rounded border ${selectedAlbum?.id === album.id ? 'bg-blue-50 border-blue-300' : 'hover:bg-gray-50'}`}
+                    >
+                      <div
+                        onClick={() => {
+                          setSelectedAlbum(album);
+                          loadAlbumImages(album.id);
+                        }}
+                        className="flex-1 cursor-pointer"
+                      >
+                        {album.name}
+                      </div>
+
+                      <div className="flex items-center space-x-1">
+                        {/* Edit Album Button */}
+                        <button
+                          onClick={() => {
+                            const newName = window.prompt(`Enter new name for album "${album.name}":`, album.name);
+                            if (newName && newName.trim() && newName !== album.name) {
+                              handleUpdateAlbum(album.id, { name: newName.trim() });
+                            }
+                          }}
+                          className="p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded"
+                          title="Edit Album"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+
+                        {/* Delete Album Button */}
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Are you sure you want to delete album "${album.name}"? This will also delete all images in this album.`)) {
+                              handleDeleteAlbum(album.id);
+                            }
+                          }}
+                          className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
+                          title="Delete Album"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Images Grid */}
+              <div className="w-2/3 pl-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-medium">
+                    {selectedAlbum ? `Images in "${selectedAlbum.name}"` : 'Select an album'}
+                  </h3>
+                  {selectedAlbum && (
+                    <button
+                      onClick={() => setShowUploadModal(true)}
+                      className="text-sm bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+                    >
+                      Upload Image
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-4 gap-4 max-h-96 overflow-y-auto">
+                  {albumImages.map((image: any) => (
+                    <div key={image.id} className="relative group">
+                      <img
+                        src={`data:image/jpeg;base64,${image.base64}`}
+                        alt={image.name}
+                        className="w-full h-24 object-cover rounded border"
+                      />
+                      <button
+                        onClick={() => handleDeleteImage(image.id)}
+                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upload Image Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <h2 className="text-lg font-bold mb-4">Upload Image</h2>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target as HTMLFormElement);
+              const form = e.target as HTMLFormElement;
+              const fileInput = form.querySelector('input[type="file"]') as HTMLInputElement;
+              const file = fileInput.files?.[0];
+
+              if (file && selectedAlbum) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                  const base64 = reader.result as string;
+                  const base64Data = base64.split(',')[1]; // Remove data:image/...;base64, prefix
+
+                  handleUploadImage({
+                    file: base64Data,
+                    name: formData.get('name') as string || file.name,
+                    albumId: selectedAlbum.id
+                  });
+                };
+                reader.readAsDataURL(file);
+              }
+            }}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Select Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  required
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Image Name (optional)</label>
+                <input
+                  type="text"
+                  name="name"
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                  placeholder="Enter image name"
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setShowUploadModal(false)}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                >
+                  Upload
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );

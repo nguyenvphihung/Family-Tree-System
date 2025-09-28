@@ -5,11 +5,6 @@ import familyService from '../../services/familyService';
 import { getPersonAvatar } from '../../assets/avatars';
 import { formatDateCompact } from '../../utils/familyUtils';
 import cameraIcon from '../../assets/avatars/camera.png';
-import AddChildModal from './AddChildModal';
-import AddParentModal from './AddParentModal';
-import AddSpouseModal from './AddSpouseModal';
-import PersonInfoModal from './PersonInfoModal';
-import DeleteConfirmModal from './DeleteConfirmModal';
 import ContextMenu from './ContextMenu';
 
 interface D3FamilyTreeViewProps {
@@ -17,7 +12,18 @@ interface D3FamilyTreeViewProps {
   personId: string;
   zoomLevel?: number;
   onRefresh?: () => void;
-  onNodeClick?: (person: FamilyMember) => void; // Thêm prop này là hiển thị tên người khi click vào node
+  onNodeClick?: (person: FamilyMember) => void;
+  // Callback handlers từ parent component
+  onAddChild?: (person: FamilyMember) => void;
+  onAddParent?: (person: FamilyMember) => void;
+  onAddSpouse?: (person: FamilyMember) => void;
+  onViewInfo?: (person: FamilyMember) => void;
+  onDeletePerson?: (person: FamilyMember) => void;
+  // Thêm zoom callbacks
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
+  onZoomReset?: () => void;
+  onZoomCenter?: () => void;
 }
 
 interface TreeNode extends FamilyMember {
@@ -27,22 +33,24 @@ interface TreeNode extends FamilyMember {
 
 const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
   treeId,
-
   zoomLevel = 1,
   onRefresh,
-  onNodeClick // Nhận prop
+  onNodeClick,
+  onAddChild,
+  onAddParent,
+  onAddSpouse,
+  onViewInfo,
+  onDeletePerson,
+  onZoomIn,
+  onZoomOut,
+  onZoomReset,
+  onZoomCenter
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [treeData, setTreeData] = useState<TreeNode | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Modal states
-  const [showAddChildModal, setShowAddChildModal] = useState(false);
-  const [showAddParentModal, setShowAddParentModal] = useState(false);
-  const [showAddSpouseModal, setShowAddSpouseModal] = useState(false);
-  const [showPersonInfoModal, setShowPersonInfoModal] = useState(false);
-  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const zoomBehaviorRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState({
@@ -82,6 +90,10 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
   useEffect(() => {
     if (svgRef.current) {
       (svgRef.current as any).centerTreeView = centerTreeView;
+      (svgRef.current as any).zoomIn = handleZoomIn;
+      (svgRef.current as any).zoomOut = handleZoomOut;
+      (svgRef.current as any).zoomReset = handleZoomReset;
+      (svgRef.current as any).zoomCenter = handleZoomCenter;
     }
   }, [treeData]);
 
@@ -469,26 +481,26 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
 
   // Handle context menu actions
   const handleAddChild = () => {
-    if (selectedNode) {
-      setShowAddChildModal(true);
+    if (selectedNode && onAddChild) {
+      onAddChild(selectedNode);
     }
   };
 
   const handleAddParent = () => {
-    if (selectedNode) {
-      setShowAddParentModal(true);
+    if (selectedNode && onAddParent) {
+      onAddParent(selectedNode);
     }
   };
 
   const handleAddSpouse = () => {
-    if (selectedNode) {
-      setShowAddSpouseModal(true);
+    if (selectedNode && onAddSpouse) {
+      onAddSpouse(selectedNode);
     }
   };
 
   const handleViewInfo = () => {
-    if (selectedNode) {
-      setShowPersonInfoModal(true);
+    if (selectedNode && onViewInfo) {
+      onViewInfo(selectedNode);
       // Lưu width/height SVG vào sessionStorage khi mở contextMenu
       if (svgRef.current) {
         sessionStorage.setItem('familyTreeSvgWidth', svgRef.current.clientWidth.toString());
@@ -498,126 +510,44 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
   };
 
   const handleDelete = () => {
-    if (selectedNode) {
-      setShowDeleteConfirmModal(true);
+    if (selectedNode && onDeletePerson) {
+      onDeletePerson(selectedNode);
     }
   };
 
-  // Handle form submissions with API calls
-  const handleAddChildSubmit = async (data: any) => {
-    try {
-      function findPartnerId(root: any, spouseId: string | undefined | null): string | null {
-        if (!root || !spouseId) return null;
-        const spouses: any[] = root.spouses || [];
-        const found = spouses.find((s: any) => s.id === spouseId);
-        if (found) return root.id;
-        const children: any[] = root.children || [];
-        for (const child of children) {
-          const partnerId = findPartnerId(child, spouseId);
-          if (partnerId) return partnerId;
-        }
-        return null;
-      }
-
-      const selectedId = selectedNode?.id || null;
-      const directSpouseId = selectedNode?.spouses?.[0]?.id || null;
-      const partnerFromTree = findPartnerId(treeData, selectedId);
-
-      const childrenType = data.childrenType;
-      let parent1Id = selectedId;
-      let parent2Id: string | null = directSpouseId || partnerFromTree || null;
-
-      if (childrenType == 'SINGLE_PARENT') {
-        parent2Id = null;
-      } else if (childrenType == 'BIOLOGICAL') {
-        if (!parent1Id || !parent2Id) {
-          console.error('BIOLOGICAL requires both parents but one is missing.');
-          return;
-        }
-      }
-
-      const response = await familyService.addChild(treeId, {
-        parent1Id,
-        parent2Id,
-        child: {
-          name: data.name,
-          gender: data.gender,
-          birthday: data.birthday,
-          birthPlace: data.birthPlace,
-        },
-        childrenType,
-        adoptionDate: data.adoptionDate,
-        notes: data.notes,
-      });
-
-      if (response) {
-        setShowAddChildModal(false);
-        loadTreeData();
-        onRefresh?.();
-      }
-    } catch (error) {
-      console.error('Error adding child:', error);
+  // Zoom functions
+  const handleZoomIn = () => {
+    if (svgRef.current) {
+      const svg = d3.select(svgRef.current);
+      const zoom = d3.zoom().scaleExtent([0.2, 3]);
+      svg.transition().duration(300).call(zoom.scaleBy, 1.2);
     }
+    if (onZoomIn) onZoomIn();
   };
 
-  const handleAddParentSubmit = async (data: any) => {
-    try {
-      const response = await familyService.addParent(treeId, {
-        childId: selectedNode?.id,
-        newParent: {
-          name: data.name,
-          gender: data.gender,
-          birthday: data.birthday,
-          birthPlace: data.birthPlace,
-        },
-      });
-
-      if (response) {
-        setShowAddParentModal(false);
-        loadTreeData();
-        onRefresh?.();
-      }
-    } catch (error) {
-      console.error('Error adding parent:', error);
+  const handleZoomOut = () => {
+    if (svgRef.current) {
+      const svg = d3.select(svgRef.current);
+      const zoom = d3.zoom().scaleExtent([0.2, 3]);
+      svg.transition().duration(300).call(zoom.scaleBy, 0.8);
     }
+    if (onZoomOut) onZoomOut();
   };
 
-  const handleAddSpouseSubmit = async (data: any) => {
-    try {
-      const response = await familyService.addSpouse(treeId, selectedNode?.id as string, {
-        newSpouse: {
-          name: data.name,
-          gender: data.gender,
-          birthday: data.birthday,
-          birthPlace: data.birthPlace,
-        },
-        marriageDate: data.marriageDate,
-        divorceDate: data.divorceDate,
-      });
-
-      if (response) {
-        setShowAddSpouseModal(false);
-        loadTreeData();
-        onRefresh?.();
-      }
-    } catch (error) {
-      console.error('Error adding spouse:', error);
+  const handleZoomReset = () => {
+    if (svgRef.current) {
+      const svg = d3.select(svgRef.current);
+      const svgGroup = svg.select("g");
+      svgGroup.transition()
+        .duration(750)
+        .attr("transform", "scale(1)");
     }
+    if (onZoomReset) onZoomReset();
   };
 
-  const handleDeleteConfirm = async () => {
-    try {
-      const response = await familyService.deletePerson(selectedNode?.id as string);
-
-      // If response is a string, just check if it's truthy or matches a success message
-      if (response) {
-        setShowDeleteConfirmModal(false);
-        loadTreeData();
-        onRefresh?.();
-      }
-    } catch (error) {
-      console.error('Error deleting person:', error);
-    }
+  const handleZoomCenter = () => {
+    centerTreeView();
+    if (onZoomCenter) onZoomCenter();
   };
 
   if (isLoading) {
@@ -675,41 +605,6 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
           onClose={() => setContextMenu({ ...contextMenu, isVisible: false })}
         />
       </div>
-
-      {/* Modals */}
-      <AddChildModal
-        isOpen={showAddChildModal}
-        onClose={() => setShowAddChildModal(false)}
-        onSave={handleAddChildSubmit}
-        parentName={selectedNode?.name}
-      />
-
-      <AddParentModal
-        isOpen={showAddParentModal}
-        onClose={() => setShowAddParentModal(false)}
-        onSave={handleAddParentSubmit}
-        childName={selectedNode?.name || ""}
-      />
-
-      <AddSpouseModal
-        isOpen={showAddSpouseModal}
-        onClose={() => setShowAddSpouseModal(false)}
-        onSave={handleAddSpouseSubmit}
-        personName={selectedNode?.name}
-      />
-
-      <PersonInfoModal
-        isOpen={showPersonInfoModal}
-        onClose={() => setShowPersonInfoModal(false)}
-        person={selectedNode as any}
-      />
-
-      <DeleteConfirmModal
-        isOpen={showDeleteConfirmModal}
-        onClose={() => setShowDeleteConfirmModal(false)}
-        onConfirm={handleDeleteConfirm}
-        person={selectedNode as any}
-      />
     </div>
   );
 };
