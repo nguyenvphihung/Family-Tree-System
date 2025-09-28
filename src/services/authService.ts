@@ -67,7 +67,7 @@ class AuthService {
     try {
       console.log('Gọi API login với credentials:', { phone: credentials.phone });
 
-      const result = await makeRequest(API_ENDPOINTS.AUTH.LOGIN, 'POST', credentials, 'response-area');
+      const result = await makeRequest(API_ENDPOINTS.AUTH.LOGIN, 'POST', credentials, null);
 
       console.log('Raw result từ makeRequest:', result);
 
@@ -87,7 +87,7 @@ class AuthService {
   // API Register
   async registerAPI(credentials: RegisterCredentials): Promise<RegisterResponse> {
     try {
-      const result = await makeRequest(API_ENDPOINTS.AUTH.REGISTER, 'POST', credentials, 'response-area');
+      const result = await makeRequest(API_ENDPOINTS.AUTH.REGISTER, 'POST', credentials, null);
       if (result.error) {
         throw new Error(result.error.message);
       }
@@ -101,7 +101,7 @@ class AuthService {
   // API Get Current User
   async getCurrentUserAPI(): Promise<any> {
     try {
-      const result = await makeRequest(API_ENDPOINTS.AUTH.ME, 'GET', null, 'response-area');
+      const result = await makeRequest(API_ENDPOINTS.AUTH.ME, 'GET', null, null);
       if (result.error) {
         throw new Error(result.error.message);
       }
@@ -115,7 +115,7 @@ class AuthService {
   // API Đăng xuất
   async logoutAPI(): Promise<void> {
     try {
-      const result = await makeRequest(API_ENDPOINTS.AUTH.LOGOUT, 'POST', null, 'response-area');
+      const result = await makeRequest(API_ENDPOINTS.AUTH.LOGOUT, 'POST', null, null);
       if (result.error) {
         throw new Error(result.error.message);
       }
@@ -270,7 +270,7 @@ class AuthService {
     }
   }
 
- 
+
   // Method để debug localStorage
   debugLocalStorage(): void {
     console.log('DEBUG LOCALSTORAGE:');

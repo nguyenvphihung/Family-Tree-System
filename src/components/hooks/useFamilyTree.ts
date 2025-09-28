@@ -88,11 +88,11 @@ export const useFamilyTree = () => {
         try {
             const result = await familyService.deleteTree(treeId);
             console.log('Tree deleted:', result);
-            setSuccessMessage('Xóa cây thành công!');
+            // Không hiển thị thông báo ở đây vì familyService.deleteTree() đã hiển thị rồi
             return result;
         } catch (err: any) {
             console.error('Error deleting tree:', err);
-            setError(err.message);
+            // Không set error ở đây vì familyService.deleteTree() đã xử lý rồi
             throw err;
         } finally {
             setLoading(false);

@@ -20,17 +20,6 @@ const DeleteTreeConfirmModal: React.FC<DeleteTreeConfirmModalProps> = ({
 }) => {
     const { deleteTree, loading, error, successMessage, clearMessages } = useFamilyTree();
 
-    // Auto close modal sau khi success và delay một chút để user thấy message
-    useEffect(() => {
-        if (successMessage) {
-            const timer = setTimeout(() => {
-                onSuccess();
-            }, 1500); // Delay 1.5s để user đọc message
-
-            return () => clearTimeout(timer);
-        }
-    }, [successMessage, onSuccess]);
-
     // Clear messages khi component unmount
     useEffect(() => {
         return () => {
@@ -41,7 +30,8 @@ const DeleteTreeConfirmModal: React.FC<DeleteTreeConfirmModalProps> = ({
     const handleDelete = async () => {
         try {
             await deleteTree(tree.id);
-            // Không cần gọi onSuccess ở đây vì useEffect sẽ handle
+            // Gọi onSuccess ngay lập tức sau khi xóa thành công
+            onSuccess();
         } catch (err) {
             console.error('Failed to delete tree:', err);
         }

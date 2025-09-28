@@ -38,7 +38,6 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ Tree created successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -48,11 +47,10 @@ class FamilyService {
   // GET /trees?userId={userId} - Get all trees of a user
   async getUserTrees(userId: string): Promise<GetUserTreesResponse['data']> {
     try {
-      const result = await makeRequest(API_ENDPOINTS.RELATIONS.GET_USER_TREES, 'GET', null, 'response-area', { userId });
+      const result = await makeRequest(API_ENDPOINTS.RELATIONS.GET_USER_TREES, 'GET', null, null, { userId });
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ User trees loaded successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -62,11 +60,10 @@ class FamilyService {
   // GET /trees - Get all trees of current user (no parameters)
   async getTrees(): Promise<GetUserTreesResponse['data']> {
     try {
-      const result = await makeRequest(API_ENDPOINTS.RELATIONS.GET_USER_TREES, 'GET', null, 'response-area');
+      const result = await makeRequest(API_ENDPOINTS.RELATIONS.GET_USER_TREES, 'GET', null, null);
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ All trees loaded successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -80,7 +77,6 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ Tree updated successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -90,25 +86,40 @@ class FamilyService {
   // DELETE /trees/{treeId} - Delete tree
   async deleteTree(treeId: string): Promise<DeleteTreeResponse['data']> {
     try {
+      console.log('🗑️ Attempting to delete tree with ID:', treeId);
+
       const result = await makeRequest(`${API_ENDPOINTS.RELATIONS.DELETE_TREE}/${treeId}`, 'DELETE', null, 'response-area');
+
+      console.log('🔍 Delete tree result:', result);
+
       if (result.error) {
-        throw new Error(result.error.message);
+        console.log('❌ Delete tree failed:', result.error);
+        throw new Error(result.error.message || 'Failed to delete tree');
       }
-      console.log('✅ Tree deleted successfully:', result.success);
-      return result.data.data;
+
+      console.log('✅ Tree deleted successfully');
+
+      // DeleteTreeResponse['data'] is string type
+      if (result.data && result.data.data !== undefined) {
+        return result.data.data;
+      } else if (result.data && result.data.message) {
+        // Sometimes server returns just message
+        return result.data.message;
+      } else {
+        // Default success message
+        return 'Tree deleted successfully';
+      }
     } catch (error: any) {
+      console.log('💥 Exception in deleteTree:', error);
       throw error;
     }
-  }
-
-  // GET /relations/trees/{treeId}?maxDepth={maxDepth} - Get tree relations
+  }  // GET /relations/trees/{treeId}?maxDepth={maxDepth} - Get tree relations
   async getTreeRelations(treeId: string, maxDepth: number = 7): Promise<any> {
     try {
-      const result = await makeRequest(`${API_ENDPOINTS.RELATIONS.GET_TREE_RELATIONS}/${treeId}`, 'GET', null, 'response-area', { maxDepth });
+      const result = await makeRequest(`${API_ENDPOINTS.RELATIONS.GET_TREE_RELATIONS}/${treeId}`, 'GET', null, null, { maxDepth });
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ Tree relations loaded successfully:', result.success);
       return result.data;
     } catch (error: any) {
       throw error;
@@ -118,11 +129,10 @@ class FamilyService {
   // GET /relations/trees/{treeId}/persons/{personId}?maxDepth={maxDepth} - Get person tree relations
   async getPersonTreeRelations(treeId: string, personId: string, maxDepth: number = 7): Promise<GetPersonTreeRelationsResponse['data']> {
     try {
-      const result = await makeRequest(`${API_ENDPOINTS.RELATIONS.GET_PERSON_TREE_RELATIONS}/${treeId}/persons/${personId}`, 'GET', null, 'response-area', { maxDepth });
+      const result = await makeRequest(`${API_ENDPOINTS.RELATIONS.GET_PERSON_TREE_RELATIONS}/${treeId}/persons/${personId}`, 'GET', null, null, { maxDepth });
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ Person tree relations loaded successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -136,7 +146,6 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ Child added successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -150,7 +159,6 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ Parent added successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -164,22 +172,18 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ Root person created successfully:', result.success);
 
       return result.data.data;
     } catch (error: any) {
       throw error;
     }
-  }
-
-  // POST /relations/trees/{treeId}/spouses/{spouseId} - Add spouse marriage
+  }  // POST /relations/trees/{treeId}/spouses/{spouseId} - Add spouse marriage
   async addSpouse(treeId: string, spouseId: string, data: AddSpouseRequest): Promise<AddSpouseResponse['data']> {
     try {
       const result = await makeRequest(`${API_ENDPOINTS.RELATIONS.ADD_SPOUSE}/${treeId}/spouses/${spouseId}`, 'POST', data, 'response-area');
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ Spouse added successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -193,7 +197,6 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ Album created successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -207,7 +210,6 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ Album updated successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -221,7 +223,6 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ Album deleted successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -231,11 +232,10 @@ class FamilyService {
   // GET /albums?userId={userId} - Get all albums of a user
   async getUserAlbums(userId: string): Promise<GetUserAlbumsResponse['data']> {
     try {
-      const result = await makeRequest(API_ENDPOINTS.ALBUMS.GET_USER_ALBUMS, 'GET', null, 'response-area', { userId });
+      const result = await makeRequest(API_ENDPOINTS.ALBUMS.GET_USER_ALBUMS, 'GET', null, null, { userId });
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ User albums loaded successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -245,11 +245,10 @@ class FamilyService {
   // GET /albums/{albumId} - Get album by ID
   async getAlbumById(albumId: string): Promise<any> {
     try {
-      const result = await makeRequest(`${API_ENDPOINTS.ALBUMS.GET_ALBUM_BY_ID}/${albumId}`, 'GET', null, 'response-area');
+      const result = await makeRequest(`${API_ENDPOINTS.ALBUMS.GET_ALBUM_BY_ID}/${albumId}`, 'GET', null, null);
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ Album details loaded successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -259,11 +258,10 @@ class FamilyService {
   // GET /images/{imageId} - Get image by ID
   async getImage(imageId: string): Promise<GetImageResponse['data']> {
     try {
-      const result = await makeRequest(`${API_ENDPOINTS.IMAGES.GET_IMAGE}/${imageId}`, 'GET', null, 'response-area');
+      const result = await makeRequest(`${API_ENDPOINTS.IMAGES.GET_IMAGE}/${imageId}`, 'GET', null, null);
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ Image loaded successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -273,11 +271,10 @@ class FamilyService {
   // GET /images/by-album - Get images by albumId
   async getImagesByAlbum(albumId: string): Promise<GetImagesByAlbumResponse['data']> {
     try {
-      const result = await makeRequest(API_ENDPOINTS.IMAGES.GET_IMAGES_BY_ALBUM, 'GET', null, 'response-area', { albumId });
+      const result = await makeRequest(API_ENDPOINTS.IMAGES.GET_IMAGES_BY_ALBUM, 'GET', null, null, { albumId });
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ Album images loaded successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -294,7 +291,6 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ Image uploaded successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -308,7 +304,6 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ Image deleted successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
@@ -322,7 +317,6 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      console.log('✅ Person deleted successfully:', result.success);
       return result.data.data;
     } catch (error: any) {
       throw error;
