@@ -2019,6 +2019,9 @@ const FamilyTreeDemo: React.FC = () => {
         </div>
       )}
 
+      {/* Response Area for notifications */}
+      <div id="response-area" style={{ display: 'none' }} className="response-area"></div>
+
     </div>
   );
 };

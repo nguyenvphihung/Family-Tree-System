@@ -4,7 +4,7 @@ import { api } from '@/config/axios';
 // Sử dụng axios để thực hiện API calls
 export async function makeRequest(endpoint: string, method: string, data: any, responseElementId: string, params?: any) {
     const responseArea = document.getElementById(responseElementId);
-   
+
 
     try {
         let response;
@@ -36,6 +36,7 @@ export async function makeRequest(endpoint: string, method: string, data: any, r
         if (responseArea) {
             responseArea.textContent = successMessage;
             responseArea.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-green-50 border border-green-300 text-green-800 rounded-lg p-3 shadow-lg max-w-sm text-center text-sm font-medium';
+            responseArea.style.display = 'block';
 
             // Tự động ẩn sau 3 giây
             setTimeout(() => {
@@ -77,6 +78,7 @@ export async function makeRequest(endpoint: string, method: string, data: any, r
         if (responseArea) {
             responseArea.textContent = errorMessage;
             responseArea.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-red-50 border border-red-300 text-red-800 rounded-lg p-3 shadow-lg max-w-sm text-center text-sm font-medium';
+            responseArea.style.display = 'block';
 
             // Tự động ẩn sau 5 giây (lâu hơn cho error)
             setTimeout(() => {
