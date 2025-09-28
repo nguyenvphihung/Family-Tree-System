@@ -210,7 +210,7 @@ const FamilyTreeDemo: React.FC = () => {
       setError(error.message || 'Failed to refresh tree');
     } finally {
       setLoading(false);
-   
+
       showSuccessNotification('✅ Đã làm mới cây gia đình');
     }
   };
@@ -752,14 +752,7 @@ const FamilyTreeDemo: React.FC = () => {
         </div>
       )}
 
-      {/* Response area for makeRequest - Hidden by default */}
-      <div
-        id="response-area"
-        style={{ display: 'none' }}
-        className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-white border border-gray-300 rounded-lg p-3 shadow-lg max-w-sm text-center text-sm font-medium"
-      >
-        {/* This will be populated by makeRequest utility but kept minimal */}
-      </div>
+
       {/* Top Header Bar - Dark Gray */}
       <div
         className="text-white px-6 py-2 border-b border-gray-700 shadow-sm"
