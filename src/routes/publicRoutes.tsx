@@ -13,6 +13,7 @@ import StoriesPage from "../pages/Stories";
 import MembersPage from "../pages/Members";
 import Logout from "@/pages/Logout/Logout";
 import SnapshotEditor from "@/pages/SnapshotEditor";
+import Calendar from "@/pages/Calendar/Calendar";
 
 export const publicRoutes: RouteObject[] = [
   { path: "/", element: <Home /> },
@@ -29,6 +30,8 @@ export const publicRoutes: RouteObject[] = [
   { path: "/members", element: <MembersPage /> },
   { path: "/logout", element: <Logout /> },
   { path: "/snapshot-editor", element: <SnapshotEditor /> },
+  { path: "/calendar", element: <Calendar /> },
+
 ];
 
 export default publicRoutes;
