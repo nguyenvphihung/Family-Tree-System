@@ -45,6 +45,21 @@ const FamilyTreeDemo: React.FC = () => {
   const [showAddRootModal, setShowAddRootModal] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
+  // Function để hiển thị thông báo thành công
+  const showSuccessNotification = (message: string) => {
+    const responseArea = document.getElementById('response-area');
+    if (responseArea) {
+      responseArea.textContent = message;
+      responseArea.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-green-50 border border-green-300 text-green-800 rounded-lg p-3 shadow-lg max-w-sm text-center text-sm font-medium';
+      responseArea.style.display = 'block';
+
+      // Tự động ẩn sau 3 giây
+      setTimeout(() => {
+        responseArea.style.display = 'none';
+      }, 3000);
+    }
+  };
+
   // Auto center tree when component mounts
   useEffect(() => {
 
@@ -91,6 +106,26 @@ const FamilyTreeDemo: React.FC = () => {
     } catch (error: any) {
       console.error('Error loading user trees:', error);
       setError(error.message || 'Failed to load user trees');
+    }
+  };
+
+  // Hàm chỉ refresh danh sách cây mà không tự động chọn cây đầu tiên
+  const refreshTreeList = async () => {
+    try {
+      const trees = await familyService.getUserTrees('current-user-id');
+      console.log('Tree list refreshed:', trees);
+      setUserTrees(trees);
+
+      // Nếu không còn cây nào, reset states
+      if (!trees || trees.length === 0) {
+        setCurrentTreeId(null);
+        setHasTreeData(false);
+        setSelectedPerson(null);
+        setError('No trees found. Please create a new tree.');
+      }
+    } catch (error: any) {
+      console.error('Error refreshing tree list:', error);
+      setError(error.message || 'Failed to refresh tree list');
     }
   };
 
@@ -191,7 +226,8 @@ const FamilyTreeDemo: React.FC = () => {
         name: treeData.name
       });
 
-      // makeRequest() sẽ tự động hiển thị thông báo, không cần thêm code
+      // Hiển thị thông báo thành công
+      showSuccessNotification(`✅ Đã tạo thành công cây gia đình: ${treeData.name}`);
 
       // Refresh user trees and switch to the new tree
       await getTrees();
@@ -229,17 +265,22 @@ const FamilyTreeDemo: React.FC = () => {
 
   // Delete tree (internal logic for state management)
   const handleDeleteTree = async (treeId: string) => {
-    // Nếu cây đang được chọn bị xóa, reset currentTreeId
-    if (currentTreeId === treeId) {
-      setCurrentTreeId(null);
-      setHasTreeData(false);
-      setSelectedPerson(null);
+    try {
+      // Nếu cây đang được chọn bị xóa, reset currentTreeId
+      if (currentTreeId === treeId) {
+        setCurrentTreeId(null);
+        setHasTreeData(false);
+        setSelectedPerson(null);
+        setTreeViewKey(prev => prev + 1); // Force re-render
+      }
+
+      // Tự động refresh danh sách cây để cập nhật UI (không tự động chọn cây đầu tiên)
+      await refreshTreeList();
+
+      console.log('Tree deleted and tree list refreshed successfully');
+    } catch (error) {
+      console.error('Error refreshing tree list after delete:', error);
     }
-
-    // Tự động refresh danh sách cây
-    await getTrees();
-
-    console.log('Tree deleted successfully');
   };  // Switch to different tree
   const handleSwitchTree = async (treeId: string) => {
     try {
@@ -427,21 +468,23 @@ const FamilyTreeDemo: React.FC = () => {
     try {
       setLoading(true);
 
+      const personName = selectedPerson.name;
 
-      // Gọi API xóa thông qua makeRequest để có thông báo thành công
+      // Gọi API xóa thông qua familyService
       await familyService.deletePerson(selectedPerson.id);
 
-      // makeRequest() sẽ tự động hiển thị thông báo
+      // Hiển thị thông báo thành công
+      showSuccessNotification(`✅ Đã xóa thành công ${personName}`);
 
       // Đóng modal
       setShowDeleteConfirmModal(false);
 
-      // Reload tree data
-      await loadTreeData();
-      setTreeViewKey(prev => prev + 1);
-
       // Clear selection
       setSelectedPerson(null);
+
+      // Tự động reload cây
+      await loadTreeData();
+      setTreeViewKey(prev => prev + 1);
 
       console.log('Person deleted successfully');
     } catch (error: any) {
@@ -482,14 +525,15 @@ const FamilyTreeDemo: React.FC = () => {
       // Call API to add child
       await familyService.addChild(currentTreeId, addChildRequest);
 
-      // makeRequest() sẽ tự động hiển thị thông báo
-
-      // Refresh tree data
-      await loadTreeData();
-      setTreeViewKey(prev => prev + 1);
+      // Hiển thị thông báo thành công
+      showSuccessNotification(`✅ Đã thêm thành công con: ${childData.name}`);
 
       // Close modal
       setShowAddChildModal(false);
+
+      // Tự động reload cây
+      await loadTreeData();
+      setTreeViewKey(prev => prev + 1);
 
       console.log('Child added successfully');
     } catch (error: any) {
@@ -526,13 +570,15 @@ const FamilyTreeDemo: React.FC = () => {
 
       await familyService.addParent(currentTreeId, addParentRequest);
 
-      // makeRequest() sẽ tự động hiển thị thông báo
-
-      await loadTreeData();
-      setTreeViewKey(prev => prev + 1);
+      // Hiển thị thông báo thành công
+      showSuccessNotification(`✅ Đã thêm thành công cha/mẹ: ${parentData.name}`);
 
       // Close modal
       setShowAddParentModal(false);
+
+      // Tự động reload cây
+      await loadTreeData();
+      setTreeViewKey(prev => prev + 1);
 
       console.log('Parent added successfully');
     } catch (error: any) {
@@ -569,13 +615,15 @@ const FamilyTreeDemo: React.FC = () => {
 
       await familyService.addSpouse(currentTreeId, selectedPerson.id, addSpouseRequest);
 
-      // makeRequest() sẽ tự động hiển thị thông báo
-
-      await loadTreeData();
-      setTreeViewKey(prev => prev + 1);
+      // Hiển thị thông báo thành công
+      showSuccessNotification(`✅ Đã thêm thành công vợ/chồng: ${spouseData.name}`);
 
       // Close modal
       setShowAddSpouseModal(false);
+
+      // Tự động reload cây
+      await loadTreeData();
+      setTreeViewKey(prev => prev + 1);
 
       console.log('Spouse added successfully');
     } catch (error: any) {
@@ -604,7 +652,8 @@ const FamilyTreeDemo: React.FC = () => {
 
       await familyService.createRootPerson(currentTreeId, createRootRequest);
 
-      // makeRequest() sẽ tự động hiển thị thông báo
+      // Hiển thị thông báo thành công
+      showSuccessNotification(`✅ Đã thêm thành công người gốc: ${rootData.name}`);
 
       // Close modal first
       setShowAddRootModal(false);
@@ -1614,6 +1663,7 @@ const FamilyTreeDemo: React.FC = () => {
                       className="text-sm bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
                     >
                       Refresh
+
                     </button>
                   </div>
                 </div>
@@ -1661,7 +1711,7 @@ const FamilyTreeDemo: React.FC = () => {
                           title="Delete Album"
                         >
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
                         </button>
                       </div>
@@ -1780,11 +1830,20 @@ const FamilyTreeDemo: React.FC = () => {
       {showDeleteTreeModal && selectedTreeForDelete && (
         <DeleteTreeConfirmModal
           tree={selectedTreeForDelete}
-          onSuccess={() => {
-            // Xử lý logic sau khi xóa thành công
-            handleDeleteTree(selectedTreeForDelete.id);
+          onSuccess={async () => {
+            // Lưu trữ thông tin cây trước khi xóa
+            const deletedTreeName = selectedTreeForDelete.name;
+            const deletedTreeId = selectedTreeForDelete.id;
+
+            // Đóng modal trước
             setShowDeleteTreeModal(false);
             setSelectedTreeForDelete(null);
+
+            // Xử lý logic sau khi xóa thành công (refresh danh sách)
+            await handleDeleteTree(deletedTreeId);
+
+            // Hiển thị thông báo thành công sau khi đã refresh
+            showSuccessNotification(`✅ Đã xóa thành công cây gia đình: ${deletedTreeName}`);
           }}
           onCancel={() => {
             setShowDeleteTreeModal(false);
