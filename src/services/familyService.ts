@@ -86,31 +86,21 @@ class FamilyService {
   // DELETE /trees/{treeId} - Delete tree
   async deleteTree(treeId: string): Promise<DeleteTreeResponse['data']> {
     try {
-      console.log('🗑️ Attempting to delete tree with ID:', treeId);
-
       const result = await makeRequest(`${API_ENDPOINTS.RELATIONS.DELETE_TREE}/${treeId}`, 'DELETE', null, 'response-area');
 
-      console.log('🔍 Delete tree result:', result);
-
       if (result.error) {
-        console.log('❌ Delete tree failed:', result.error);
         throw new Error(result.error.message || 'Failed to delete tree');
       }
 
-      console.log('✅ Tree deleted successfully');
-
-      // DeleteTreeResponse['data'] is string type
+      // Return data from server response
       if (result.data && result.data.data !== undefined) {
         return result.data.data;
       } else if (result.data && result.data.message) {
-        // Sometimes server returns just message
         return result.data.message;
       } else {
-        // Default success message
         return 'Tree deleted successfully';
       }
     } catch (error: any) {
-      console.log('💥 Exception in deleteTree:', error);
       throw error;
     }
   }  // GET /relations/trees/{treeId}?maxDepth={maxDepth} - Get tree relations

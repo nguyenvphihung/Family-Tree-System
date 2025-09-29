@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { authService } from '../services/authService';
-import { familyService } from '../services/familyService';
+import familyService from '../services/familyService';
 
 // Auth Store
 interface AuthState {
@@ -98,10 +98,10 @@ export const useAuthStore = create<AuthStore>()(
       }),
       {
         name: 'auth-storage',
-        partialize: (state) => ({ 
-          user: state.user, 
-          token: state.token, 
-          isAuthenticated: state.isAuthenticated 
+        partialize: (state) => ({
+          user: state.user,
+          token: state.token,
+          isAuthenticated: state.isAuthenticated
         }),
       }
     ),
@@ -124,7 +124,7 @@ interface FamilyTreeStore extends FamilyTreeState {
   addSpouse: (treeId: string, spouseId: string, data: any) => Promise<any>;
   getPersonWithRelations: (treeId: string, personId: string) => Promise<any>;
   deletePerson: (personId: string) => Promise<boolean>;
-  
+
   // Local state management
   setCurrentPerson: (person: any) => void;
   clearFamilyTree: () => void;
@@ -144,7 +144,7 @@ export const useFamilyTreeStore = create<FamilyTreeStore>()(
       createTreeRoot: async (treeId: string, data: any) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await familyService.createTreeRoot(treeId, data);
+          const response = await familyService.createRootPerson(treeId, data);
           set({ isLoading: false });
           return response;
         } catch (error: any) {
@@ -155,7 +155,7 @@ export const useFamilyTreeStore = create<FamilyTreeStore>()(
           throw error;
         }
       },
-      
+
       //sinh ra để làm gì ?  kh biết luôn à :)), cái này có thấy sài đâu, nó đang sài của familyService hết mà ?
       // t đổi qua familyService khi chieu khong nho co cai nay
       // addChildren: async (treeId: string, data: any) => {
@@ -206,7 +206,7 @@ export const useFamilyTreeStore = create<FamilyTreeStore>()(
       getPersonWithRelations: async (treeId: string, personId: string) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await familyService.getPersonWithRelations(treeId, personId);
+          const response = await familyService.getPersonTreeRelations(treeId, personId);
           set({ isLoading: false });
           return response;
         } catch (error: any) {
@@ -222,13 +222,13 @@ export const useFamilyTreeStore = create<FamilyTreeStore>()(
         try {
           set({ isLoading: true, error: null });
           await familyService.deletePerson(personId);
-          
+
           // Remove person from members list
           set((state) => ({
             members: state.members.filter(member => member.id !== personId),
             isLoading: false
           }));
-          
+
           return true;
         } catch (error: any) {
           set({

@@ -12,6 +12,23 @@ import familyService from "../../services/familyService";
 import { get } from "http";
 
 const FamilyTreeDemo: React.FC = () => {
+  // Modal tạo album
+  const [showCreateAlbumModal, setShowCreateAlbumModal] = useState(false);
+  const [newAlbumName, setNewAlbumName] = useState('');
+  // Cập nhật tên cây
+  const handleUpdateTree = async (treeId: string, treeData: { name: string }) => {
+    try {
+      setLoading(true);
+      await familyService.updateTree(treeId, { treeId, name: treeData.name });
+      await getTrees(); // Refresh lại danh sách cây
+    } catch (error: any) {
+      setError(error.message || 'Failed to update tree');
+    } finally {
+      setLoading(false);
+    }
+  };
+  // State để hiển thị thông báo khi vừa tạo cây mới
+  const [justCreatedTree, setJustCreatedTree] = useState(false);
   const [currentTreeId, setCurrentTreeId] = useState<string | null>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -48,6 +65,15 @@ const FamilyTreeDemo: React.FC = () => {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [personTreeData, setPersonTreeData] = useState<any>(null);
   const [showPersonTreeModal, setShowPersonTreeModal] = useState(false);
+
+
+  // Hiển thị toast khi vừa tạo cây mới và ở trạng thái empty tree
+  useEffect(() => {
+    if (justCreatedTree && currentTreeId && !hasTreeData) {
+      setError('Không có bất cứ thành viên nào');
+      setJustCreatedTree(false); // Đảm bảo chỉ hiện 1 lần
+    }
+  }, [justCreatedTree, currentTreeId, hasTreeData]);
 
   // Thông báo success/error được xử lý tự động bởi makeRequest
 
@@ -266,45 +292,21 @@ const FamilyTreeDemo: React.FC = () => {
   const handleCreateTree = async (treeData: any) => {
     try {
       setLoading(true);
-      const newTree = await familyService.createTree({
+      await familyService.createTree({
         userId: 'current-user-id', // Replace with actual user ID
         name: treeData.name
       });
-
-      // Thông báo success được xử lý tự động bởi makeRequest
-
       // Refresh user trees and switch to the new tree
       await getTrees();
       setShowCreateTreeModal(false);
-      console.log('Tree created successfully:', newTree);
+      setJustCreatedTree(true); // Đánh dấu vừa tạo cây mới
     } catch (error: any) {
       console.error('Error creating tree:', error);
       setError(error.message || 'Failed to create tree');
     } finally {
       setLoading(false);
     }
-  };
 
-  // Update tree
-  const handleUpdateTree = async (treeId: string, treeData: any) => {
-    try {
-      setLoading(true);
-      const updatedTree = await familyService.updateTree(treeId, {
-        treeId: treeId,
-        name: treeData.name
-      });
-
-      // makeRequest() sẽ tự động hiển thị thông báo, không cần thêm code
-
-      // Refresh user trees
-      await getTrees();
-      console.log('Tree updated successfully:', updatedTree);
-    } catch (error: any) {
-      console.error('Error updating tree:', error);
-      setError(error.message || 'Failed to update tree');
-    } finally {
-      setLoading(false);
-    }
   };
 
   // Delete tree (internal logic for state management)
@@ -327,8 +329,6 @@ const FamilyTreeDemo: React.FC = () => {
 
       // Đóng modal danh sách cây sau khi xóa thành công  
       setShowTreeSelector(false);
-
-      console.log('Tree deleted, modals closed, and tree list refreshed successfully');
     } catch (error: any) {
       console.error('Error updating UI after tree deletion:', error);
       setError(error.message || 'Failed to update UI after tree deletion');
@@ -343,8 +343,6 @@ const FamilyTreeDemo: React.FC = () => {
       setShowTreeSelector(false);
 
       // Không cần thông báo thủ công - switch tree là UI action, không phải API call
-
-      console.log('Switched to tree:', treeId);
     } catch (error: any) {
       console.error('Error switching tree:', error);
       setError(error.message || 'Failed to switch tree');
@@ -374,14 +372,13 @@ const FamilyTreeDemo: React.FC = () => {
         userId: 'current-user-id', // Replace with actual user ID
         name: albumData.name
       });
-
-      // makeRequest() sẽ tự động hiển thị thông báo
-
       await loadUserAlbums('current-user-id');
-      console.log('Album created:', newAlbum);
     } catch (error: any) {
       console.error('Error creating album:', error);
-      setError(error.message || 'Failed to create album');
+      let msg = 'Failed to create album';
+      if (typeof error === 'string') msg = error;
+      else if (error && typeof error.message === 'string' && error.message.trim() !== '') msg = error.message;
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -396,10 +393,7 @@ const FamilyTreeDemo: React.FC = () => {
         name: albumData.name
       });
 
-      // makeRequest() sẽ tự động hiển thị thông báo
-
       await loadUserAlbums('current-user-id');
-      console.log('Album updated:', updatedAlbum);
     } catch (error: any) {
       console.error('Error updating album:', error);
       setError(error.message || 'Failed to update album');
@@ -414,10 +408,7 @@ const FamilyTreeDemo: React.FC = () => {
       setLoading(true);
       await familyService.deleteAlbum(albumId);
 
-      // makeRequest() sẽ tự động hiển thị thông báo
-
       await loadUserAlbums('current-user-id');
-      console.log('Album deleted successfully');
     } catch (error: any) {
       console.error('Error deleting album:', error);
       setError(error.message || 'Failed to delete album');
@@ -467,15 +458,12 @@ const FamilyTreeDemo: React.FC = () => {
         albumId: imageData.albumId
       });
 
-      // makeRequest() sẽ tự động hiển thị thông báo
-
       // Refresh album images if album is selected
       if (selectedAlbum) {
         await loadAlbumImages(selectedAlbum.id);
       }
 
       setShowUploadModal(false);
-      console.log('Image uploaded:', uploadedImage);
     } catch (error: any) {
       console.error('Error uploading image:', error);
       setError(error.message || 'Failed to upload image');
@@ -490,14 +478,10 @@ const FamilyTreeDemo: React.FC = () => {
       setLoading(true);
       await familyService.deleteImage(imageId);
 
-      // makeRequest() sẽ tự động hiển thị thông báo
-
       // Refresh album images if album is selected
       if (selectedAlbum) {
         await loadAlbumImages(selectedAlbum.id);
       }
-
-      console.log('Image deleted successfully');
     } catch (error: any) {
       console.error('Error deleting image:', error);
       setError(error.message || 'Failed to delete image');
@@ -559,8 +543,6 @@ const FamilyTreeDemo: React.FC = () => {
       // Gọi API xóa thông qua familyService
       await familyService.deletePerson(selectedPerson.id);
 
-      // Thông báo success được xử lý tự động bởi makeRequest
-
       // Đóng modal
       setShowDeleteConfirmModal(false);
 
@@ -570,8 +552,6 @@ const FamilyTreeDemo: React.FC = () => {
       // Tự động reload cây
       await loadTreeData();
       setTreeViewKey(prev => prev + 1);
-
-      console.log('Person deleted successfully');
     } catch (error: any) {
       console.error('Error deleting person:', error);
       setError(error.message || 'Failed to delete person');
@@ -610,16 +590,12 @@ const FamilyTreeDemo: React.FC = () => {
       // Call API to add child
       await familyService.addChild(currentTreeId, addChildRequest);
 
-      // Thông báo success được xử lý tự động bởi makeRequest
-
       // Close modal
       setShowAddChildModal(false);
 
       // Tự động reload cây
       await loadTreeData();
       setTreeViewKey(prev => prev + 1);
-
-      console.log('Child added successfully');
     } catch (error: any) {
       console.error('Error adding child:', error);
       setError(error.message || 'Failed to add child');
@@ -654,16 +630,12 @@ const FamilyTreeDemo: React.FC = () => {
 
       await familyService.addParent(currentTreeId, addParentRequest);
 
-      // Thông báo success được xử lý tự động bởi makeRequest
-
       // Close modal
       setShowAddParentModal(false);
 
       // Tự động reload cây
       await loadTreeData();
       setTreeViewKey(prev => prev + 1);
-
-      console.log('Parent added successfully');
     } catch (error: any) {
       console.error('Error adding parent:', error);
       setError(error.message || 'Failed to add parent');
@@ -698,16 +670,12 @@ const FamilyTreeDemo: React.FC = () => {
 
       await familyService.addSpouse(currentTreeId, selectedPerson.id, addSpouseRequest);
 
-      // Thông báo success được xử lý tự động bởi makeRequest
-
       // Close modal
       setShowAddSpouseModal(false);
 
       // Tự động reload cây
       await loadTreeData();
       setTreeViewKey(prev => prev + 1);
-
-      console.log('Spouse added successfully');
     } catch (error: any) {
       console.error('Error adding spouse:', error);
       setError(error.message || 'Failed to add spouse');
@@ -734,8 +702,6 @@ const FamilyTreeDemo: React.FC = () => {
 
       await familyService.createRootPerson(currentTreeId, createRootRequest);
 
-      // Thông báo success được xử lý tự động bởi makeRequest
-
       // Close modal first
       setShowAddRootModal(false);
 
@@ -753,8 +719,6 @@ const FamilyTreeDemo: React.FC = () => {
           svgElement.refreshTreeData();
         }
       }, 500);
-
-      console.log('Root person added successfully:', rootData.name);
     } catch (error: any) {
       console.error('Error adding root person:', error);
       setError(error.message || 'Failed to add root person');
@@ -1432,12 +1396,19 @@ const FamilyTreeDemo: React.FC = () => {
               className="w-8 h-8 bg-white border border-gray-200 hover:bg-gray-100 rounded-full shadow-sm flex items-center justify-center hover:shadow transition-all duration-200"
               title="Center Family Tree"
             >
-
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"
-              />
+              <svg
+                className="w-4 h-4 text-gray-700"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                />
+              </svg>
             </button>
             <button
               className="w-8 h-8 bg-white border border-gray-200 hover:bg-gray-100 rounded-full shadow-sm flex items-center justify-center hover:shadow transition-all duration-200"
@@ -1716,16 +1687,55 @@ const FamilyTreeDemo: React.FC = () => {
                   <h3 className="font-medium">Albums</h3>
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => {
-                        const albumName = window.prompt('Enter album name:');
-                        if (albumName?.trim()) {
-                          handleCreateAlbum({ name: albumName.trim() });
-                        }
-                      }}
+                      onClick={() => setShowCreateAlbumModal(true)}
                       className="text-sm bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
                     >
                       New Album
                     </button>
+                    {/* Modal tạo album */}
+                    {showCreateAlbumModal && (
+                      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg p-6 w-96">
+                          <h2 className="text-lg font-bold mb-4">Create New Album</h2>
+                          <form onSubmit={e => {
+                            e.preventDefault();
+                            if (newAlbumName.trim()) {
+                              handleCreateAlbum({ name: newAlbumName.trim() });
+                              setShowCreateAlbumModal(false);
+                              setNewAlbumName('');
+                            }
+                          }}>
+                            <div className="mb-4">
+                              <label className="block text-sm font-medium mb-2">Album Name</label>
+                              <input
+                                type="text"
+                                value={newAlbumName}
+                                onChange={e => setNewAlbumName(e.target.value)}
+                                required
+                                className="w-full border border-gray-300 rounded px-3 py-2"
+                                placeholder="Enter album name"
+                                autoFocus
+                              />
+                            </div>
+                            <div className="flex justify-end space-x-2">
+                              <button
+                                type="button"
+                                onClick={() => { setShowCreateAlbumModal(false); setNewAlbumName(''); }}
+                                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="submit"
+                                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                              >
+                                Create Album
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    )}
                     <button
                       onClick={() => loadUserAlbums('current-user-id')}
                       className="text-sm bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
@@ -1912,7 +1922,7 @@ const FamilyTreeDemo: React.FC = () => {
             // Xử lý logic sau khi xóa thành công
             await handleDeleteTree(deletedTreeId);
 
-            console.log(`Tree ${deletedTreeName} deleted successfully`);
+            // console.log(`Tree ${deletedTreeName} deleted successfully`);
           }}
           onCancel={() => {
             setShowDeleteTreeModal(false);

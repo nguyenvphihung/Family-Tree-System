@@ -35,12 +35,13 @@ export async function makeRequest(endpoint: string, method: string, data: any, r
         }
 
         // Lấy thông báo thành công từ server response
-        const successMessage = `✅ ${response.data.message || 'Thao tác thành công'}`;
+        const serverMessage = response.data.message || 'Thao tác thành công';
+        const successMessage = `✅ ${serverMessage}`;
 
-        console.log('📢 Success message from server:', response.data.message);
-        console.log('📢 Final success message:', successMessage);
-        console.log('🔗 API endpoint called:', endpoint);
-        console.log('🔗 Method:', method);
+        // Hiển thị message từ server trong console để theo dõi
+        console.log('📢 Server success message:', serverMessage);
+        console.log('� Full server response:', response.data);
+        console.log('🔗 API endpoint:', endpoint, '- Method:', method);
 
         if (responseArea) {
             // Clear timeout cũ nếu có để tránh thông báo trùng lặp
@@ -79,13 +80,63 @@ export async function makeRequest(endpoint: string, method: string, data: any, r
         if (error.response) {
             // Lỗi từ server (có response)
             const data = error.response.data;
-            console.log('❌ Server error response:', error.response.status, data);
+            let serverErrorMessage = data.message;
 
-            // Lấy message lỗi từ server response
-            errorMessage = `❌ ${data.message}`;
+            // Xử lý message cụ thể dựa trên endpoint và status code khi server không trả về message rõ ràng
+            if (!serverErrorMessage ||
+                serverErrorMessage === 'Internal Server Error' ||
+                serverErrorMessage === 'Bad Request' ||
+                serverErrorMessage.trim() === '' ||
+                serverErrorMessage === 'Error') {
+                // Xử lý trường hợp xóa cây
+                if (endpoint.includes('/trees/') && method === 'DELETE') {
+
+                    if (error.response.status === 400 || error.response.status === 409 || error.response.status === 500) {
+                        serverErrorMessage = 'Không thể xóa cây này vì còn chứa nhiều thành viên. Chỉ có thể xóa cây khi chỉ còn lại 1 thành viên .';
+                        // Hiển thị message lỗi lên trên modal trong 3s
+                        if (responseArea) {
+                            responseArea.textContent = `❌ ${serverErrorMessage}`;
+                            responseArea.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-[9999] bg-red-50 border border-red-300 text-red-800 rounded-lg p-3 shadow-lg max-w-sm text-center text-sm font-medium';
+                            responseArea.style.display = 'block';
+                            responseArea.style.zIndex = '9999';
+                            // Ẩn message sau 3s
+                            if (currentTimeoutId) clearTimeout(currentTimeoutId);
+                            currentTimeoutId = setTimeout(() => {
+                                responseArea.style.display = 'none';
+                                responseArea.textContent = '';
+                                responseArea.className = 'response-area';
+                                currentTimeoutId = null;
+                            }, 4000);
+                        }
+                        // Đóng modal sau 1s
+                        setTimeout(() => {
+                            const modal = document.getElementById('delete-tree-modal');
+                            if (modal) {
+                                (modal as any).close();
+                            }
+                        }, 4000);
+                        // Reload lại cây sau 1s
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 3000);
+                    }
+                }
+
+            }
+         
+
+
+
+            // Hiển thị error từ server trong console để theo dõi
+            console.log('❌ Server error message:', serverErrorMessage);
+            console.log('❌ Full server error response:', data);
+            console.log('❌ Error status:', error.response.status);
+            console.log('❌ Endpoint & Method:', endpoint, method);
+
+            errorMessage = `❌ ${serverErrorMessage}`;
         } else if (error.request) {
             // Lỗi network (không có response)
-            console.log('❌ Network error:', error.request);
+            console.log('❌ Network error - No response from server');
             errorMessage = '❌ Lỗi kết nối: Không thể kết nối đến server';
         } else {
             // Lỗi khác
