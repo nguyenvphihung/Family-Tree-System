@@ -24,6 +24,15 @@ api.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // Debug: log whether auth header is attached and target URL (without leaking token)
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.log(
+        "[axios] auth header attached:", !!token,
+        "method:", (config.method || 'GET').toUpperCase(),
+        "url:", `${config.baseURL || ''}${config.url || ''}`
+      );
+    }
     return config;
   },
   (error) => {

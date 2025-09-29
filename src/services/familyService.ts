@@ -26,7 +26,8 @@ import {
   UploadImageRequest,
   UploadImageResponse,
   DeleteImageResponse,
-  DeletePersonResponse
+  DeletePersonResponse,
+  GetAlbumByIdResponse
 } from '../types/family';
 import { makeRequest } from '../utils';
 
@@ -233,7 +234,7 @@ class FamilyService {
   }
 
   // GET /albums/{albumId} - Get album by ID
-  async getAlbumById(albumId: string): Promise<any> {
+  async getAlbumById(albumId: string): Promise<GetAlbumByIdResponse['data']> {
     try {
       const result = await makeRequest(`${API_ENDPOINTS.ALBUMS.GET_ALBUM_BY_ID}/${albumId}`, 'GET', null, null);
       if (result.error) {

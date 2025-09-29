@@ -375,6 +375,14 @@ export interface GetUserAlbumsResponse {
   data: Album[];
 }
 
+// API response interfaces - Get album by ID
+export interface GetAlbumByIdResponse {
+  code: number;
+  status: string;
+  message: string;
+  data: Album;
+}
+
 // API response interfaces - Images
 export interface GetImageResponse {
   code: number;

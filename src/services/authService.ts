@@ -98,10 +98,10 @@ class AuthService {
     }
   }
 
-  // API Get Current User
+  // API Get Current User (đổi sang /users/profile thay cho /auth/me)
   async getCurrentUserAPI(): Promise<any> {
     try {
-      const result = await makeRequest(API_ENDPOINTS.AUTH.ME, 'GET', null, null);
+      const result = await makeRequest(API_ENDPOINTS.USER.PROFILE, 'GET', null, null);
       if (result.error) {
         throw new Error(result.error.message);
       }
@@ -209,6 +209,18 @@ class AuthService {
     }
   }
 
+  // Decode JWT để lấy thông tin cơ bản (fallback khi không có /users/profile)
+  private decodeTokenSafely(token: string): any | null {
+    try {
+      const parts = token.split('.');
+      if (parts.length < 2) return null;
+      const payload = JSON.parse(atob(parts[1]));
+      return payload;
+    } catch (e) {
+      return null;
+    }
+  }
+
   // Xử lý lấy thông tin user với token validation
   async getCurrentUser(): Promise<{
     success: boolean;
@@ -224,14 +236,28 @@ class AuthService {
         };
       }
 
-      // 2. Gọi API
-      const response = await this.getCurrentUserAPI();
-
-      return {
-        success: true,
-        message: 'Lấy thông tin user thành công',
-        data: response
-      };
+      // 2. Gọi API hồ sơ người dùng; nếu 404 thì fallback decode token để lấy userId
+      try {
+        const response = await this.getCurrentUserAPI();
+        return {
+          success: true,
+          message: 'Lấy thông tin user thành công',
+          data: response
+        };
+      } catch (apiErr: any) {
+        // Fallback: decode token
+        const token = this.getToken();
+        const payload = token ? this.decodeTokenSafely(token) : null;
+        const guessedUserId = payload?.userId || payload?.sub || payload?.id;
+        if (guessedUserId) {
+          return {
+            success: true,
+            message: 'Lấy thông tin user từ token',
+            data: { id: guessedUserId }
+          };
+        }
+        throw apiErr;
+      }
     } catch (error: any) {
       // Nếu token hết hạn
       if (error.message.includes('401') || error.message.includes('Unauthorized')) {

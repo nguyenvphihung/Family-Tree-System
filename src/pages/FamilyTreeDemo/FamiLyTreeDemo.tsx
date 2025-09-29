@@ -10,10 +10,17 @@ import DeleteConfirmModal from "../../components/family-tree/DeleteConfirmModal"
 import DeleteTreeConfirmModal from "../../components/family-tree/DeleteTreeConfirmModal";
 import familyService from "../../services/familyService";
 import { get } from "http";
+import { useAuth } from "../../components/hooks/useAuth";
 
 const FamilyTreeDemo: React.FC = () => {
+  const { user, isAuthenticated } = useAuth();
   // Modal tạo album
   const [showCreateAlbumModal, setShowCreateAlbumModal] = useState(false);
+  const [showEditAlbumModal, setShowEditAlbumModal] = useState(false);
+  const [albumToEdit, setAlbumToEdit] = useState<any | null>(null);
+  const [editAlbumName, setEditAlbumName] = useState('');
+  const [showDeleteAlbumConfirm, setShowDeleteAlbumConfirm] = useState(false);
+  const [albumToDelete, setAlbumToDelete] = useState<any | null>(null);
   const [newAlbumName, setNewAlbumName] = useState('');
   // Cập nhật tên cây
   const handleUpdateTree = async (treeId: string, treeData: { name: string }) => {
@@ -68,12 +75,7 @@ const FamilyTreeDemo: React.FC = () => {
 
 
   // Hiển thị toast khi vừa tạo cây mới và ở trạng thái empty tree
-  useEffect(() => {
-    if (justCreatedTree && currentTreeId && !hasTreeData) {
-      setError('Không có bất cứ thành viên nào');
-      setJustCreatedTree(false); // Đảm bảo chỉ hiện 1 lần
-    }
-  }, [justCreatedTree, currentTreeId, hasTreeData]);
+
 
   // Thông báo success/error được xử lý tự động bởi makeRequest
 
@@ -368,11 +370,12 @@ const FamilyTreeDemo: React.FC = () => {
   const handleCreateAlbum = async (albumData: any) => {
     try {
       setLoading(true);
+      if (!user?.id) throw new Error('User is not authenticated');
       const newAlbum = await familyService.createAlbum({
-        userId: 'current-user-id', // Replace with actual user ID
+        userId: user.id,
         name: albumData.name
       });
-      await loadUserAlbums('current-user-id');
+      await loadUserAlbums(user.id);
     } catch (error: any) {
       console.error('Error creating album:', error);
       let msg = 'Failed to create album';
@@ -393,7 +396,9 @@ const FamilyTreeDemo: React.FC = () => {
         name: albumData.name
       });
 
-      await loadUserAlbums('current-user-id');
+      if (user?.id) {
+        await loadUserAlbums(user.id);
+      }
     } catch (error: any) {
       console.error('Error updating album:', error);
       setError(error.message || 'Failed to update album');
@@ -407,8 +412,9 @@ const FamilyTreeDemo: React.FC = () => {
     try {
       setLoading(true);
       await familyService.deleteAlbum(albumId);
-
-      await loadUserAlbums('current-user-id');
+      if (user?.id) {
+        await loadUserAlbums(user.id);
+      }
     } catch (error: any) {
       console.error('Error deleting album:', error);
       setError(error.message || 'Failed to delete album');
@@ -431,6 +437,13 @@ const FamilyTreeDemo: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Load albums on auth ready
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      loadUserAlbums(user.id);
+    }
+  }, [isAuthenticated, user?.id]);
 
   // Load album detail by ID
   const loadAlbumDetail = async (albumId: string) => {
@@ -1765,10 +1778,9 @@ const FamilyTreeDemo: React.FC = () => {
                         {/* Edit Album Button */}
                         <button
                           onClick={() => {
-                            const newName = window.prompt(`Enter new name for album "${album.name}":`, album.name);
-                            if (newName && newName.trim() && newName !== album.name) {
-                              handleUpdateAlbum(album.id, { name: newName.trim() });
-                            }
+                            setAlbumToEdit(album);
+                            setEditAlbumName(album.name || '');
+                            setShowEditAlbumModal(true);
                           }}
                           className="p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded"
                           title="Edit Album"
@@ -1781,9 +1793,8 @@ const FamilyTreeDemo: React.FC = () => {
                         {/* Delete Album Button */}
                         <button
                           onClick={() => {
-                            if (window.confirm(`Are you sure you want to delete album "${album.name}"? This will also delete all images in this album.`)) {
-                              handleDeleteAlbum(album.id);
-                            }
+                            setAlbumToDelete(album);
+                            setShowDeleteAlbumConfirm(true);
                           }}
                           className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
                           title="Delete Album"
@@ -1902,6 +1913,52 @@ const FamilyTreeDemo: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Album Modal */}
+      {showEditAlbumModal && albumToEdit && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <h2 className="text-lg font-bold mb-4">Edit Album</h2>
+            <form onSubmit={e => {
+              e.preventDefault();
+              if (albumToEdit && editAlbumName.trim()) {
+                handleUpdateAlbum(albumToEdit.id, { name: editAlbumName.trim() });
+                setShowEditAlbumModal(false);
+                setAlbumToEdit(null);
+              }
+            }}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Album Name</label>
+                <input
+                  type="text"
+                  value={editAlbumName}
+                  onChange={e => setEditAlbumName(e.target.value)}
+                  required
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button type="button" onClick={() => { setShowEditAlbumModal(false); setAlbumToEdit(null); }} className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Album Confirm */}
+      {showDeleteAlbumConfirm && albumToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <h2 className="text-lg font-bold mb-4">Delete Album</h2>
+            <p className="mb-6">Are you sure you want to delete album "{albumToDelete.name}"? This will also delete all images in this album.</p>
+            <div className="flex justify-end space-x-2">
+              <button type="button" onClick={() => { setShowDeleteAlbumConfirm(false); setAlbumToDelete(null); }} className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Cancel</button>
+              <button type="button" onClick={() => { handleDeleteAlbum(albumToDelete.id); setShowDeleteAlbumConfirm(false); setAlbumToDelete(null); }} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Delete</button>
+            </div>
           </div>
         </div>
       )}
