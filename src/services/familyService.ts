@@ -111,7 +111,7 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      return result.data;
+      return result.data.data;
     } catch (error: any) {
       throw error;
     }
@@ -273,30 +273,19 @@ class FamilyService {
     }
   }
 
-  // POST /images/upload (multipart) - Upload raw image to album with query name & albumId
+  // POST /images/upload - Upload base64 image to album with query name & albumId
   async uploadImage(data: UploadImageRequest): Promise<UploadImageResponse['data']> {
     try {
-      const { file, name, albumId, originalFile } = data;
+      const { file, name, albumId } = data;
       const endpoint = `${API_ENDPOINTS.IMAGES.UPLOAD_IMAGE}?name=${encodeURIComponent(name)}&albumId=${encodeURIComponent(albumId)}`;
-
-      // Always send multipart/form-data as agreed (Hướng A)
-      const form = new FormData();
-
-      if (originalFile instanceof Blob) {
-        form.append('file', originalFile);
-      } else if (file) {
-        // Convert base64 (with or without prefix) -> Blob
-        const base64 = file.startsWith('data:') ? file.split(',')[1] : file;
-        const byteString = atob(base64);
-        const byteArray = new Uint8Array(byteString.length);
-        for (let i = 0; i < byteString.length; i++) byteArray[i] = byteString.charCodeAt(i);
-        const blob = new Blob([byteArray], { type: 'application/octet-stream' });
-        form.append('file', blob, name);
-      } else {
+      if (!file) {
         throw new Error('No file provided');
       }
 
-      const result = await makeRequest(endpoint, 'POST', form, 'response-area');
+      // API spec requires JSON body { file }
+      const body = { file };
+
+      const result = await makeRequest(endpoint, 'POST', body, 'response-area');
       if (result.error) {
         throw new Error(result.error.message);
       }

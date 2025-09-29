@@ -45,7 +45,6 @@ export interface Image {
 
 // API request interfaces - Tree CRUD
 export interface CreateTreeRequest {
-  userId: string;
   name: string;
 }
 

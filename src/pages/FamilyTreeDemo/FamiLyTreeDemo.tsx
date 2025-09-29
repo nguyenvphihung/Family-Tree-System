@@ -322,7 +322,6 @@ const FamilyTreeDemo: React.FC = () => {
     try {
       setLoading(true);
       await familyService.createTree({
-        userId: 'current-user-id', // Replace with actual user ID
         name: treeData.name
       });
       // Refresh user trees and switch to the new tree
@@ -1963,8 +1962,7 @@ const FamilyTreeDemo: React.FC = () => {
                   handleUploadImage({
                     file: base64Only,
                     name: (formData.get('name') as string) || file.name,
-                    albumId: selectedAlbum.id,
-                    originalFile: file
+                    albumId: selectedAlbum.id
                   });
                 };
                 reader.readAsDataURL(file);
