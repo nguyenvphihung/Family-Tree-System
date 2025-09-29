@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Search, Filter, Plus, MapPin, Calendar, Users, CheckCircle, Camera } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -9,44 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Checkbox } from './ui/checkbox';
 
 interface GraveResult {
-  id: string;
+  id: string | number;
   name: string;
-  years: string;
-  generation: number;
-  status: 'verified' | 'unverified';
-  location: string;
+  years?: string;
+  generation?: number;
+  status?: string;
+  location?: string;
   avatar?: string;
 }
-
-const mockResults: GraveResult[] = [
-  {
-    id: '1',
-    name: 'Nguyễn Văn An',
-    years: '1932-1998',
-    generation: 5,
-    status: 'verified',
-    location: 'Nghĩa trang An Lạc',
-    avatar: ''
-  },
-  {
-    id: '2', 
-    name: 'Trần Thị Bình',
-    years: '1940-2005',
-    generation: 4,
-    status: 'unverified',
-    location: 'Nghĩa trang Bình Hưng',
-    avatar: ''
-  },
-  {
-    id: '3',
-    name: 'Lê Văn Cường',
-    years: '1925-1995',
-    generation: 6,
-    status: 'verified', 
-    location: 'Nghĩa trang Gò Vấp',
-    avatar: ''
-  }
-];
 
 interface MapSidebarProps {
   onAddGrave: () => void;
@@ -54,6 +25,33 @@ interface MapSidebarProps {
 }
 
 export function MapSidebar({ onAddGrave, onSelectGrave }: MapSidebarProps) {
+  const [results, setResults] = useState<GraveResult[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/graves');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        const mapped: GraveResult[] = data.map((g: any) => ({
+          id: g.id,
+          name: g.name,
+          years: g.years,
+          generation: g.generation ?? 0,
+          status: g.status,
+          location: g.cemetery || g.location || '',
+          avatar: '',
+        }));
+        setResults(mapped);
+      } catch (e) {
+        console.error('Failed to load graves for sidebar', e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   return (
     <div className="w-80 h-full bg-white border-r border-[#E6E6EA] flex flex-col">
       {/* Header */}
@@ -139,14 +137,14 @@ export function MapSidebar({ onAddGrave, onSelectGrave }: MapSidebarProps) {
       <div className="flex-1 overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-medium">Kết quả ({mockResults.length})</h3>
+            <h3 className="font-medium">Kết quả ({results.length})</h3>
             <Button variant="ghost" size="sm">
               <Filter className="w-4 h-4" />
             </Button>
           </div>
 
           <div className="space-y-3">
-            {mockResults.map((result) => (
+            {results.map((result) => (
               <Card 
                 key={result.id} 
                 className="p-4 hover:shadow-md transition-shadow cursor-pointer border-[#E6E6EA]"
@@ -156,7 +154,7 @@ export function MapSidebar({ onAddGrave, onSelectGrave }: MapSidebarProps) {
                   <Avatar className="w-12 h-12">
                     <AvatarImage src={result.avatar} />
                     <AvatarFallback className="bg-gray-200 text-gray-600">
-                      {result.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                      {result.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                     </AvatarFallback>
                   </Avatar>
                   

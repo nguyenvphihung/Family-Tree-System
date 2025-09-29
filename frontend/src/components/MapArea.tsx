@@ -1,11 +1,25 @@
 import { useEffect, useState, useMemo } from 'react';
-import { MapContainer, TileLayer, CircleMarker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import * as L from 'leaflet';
 import type { LeafletMouseEvent } from 'leaflet';
 
 // react-leaflet TS types sometimes differ across versions in this repo; alias to any to avoid prop type errors
 const AnyMapContainer: any = MapContainer;
 const AnyTileLayer: any = TileLayer;
-const AnyCircleMarker: any = CircleMarker;
+const AnyMarker: any = Marker;
+
+const createIcon = (color: string, label = 'Vị trí') =>
+  L.divIcon({
+    html: `
+      <div style="display:flex;align-items:center;gap:6px;white-space:nowrap">
+        <span style="width:10px;height:10px;border-radius:50%;background:${color};display:inline-block;flex-shrink:0"></span>
+        <span style="font-size:12px;color:#222;font-weight:500">${label}</span>
+      </div>
+    `,
+    className: '',
+    iconSize: [90, 24],
+    iconAnchor: [10, 12],
+  });
 import { MapPin, Plus, Minus, Maximize2, Navigation, Eye, EyeOff } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
@@ -73,7 +87,7 @@ export function MapArea({ onMarkerClick, selectedMarkerId, addMode = false, onMa
 
   function MapClickHandler() {
     useMapEvents({
-      click(e: LeafletMouseEvent) {
+      click(e: any) {
         if (addMode && onMapClick) {
           onMapClick({ latitude: e.latlng.lat, longitude: e.latlng.lng });
         }
@@ -106,25 +120,21 @@ export function MapArea({ onMarkerClick, selectedMarkerId, addMode = false, onMa
 
         {/* Temporary marker when in add mode */}
         {selectedAddCoords && (
-          <AnyCircleMarker
-            center={[selectedAddCoords.latitude, selectedAddCoords.longitude]}
-            pathOptions={{ color: '#000', fillColor: '#000' }}
-            radius={6}
+          <AnyMarker
+            position={[selectedAddCoords.latitude, selectedAddCoords.longitude]}
+            icon={createIcon('#000')}
           />
         )}
 
         {graves.map((g: Grave) => {
           const show = g.status === 'verified' ? showLayers.verified : showLayers.unverified;
           if (!show) return null;
-            return (
-            <AnyCircleMarker
+          return (
+            <AnyMarker
               key={g.id}
-              center={[g.latitude, g.longitude]}
-              pathOptions={{ color: getColor(g.status), fillColor: getColor(g.status) }}
-              radius={8}
-              eventHandlers={{
-                click: () => onMarkerClick(g),
-              }}
+              position={[g.latitude, g.longitude]}
+              icon={createIcon(getColor(g.status))}
+              eventHandlers={{ click: () => onMarkerClick(g) }}
             />
           );
         })}

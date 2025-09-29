@@ -10,6 +10,8 @@ export default function App() {
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  // separate state for enabling "click on map to add" mode
+  const [mapAddMode, setMapAddMode] = useState(false);
   const [addCoords, setAddCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [refreshSignal, setRefreshSignal] = useState(0);
 
@@ -24,8 +26,9 @@ export default function App() {
   };
 
   const handleAddGrave = () => {
-    setIsAddModalOpen(true);
+    // Enable map click mode: user should click on the map to pick coordinates.
     setAddCoords(null); // reset any previous coords
+    setMapAddMode(true);
   };
 
   const handleCloseDrawer = () => {
@@ -50,8 +53,13 @@ export default function App() {
         <MapArea 
           onMarkerClick={handleMarkerClick}
           selectedMarkerId={selectedMarkerId}
-          addMode={isAddModalOpen}
-          onMapClick={(latlng) => setAddCoords(latlng)}
+          addMode={mapAddMode}
+          onMapClick={(latlng) => {
+            // when map reports a click while in add mode, capture coords, disable add mode and open modal
+            setAddCoords(latlng);
+            setMapAddMode(false);
+            setIsAddModalOpen(true);
+          }}
           selectedAddCoords={addCoords}
           refreshSignal={refreshSignal}
         />
@@ -69,11 +77,11 @@ export default function App() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         initialCoords={addCoords}
-          onSaved={() => {
-            setIsAddModalOpen(false);
-            setAddCoords(null);
-            setRefreshSignal((s: number) => s + 1);
-          }}
+        onSaved={() => {
+          setIsAddModalOpen(false);
+          setAddCoords(null);
+          setRefreshSignal((s: number) => s + 1);
+        }}
       />
     </div>
   );

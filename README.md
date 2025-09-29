@@ -5,9 +5,9 @@
 
   ## Running the code
 
-  Run `mvn spring-boot:run` to start BE.
+  From root dir run `cd backend` and `mvn spring-boot:run` to start BE.
 
-  Run `npm i` to install the dependencies.
+  From root dir run `cd frontend` and `npm i` to install the dependencies.
 
-  Run `npm run dev` to start FE.
+  From root dir run `npm run dev` to start FE.
   

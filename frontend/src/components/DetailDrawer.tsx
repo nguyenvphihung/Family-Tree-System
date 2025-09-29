@@ -86,7 +86,7 @@ export function DetailDrawer({ isOpen, onClose, graveId }: DetailDrawerProps) {
   const display = grave ?? mockGraveDetail;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-[420px] bg-white shadow-2xl z-50 border-l border-[#E6E6EA] overflow-hidden">
+    <div className="fixed inset-y-0 right-0 w-[420px] bg-white shadow-2xl border-l border-[#E6E6EA] overflow-hidden" style={{ zIndex: 3000 }}>
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between p-6 border-b border-[#E6E6EA]">
           <h2 className="text-xl font-semibold">Chi tiết mộ phần</h2>
