@@ -62,6 +62,11 @@ export const API_ENDPOINTS = {
     DELETE_IMAGE: '/images',
   },
 
+  // Person endpoints
+  PERSONS: {
+    // Only endpoints in spec used in FE now
+  },
+
   // Onboarding endpoints
   ONBOARDING: {
     COMPLETE: '/onboarding/complete',

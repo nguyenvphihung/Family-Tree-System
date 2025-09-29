@@ -9,7 +9,6 @@ import AddRootModal from "../../components/family-tree/AddRootModal";
 import DeleteConfirmModal from "../../components/family-tree/DeleteConfirmModal";
 import DeleteTreeConfirmModal from "../../components/family-tree/DeleteTreeConfirmModal";
 import familyService from "../../services/familyService";
-import { get } from "http";
 import { useAuth } from "../../components/hooks/useAuth";
 
 const FamilyTreeDemo: React.FC = () => {
@@ -27,15 +26,13 @@ const FamilyTreeDemo: React.FC = () => {
     try {
       setLoading(true);
       await familyService.updateTree(treeId, { treeId, name: treeData.name });
-      await getTrees(); // Refresh lại danh sách cây
+      await getTrees();
     } catch (error: any) {
       setError(error.message || 'Failed to update tree');
     } finally {
       setLoading(false);
     }
   };
-  // State để hiển thị thông báo khi vừa tạo cây mới
-  const [justCreatedTree, setJustCreatedTree] = useState(false);
   const [currentTreeId, setCurrentTreeId] = useState<string | null>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -58,6 +55,17 @@ const FamilyTreeDemo: React.FC = () => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<any>(null);
   const [showImageDetailModal, setShowImageDetailModal] = useState(false);
+  // Search album by name or id in Photo Manager
+  const [searchAlbumQuery, setSearchAlbumQuery] = useState<string>("");
+  const handleSearchQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSearchAlbumQuery(val);
+    if (!val.trim()) {
+      // Clear selection and images when search box is cleared
+      setSelectedAlbum(null);
+      setAlbumImages([]);
+    }
+  };
 
   // State để lưu thông tin node được chọn
   const [selectedPerson, setSelectedPerson] = useState<FamilyMember | null>(null);
@@ -73,13 +81,6 @@ const FamilyTreeDemo: React.FC = () => {
   const [personTreeData, setPersonTreeData] = useState<any>(null);
   const [showPersonTreeModal, setShowPersonTreeModal] = useState(false);
 
-
-  // Hiển thị toast khi vừa tạo cây mới và ở trạng thái empty tree
-
-
-  // Thông báo success/error được xử lý tự động bởi makeRequest
-
-  // Auto center tree when component mounts
   useEffect(() => {
 
     const timer = setTimeout(() => {
@@ -110,7 +111,7 @@ const FamilyTreeDemo: React.FC = () => {
 
   const getTrees = async () => {
     try {
-      const trees = await familyService.getUserTrees('current-user-id');
+      const trees = await familyService.getTrees();
       console.log('User trees loaded:', trees);
 
       setUserTrees(trees);
@@ -136,23 +137,13 @@ const FamilyTreeDemo: React.FC = () => {
     }
   };
 
-  // Load all trees (no userId parameter) - Alternative method
-  const getAllTrees = async () => {
-    try {
-      const trees = await familyService.getTrees();
-      console.log('All trees loaded:', trees);
-      setUserTrees(trees);
-    } catch (error: any) {
-      console.error('Error loading all trees:', error);
-      setError(error.message || 'Failed to load all trees');
-    }
-  };
+  // (removed) getAllTrees was unused; all tree APIs are called via familyService in used functions above
 
 
   // Hàm chỉ refresh danh sách cây mà không tự động chọn cây đầu tiên
   const refreshTreeList = async () => {
     try {
-      const trees = await familyService.getUserTrees('current-user-id');
+      const trees = await familyService.getTrees();
       console.log('Tree list refreshed:', trees);
       setUserTrees(trees);
 
@@ -169,6 +160,25 @@ const FamilyTreeDemo: React.FC = () => {
     }
   };
 
+  // FE-only refresh action for Photo Manager header Refresh button
+  const handlePhotoManagerRefresh = async () => {
+    // Hiển thị toast trước, đảm bảo nổi trên modal
+    showLocalToast('Tải lại danh sách album thành công', 'success');
+    // Chờ 3s cho toast hiển thị, sau đó mới reload dữ liệu trong modal
+    setTimeout(async () => {
+      try {
+        if (user?.id) {
+          await loadUserAlbums(user.id);
+          if (selectedAlbum?.id) {
+            await loadAlbumImages(selectedAlbum.id);
+          }
+        }
+      } catch (_) {
+        // Bỏ qua lỗi để không phá UX của nút Refresh FE-only
+      }
+    }, 3000);
+  };
+
   // Close more menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -182,6 +192,23 @@ const FamilyTreeDemo: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showMoreMenu]);
+
+  // Local toast for FE-only actions (not from API)
+  const showLocalToast = (message: string, type: 'success' | 'error' = 'success') => {
+    const responseArea = document.getElementById('response-area');
+    if (!responseArea) return;
+    const isSuccess = type === 'success';
+    responseArea.textContent = message;
+    responseArea.className = `fixed top-20 left-1/2 transform -translate-x-1/2 z-[99999] ${isSuccess ? 'bg-green-50 border border-green-300 text-green-800' : 'bg-red-50 border border-red-300 text-red-800'
+      } rounded-lg p-3 shadow-lg max-w-sm text-center text-sm font-medium`;
+    responseArea.style.display = 'block';
+    responseArea.style.zIndex = '99999';
+    setTimeout(() => {
+      responseArea.style.display = 'none';
+      responseArea.textContent = '';
+      responseArea.className = 'response-area';
+    }, 3000);
+  };
 
   // Function để load dữ liệu cây gia đình cho tree cụ thể
   const loadTreeDataForTree = async (treeId: string) => {
@@ -301,7 +328,7 @@ const FamilyTreeDemo: React.FC = () => {
       // Refresh user trees and switch to the new tree
       await getTrees();
       setShowCreateTreeModal(false);
-      setJustCreatedTree(true); // Đánh dấu vừa tạo cây mới
+      // no-op
     } catch (error: any) {
       console.error('Error creating tree:', error);
       setError(error.message || 'Failed to create tree');
@@ -377,11 +404,14 @@ const FamilyTreeDemo: React.FC = () => {
       });
       await loadUserAlbums(user.id);
     } catch (error: any) {
-      console.error('Error creating album:', error);
-      let msg = 'Failed to create album';
-      if (typeof error === 'string') msg = error;
-      else if (error && typeof error.message === 'string' && error.message.trim() !== '') msg = error.message;
-      setError(msg);
+
+      let msg = 'Album đã tồn tại';
+      // if (typeof error === 'string') msg = error;
+      // else if (error && typeof error.message === 'string' && error.message.trim() !== '') {
+      //   // Làm sạch thông điệp không mong muốn
+      //   msg = error.message.replace(/\(HTTP \d+\)/gi, '').trim();
+      // }
+      showLocalToast(msg, 'error');
     } finally {
       setLoading(false);
     }
@@ -415,9 +445,53 @@ const FamilyTreeDemo: React.FC = () => {
       if (user?.id) {
         await loadUserAlbums(user.id);
       }
+      // Nếu album bị xóa là album đang chọn thì bỏ chọn
+      if (selectedAlbum?.id === albumId) {
+        setSelectedAlbum(null);
+        setAlbumImages([]);
+      }
+      // Hiển thị thông báo xóa thành công màu đỏ theo yêu cầu
+      showLocalToast('Xoá album thành công', 'error');
     } catch (error: any) {
       console.error('Error deleting album:', error);
       setError(error.message || 'Failed to delete album');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Search album by name locally first, then by ID from server
+  const handleSearchAlbum = async () => {
+    const q = (searchAlbumQuery || '').trim().toLowerCase();
+    if (!q) {
+      showLocalToast('Vui lòng nhập tên album hoặc ID', 'error');
+      return;
+    }
+
+    // 1) Tìm theo tên trong danh sách hiện tại
+    const localMatch = userAlbums.find((a: any) => (a?.name || '').toLowerCase().includes(q));
+    if (localMatch) {
+      setSelectedAlbum(localMatch);
+      await loadAlbumImages(localMatch.id);
+      showLocalToast('Tìm album thành công', 'success');
+      return;
+    }
+
+    // 2) Nếu không thấy theo tên, thử coi chuỗi là ID và gọi API
+    try {
+      setLoading(true);
+      const album = await familyService.getAlbumById(q);
+      if (album) {
+        const exists = userAlbums.some((a: any) => a.id === album.id);
+        if (!exists) setUserAlbums([album, ...userAlbums]);
+        setSelectedAlbum(album);
+        await loadAlbumImages(album.id);
+        showLocalToast('Tìm album thành công', 'success');
+        return;
+      }
+      showLocalToast('Không tìm thấy album', 'error');
+    } catch (_) {
+      showLocalToast('Không tìm thấy album', 'error');
     } finally {
       setLoading(false);
     }
@@ -445,21 +519,7 @@ const FamilyTreeDemo: React.FC = () => {
     }
   }, [isAuthenticated, user?.id]);
 
-  // Load album detail by ID
-  const loadAlbumDetail = async (albumId: string) => {
-    try {
-      setLoading(true);
-      const albumDetail = await familyService.getAlbumById(albumId);
-      console.log('Album detail loaded:', albumDetail);
-      // You can set this to a state if needed for displaying album details
-      // setSelectedAlbumDetail(albumDetail);
-    } catch (error: any) {
-      console.error('Error loading album detail:', error);
-      setError(error.message || 'Failed to load album detail');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // loadAlbumDetail removed (unused)
 
   // Upload image
   const handleUploadImage = async (imageData: any) => {
@@ -1268,7 +1328,7 @@ const FamilyTreeDemo: React.FC = () => {
                   className="w-4 h-4"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="1.5"
+                  strokeWidth="2"
                   viewBox="0 0 24 24"
                 >
                   <path
@@ -1680,25 +1740,50 @@ const FamilyTreeDemo: React.FC = () => {
       {/* Photo Manager Modal */}
       {showPhotoManager && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-3/4 h-3/4 max-w-4xl">
+          <div className="rounded-lg p-6 w-3/4 h-3/4 max-w-4xl" style={{ background: '#f9fafb' }}>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">Photo Manager</h2>
+              <div className="flex-1 flex items-center justify-center space-x-3">
+                <h2 className="text-lg font-bold mr-60">Photo Manager</h2>
+
+                <h2>Tìm album của bạn </h2>
+                <div className="hidden md:flex items-center space-x-2 bg-white border border-gray-300 rounded px-2 py-1">
+
+                  <input
+                    type="text"
+                    placeholder="Nhập tên album"
+                    value={searchAlbumQuery}
+                    onChange={handleSearchQueryChange}
+                    className="text-sm outline-none w-48"
+                  />
+                  <button
+                    onClick={handleSearchAlbum}
+                    className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                  >
+                    Search
+                  </button>
+                </div>
+              </div>
               <button
                 onClick={() => setShowPhotoManager(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <div className="flex h-full space-x-4">
+            <div className="flex h-auto space-x-4" onClick={(e) => {
+              // Nếu click vào vùng ngoài album list thì bỏ chọn album
+              if ((e.target as HTMLElement).classList.contains('albums-list-outer')) {
+                setSelectedAlbum(null);
+              }
+            }}>
               {/* Albums List */}
-              <div className="w-1/3 border-r pr-4">
+              <div className="w-1/3 border-r pr-3 albums-list-outer" style={{ position: 'relative' }}>
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-medium">Albums</h3>
-                  <div className="flex space-x-2">
+
+                  <div className="flex space-x-2 items-center">
                     <button
                       onClick={() => setShowCreateAlbumModal(true)}
                       className="text-sm bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
@@ -1709,7 +1794,7 @@ const FamilyTreeDemo: React.FC = () => {
                     {showCreateAlbumModal && (
                       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg p-6 w-96">
-                          <h2 className="text-lg font-bold mb-4">Create New Album</h2>
+
                           <form onSubmit={e => {
                             e.preventDefault();
                             if (newAlbumName.trim()) {
@@ -1750,7 +1835,7 @@ const FamilyTreeDemo: React.FC = () => {
                       </div>
                     )}
                     <button
-                      onClick={() => loadUserAlbums('current-user-id')}
+                      onClick={handlePhotoManagerRefresh}
                       className="text-sm bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
                     >
                       Refresh
@@ -1763,16 +1848,14 @@ const FamilyTreeDemo: React.FC = () => {
                     <div
                       key={album.id}
                       className={`flex items-center justify-between p-2 rounded border ${selectedAlbum?.id === album.id ? 'bg-blue-50 border-blue-300' : 'hover:bg-gray-50'}`}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Không cho click lan ra ngoài
+                        setSelectedAlbum(album);
+                        loadAlbumImages(album.id);
+                      }}
+                      style={{ cursor: 'pointer' }}
                     >
-                      <div
-                        onClick={() => {
-                          setSelectedAlbum(album);
-                          loadAlbumImages(album.id);
-                        }}
-                        className="flex-1 cursor-pointer"
-                      >
-                        {album.name}
-                      </div>
+                      <div className="flex-1">{album.name}</div>
 
                       <div className="flex items-center space-x-1">
                         {/* Edit Album Button */}
@@ -1812,17 +1895,21 @@ const FamilyTreeDemo: React.FC = () => {
               {/* Images Grid */}
               <div className="w-2/3 pl-4">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-medium">
-                    {selectedAlbum ? `Images in "${selectedAlbum.name}"` : 'Select an album'}
+                  <h3 className="font-medium text-gray-700">
+                    {selectedAlbum ? `Đang chọn "${selectedAlbum.name}"` : 'Select an album'}
                   </h3>
-                  {selectedAlbum && (
-                    <button
-                      onClick={() => setShowUploadModal(true)}
-                      className="text-sm bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
-                    >
-                      Upload Image
-                    </button>
-                  )}
+                  <button
+                    onClick={() => {
+                      if (!selectedAlbum) {
+                        showLocalToast('Vui lòng chọn album trước', 'error');
+                        return;
+                      }
+                      setShowUploadModal(true);
+                    }}
+                    className={`text-sm text-white px-2 py-1 rounded ${selectedAlbum ? 'bg-green-500 hover:bg-green-600' : 'bg-green-400 cursor-not-allowed'}`}
+                  >
+                    Upload Image
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-4 gap-4 max-h-96 overflow-y-auto">
@@ -1856,7 +1943,7 @@ const FamilyTreeDemo: React.FC = () => {
       {showUploadModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-96">
-            <h2 className="text-lg font-bold mb-4">Upload Image</h2>
+            <h2 className="text-lg font-bold mb-4">Upload Image to {selectedAlbum?.name}</h2>
             <form onSubmit={(e) => {
               e.preventDefault();
               const formData = new FormData(e.target as HTMLFormElement);
@@ -1867,13 +1954,17 @@ const FamilyTreeDemo: React.FC = () => {
               if (file && selectedAlbum) {
                 const reader = new FileReader();
                 reader.onload = () => {
-                  const base64 = reader.result as string;
-                  const base64Data = base64.split(',')[1]; // Remove data:image/...;base64, prefix
+                  const base64WithPrefix = reader.result as string;
+                  const base64Only = base64WithPrefix.includes(',')
+                    ? base64WithPrefix.split(',')[1]
+                    : base64WithPrefix; // Gửi base64 thuần theo API
 
+                  // Upload ảnh vào album (Photo Manager)
                   handleUploadImage({
-                    file: base64Data,
-                    name: formData.get('name') as string || file.name,
-                    albumId: selectedAlbum.id
+                    file: base64Only,
+                    name: (formData.get('name') as string) || file.name,
+                    albumId: selectedAlbum.id,
+                    originalFile: file
                   });
                 };
                 reader.readAsDataURL(file);

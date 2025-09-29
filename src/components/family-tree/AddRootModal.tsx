@@ -63,7 +63,7 @@ const AddRootModal: React.FC<AddRootModalProps> = ({
             <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="text-xl font-bold text-gray-900">
-                        Add Person to {treeName}
+                        Thêm thành viên vào gia phả {treeName}
                     </DialogTitle>
                     <p className="text-sm text-gray-600 mt-2">
                         Create the first person in your family tree. This will be the foundation of your genealogy.

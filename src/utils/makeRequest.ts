@@ -18,9 +18,22 @@ export async function makeRequest(endpoint: string, method: string, data: any, r
             case 'GET':
                 response = await api.get(endpoint, { params });
                 break;
-            case 'POST':
-                response = await api.post(endpoint, data);
+            case 'POST': {
+                const isImageUpload = endpoint.includes('/images/upload');
+                const postTimeout = isImageUpload ? 60000 : undefined; // Upload có thể chậm hơn
+
+                // Nếu là FormData, để browser tự set boundary và content-type phù hợp
+                if (typeof FormData !== 'undefined' && data instanceof FormData) {
+                    response = await api.post(endpoint, data, {
+                        timeout: postTimeout,
+                    });
+                } else {
+                    response = await api.post(endpoint, data, {
+                        timeout: postTimeout,
+                    });
+                }
                 break;
+            }
             case 'PUT':
                 response = await api.put(endpoint, data);
                 break;
@@ -36,7 +49,7 @@ export async function makeRequest(endpoint: string, method: string, data: any, r
 
         // Lấy thông báo thành công từ server response
         const serverMessage = response.data.message || 'Thao tác thành công';
-        const successMessage = `✅ ${serverMessage}`;
+        const successMessage = `${serverMessage}`;
 
         // Hiển thị message từ server trong console để theo dõi
         console.log('📢 Server success message:', serverMessage);
@@ -50,7 +63,13 @@ export async function makeRequest(endpoint: string, method: string, data: any, r
             }
 
             responseArea.textContent = successMessage;
-            responseArea.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-green-50 border border-green-300 text-green-800 rounded-lg p-3 shadow-lg max-w-sm text-center text-sm font-medium';
+            // Quy ước: mọi DELETE thành công hiển thị màu đỏ để người dùng nhận biết thao tác xóa
+            const isDelete = (method || '').toUpperCase() === 'DELETE';
+            responseArea.className = `fixed top-20 left-1/2 transform -translate-x-1/2 z-40 ${
+                isDelete
+                  ? 'bg-red-50 border border-red-300 text-red-800'
+                  : 'bg-green-50 border border-green-300 text-green-800'
+            } rounded-lg p-3 shadow-lg max-w-sm text-center text-sm font-medium`;
             responseArea.style.display = 'block';
 
             // Tự động ẩn sau 4 giây
@@ -73,14 +92,14 @@ export async function makeRequest(endpoint: string, method: string, data: any, r
             success: successMessage,
             data: response.data
         };
-    } catch (error: any) {
+        } catch (error: any) {
         // Xử lý thông báo lỗi cụ thể dựa trên loại lỗi
         let errorMessage = '';
 
         if (error.response) {
             // Lỗi từ server (có response)
             const data = error.response.data;
-            let serverErrorMessage = data.message;
+            let serverErrorMessage = data?.message || '';
 
             // Xử lý message cụ thể dựa trên endpoint và status code khi server không trả về message rõ ràng
             if (!serverErrorMessage ||
@@ -95,7 +114,7 @@ export async function makeRequest(endpoint: string, method: string, data: any, r
                         serverErrorMessage = 'Không thể xóa cây này vì còn chứa nhiều thành viên. Chỉ có thể xóa cây khi chỉ còn lại 1 thành viên .';
                         // Hiển thị message lỗi lên trên modal trong 3s
                         if (responseArea) {
-                            responseArea.textContent = `❌ ${serverErrorMessage}`;
+                            responseArea.textContent = `${serverErrorMessage}`;
                             responseArea.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-[9999] bg-red-50 border border-red-300 text-red-800 rounded-lg p-3 shadow-lg max-w-sm text-center text-sm font-medium';
                             responseArea.style.display = 'block';
                             responseArea.style.zIndex = '9999';
@@ -127,21 +146,30 @@ export async function makeRequest(endpoint: string, method: string, data: any, r
 
 
 
-            // Hiển thị error từ server trong console để theo dõi
-            console.log('❌ Server error message:', serverErrorMessage);
-            console.log('❌ Full server error response:', data);
-            console.log('❌ Error status:', error.response.status);
-            console.log('❌ Endpoint & Method:', endpoint, method);
+            // Nếu vẫn rỗng, đặt default message theo status code để tránh 'undefined'
+            if (!serverErrorMessage || serverErrorMessage.trim() === '') {
+                const status = error.response.status;
+                serverErrorMessage = status === 404 ? 'Không tìm thấy tài nguyên (404)'
+                  : status === 401 ? 'Không được phép, vui lòng đăng nhập (401)'
+                  : status === 400 ? 'Yêu cầu không hợp lệ (400)'
+                  : 'Đã xảy ra lỗi khi gọi API';
+            }
 
-            errorMessage = `❌ ${serverErrorMessage}`;
+            // Hiển thị error từ server trong console để theo dõi
+            console.log(' Server error message:', serverErrorMessage);
+            console.log(' Full server error response:', data);
+            console.log(' Error status:', error.response.status);
+            console.log(' Endpoint & Method:', endpoint, method);
+
+            errorMessage = `${serverErrorMessage}`;
         } else if (error.request) {
             // Lỗi network (không có response)
-            console.log('❌ Network error - No response from server');
-            errorMessage = '❌ Lỗi kết nối: Không thể kết nối đến server';
+            console.log(' Network error - No response from server');
+            errorMessage = 'Lỗi kết nối: Không thể kết nối đến server';
         } else {
             // Lỗi khác
-            console.log('❌ Other error:', error.message);
-            errorMessage = `❌ Lỗi: ${error.message}`;
+            console.log(' Other error:', error.message);
+            errorMessage = `Lỗi: ${error.message}`;
         }
 
         if (responseArea) {
@@ -167,7 +195,8 @@ export async function makeRequest(endpoint: string, method: string, data: any, r
         return {
             error: {
                 message: errorMessage,
-                originalError: error.message
+                originalError: error.message,
+                status: error.response?.status
             }
         };
     }

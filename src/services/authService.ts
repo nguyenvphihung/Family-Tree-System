@@ -100,15 +100,27 @@ class AuthService {
 
   // API Get Current User (đổi sang /users/profile thay cho /auth/me)
   async getCurrentUserAPI(): Promise<any> {
+    // Cố gắng gọi lần 1: /users/profile
     try {
       const result = await makeRequest(API_ENDPOINTS.USER.PROFILE, 'GET', null, null);
-      if (result.error) {
-        throw new Error(result.error.message);
+      if (!result.error) {
+        return result.data;
       }
-      return result.data;
-    } catch (error: any) {
-      console.error('Lỗi gọi API getCurrentUser:', error);
-      throw error;
+      // Nếu result.error tồn tại, thử fallback luôn (không phụ thuộc error.response)
+    } catch (e) {
+      // Bỏ qua, chuyển sang fallback
+    }
+
+    // Fallback lần 2: /auth/me
+    try {
+      const fallback = await makeRequest(API_ENDPOINTS.AUTH.ME, 'GET', null, null);
+      if (fallback.error) {
+        throw new Error(fallback.error.message);
+      }
+      return fallback.data;
+    } catch (fallbackErr: any) {
+      console.error('Lỗi fallback /auth/me:', fallbackErr);
+      throw fallbackErr;
     }
   }
 
@@ -236,28 +248,23 @@ class AuthService {
         };
       }
 
-      // 2. Gọi API hồ sơ người dùng; nếu 404 thì fallback decode token để lấy userId
-      try {
-        const response = await this.getCurrentUserAPI();
+      // 2. Không gọi API để tránh 404; decode token để lấy user tối thiểu
+      const token = this.getToken();
+      const payload = token ? this.decodeTokenSafely(token) : null;
+      const guessedUserId = payload?.userId || payload?.sub || payload?.id;
+      if (guessedUserId) {
         return {
           success: true,
-          message: 'Lấy thông tin user thành công',
-          data: response
+          message: 'Lấy thông tin user từ token',
+          data: { id: guessedUserId }
         };
-      } catch (apiErr: any) {
-        // Fallback: decode token
-        const token = this.getToken();
-        const payload = token ? this.decodeTokenSafely(token) : null;
-        const guessedUserId = payload?.userId || payload?.sub || payload?.id;
-        if (guessedUserId) {
-          return {
-            success: true,
-            message: 'Lấy thông tin user từ token',
-            data: { id: guessedUserId }
-          };
-        }
-        throw apiErr;
       }
+
+      // Nếu không decode được, coi như không thể lấy thông tin user
+      return {
+        success: false,
+        message: 'Không thể lấy thông tin user từ token'
+      };
     } catch (error: any) {
       // Nếu token hết hạn
       if (error.message.includes('401') || error.message.includes('Unauthorized')) {

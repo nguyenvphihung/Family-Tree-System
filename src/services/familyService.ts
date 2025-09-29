@@ -210,7 +210,8 @@ class FamilyService {
   // DELETE /albums/{albumId} - Delete album
   async deleteAlbum(albumId: string): Promise<DeleteAlbumResponse['data']> {
     try {
-      const result = await makeRequest(`${API_ENDPOINTS.ALBUMS.DELETE_ALBUM}/${albumId}`, 'DELETE', null, 'response-area');
+      // Không hiển thị toast xanh mặc định cho thao tác xóa; UI sẽ tự hiển thị màu đỏ
+      const result = await makeRequest(`${API_ENDPOINTS.ALBUMS.DELETE_ALBUM}/${albumId}`, 'DELETE', null, null);
       if (result.error) {
         throw new Error(result.error.message);
       }
@@ -272,17 +273,34 @@ class FamilyService {
     }
   }
 
-  // POST /images/upload - Upload image with name and albumId as query parameters
+  // POST /images/upload (multipart) - Upload raw image to album with query name & albumId
   async uploadImage(data: UploadImageRequest): Promise<UploadImageResponse['data']> {
     try {
-      const { file, name, albumId } = data;
-      // Sử dụng makeRequest với endpoint có query params
+      const { file, name, albumId, originalFile } = data;
       const endpoint = `${API_ENDPOINTS.IMAGES.UPLOAD_IMAGE}?name=${encodeURIComponent(name)}&albumId=${encodeURIComponent(albumId)}`;
-      const result = await makeRequest(endpoint, 'POST', { file }, 'response-area');
+
+      // Always send multipart/form-data as agreed (Hướng A)
+      const form = new FormData();
+
+      if (originalFile instanceof Blob) {
+        form.append('file', originalFile);
+      } else if (file) {
+        // Convert base64 (with or without prefix) -> Blob
+        const base64 = file.startsWith('data:') ? file.split(',')[1] : file;
+        const byteString = atob(base64);
+        const byteArray = new Uint8Array(byteString.length);
+        for (let i = 0; i < byteString.length; i++) byteArray[i] = byteString.charCodeAt(i);
+        const blob = new Blob([byteArray], { type: 'application/octet-stream' });
+        form.append('file', blob, name);
+      } else {
+        throw new Error('No file provided');
+      }
+
+      const result = await makeRequest(endpoint, 'POST', form, 'response-area');
       if (result.error) {
         throw new Error(result.error.message);
       }
-      return result.data.data;
+      return result.data?.data ?? result.data;
     } catch (error: any) {
       throw error;
     }
