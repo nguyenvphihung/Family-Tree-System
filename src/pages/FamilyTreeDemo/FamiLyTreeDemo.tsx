@@ -97,6 +97,19 @@ const FamilyTreeDemo: React.FC = () => {
   // Load tree data when component mounts
   useEffect(() => {
     initializeComponent();
+
+    // Listen for reload current tree event
+    const handleReloadCurrentTree = async () => {
+      console.log('Reload current tree event received');
+      await getTrees();
+      setShowCreateTreeModal(false);
+    };
+
+    window.addEventListener('reloadCurrentTree', handleReloadCurrentTree);
+
+    return () => {
+      window.removeEventListener('reloadCurrentTree', handleReloadCurrentTree);
+    };
   }, []);
 
   const initializeComponent = async () => {
@@ -825,29 +838,6 @@ const FamilyTreeDemo: React.FC = () => {
 
   return (
     <div className="fixed inset-0 w-screen h-screen bg-gray-50 overflow-hidden">
-      {/* Error Message Toast */}
-      {error && (
-        <div className="fixed top-4 right-4 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg max-w-md">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.856-.833-2.598 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-              <span className="text-sm">{error}</span>
-            </div>
-            <button
-              onClick={() => setError(null)}
-              className="ml-4 text-red-500 hover:text-red-700"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
-
-
       {/* Top Header Bar - Dark Gray */}
       <div
         className="text-white px-6 py-2 border-b border-gray-700 shadow-sm"
