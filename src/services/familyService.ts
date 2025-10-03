@@ -39,7 +39,7 @@ class FamilyService {
       if (result.error) {
         throw new Error(result.error.message);
       }
-      return result.data.data;
+      return result.data;
     } catch (error: any) {
       throw error;
     }
@@ -108,10 +108,10 @@ class FamilyService {
   async getTreeRelations(treeId: string, maxDepth: number = 7): Promise<any> {
     try {
       const result = await makeRequest(`${API_ENDPOINTS.RELATIONS.GET_TREE_RELATIONS}/${treeId}`, 'GET', null, null, { maxDepth });
-      if (result.error) {
-        throw new Error(result.error.message);
-      }
-      return result.data.data;
+      // if (result.error) {
+      //   throw new Error(result.error.message);
+      // }
+      return result.data;
     } catch (error: any) {
       throw error;
     }

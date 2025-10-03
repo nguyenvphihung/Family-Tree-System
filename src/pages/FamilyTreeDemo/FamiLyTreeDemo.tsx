@@ -80,6 +80,7 @@ const FamilyTreeDemo: React.FC = () => {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [personTreeData, setPersonTreeData] = useState<any>(null);
   const [showPersonTreeModal, setShowPersonTreeModal] = useState(false);
+  const [isDeletingPerson, setIsDeletingPerson] = useState(false);
 
   useEffect(() => {
 
@@ -152,7 +153,7 @@ const FamilyTreeDemo: React.FC = () => {
         setCurrentTreeId(null);
         setHasTreeData(false);
         setSelectedPerson(null);
-        setError('No trees found. Please create a new tree.');
+
       }
     } catch (error: any) {
       console.error('Error refreshing tree list:', error);
@@ -236,7 +237,7 @@ const FamilyTreeDemo: React.FC = () => {
       setHasTreeData(hasData);
 
     } catch (error: any) {
-      console.error('Error loading tree data:', error);
+      // console.error('Error loading tree data:', error);
       setError(error.message || 'Failed to load tree data');
       setHasTreeData(false);
     } finally {
@@ -608,6 +609,7 @@ const FamilyTreeDemo: React.FC = () => {
     if (!selectedPerson) return;
 
     try {
+      setIsDeletingPerson(true);
       setLoading(true);
 
       const personName = selectedPerson.name;
@@ -628,6 +630,7 @@ const FamilyTreeDemo: React.FC = () => {
       console.error('Error deleting person:', error);
       setError(error.message || 'Failed to delete person');
     } finally {
+      setIsDeletingPerson(false);
       setLoading(false);
     }
   };
@@ -1610,9 +1613,10 @@ const FamilyTreeDemo: React.FC = () => {
       {/* Modal xác nhận xóa */}
       <DeleteConfirmModal
         isOpen={showDeleteConfirmModal}
-        onClose={() => setShowDeleteConfirmModal(false)}
+        onClose={() => !isDeletingPerson && setShowDeleteConfirmModal(false)}
         onConfirm={handleConfirmDelete}
         person={selectedPerson}
+        isDeleting={isDeletingPerson}
       />
 
       {/* Tree Selector Modal */}

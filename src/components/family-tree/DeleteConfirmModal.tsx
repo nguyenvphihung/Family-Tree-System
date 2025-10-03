@@ -2,20 +2,22 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { FamilyMember } from '../../types/family';
-import { AlertTriangle, Trash2 } from 'lucide-react';
+import { AlertTriangle, Trash2, Loader2 } from 'lucide-react';
 
 interface DeleteConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
   person: FamilyMember | null;
+  isDeleting?: boolean;
 }
 
 const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   isOpen,
   onClose,
   onConfirm,
-  person
+  person,
+  isDeleting = false
 }) => {
   if (!person) return null;
 
@@ -41,7 +43,7 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
             Xác nhận xóa
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-center gap-2 text-red-800 mb-2">
@@ -87,16 +89,26 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
         </div>
 
         <div className="flex justify-end gap-3 pt-4">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={isDeleting}>
             Hủy
           </Button>
-          <Button 
-            variant="destructive" 
+          <Button
+            variant="destructive"
             onClick={onConfirm}
+            disabled={isDeleting}
             className="flex items-center gap-2"
           >
-            <Trash2 className="w-4 h-4" />
-            Xác nhận xóa
+            {isDeleting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Đang xóa...
+              </>
+            ) : (
+              <>
+                <Trash2 className="w-4 h-4" />
+                Xác nhận xóa
+              </>
+            )}
           </Button>
         </div>
       </DialogContent>
