@@ -14,6 +14,9 @@ import MembersPage from "../pages/Members";
 import Logout from "@/pages/Logout/Logout";
 import SnapshotEditor from "@/pages/SnapshotEditor";
 import Calendar from "@/pages/Calendar/Calendar";
+import Fundraising from "@/pages/Fundraising";
+import PaymentResult from "@/pages/Fundraising/PaymentResult";
+import FundraisingDemo from "@/pages/Fundraising/Demo";
 
 export const publicRoutes: RouteObject[] = [
   { path: "/", element: <Home /> },
@@ -31,6 +34,9 @@ export const publicRoutes: RouteObject[] = [
   { path: "/logout", element: <Logout /> },
   { path: "/snapshot-editor", element: <SnapshotEditor /> },
   { path: "/calendar", element: <Calendar /> },
+  { path: "/fundraising", element: <Fundraising /> },
+  { path: "/fundraising/payment-result", element: <PaymentResult /> },
+  { path: "/fundraising/demo", element: <FundraisingDemo /> },
 
 ];
 
