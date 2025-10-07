@@ -178,10 +178,6 @@ export async function makeRequest(endpoint: string, method: string, data: any, r
             }
 
 
-
-
-        
-
             // Hiển thị error từ server trong console để theo dõi
             console.log(' Server error message:', serverErrorMessage);
             console.log(' Full server error response:', data);

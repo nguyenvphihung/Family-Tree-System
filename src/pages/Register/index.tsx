@@ -52,6 +52,44 @@ const Register = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const navigate = useNavigate();
 
+  // Hàm validate dữ liệu form, trả về chuỗi lỗi hoặc null nếu hợp lệ
+  const validateForm = (data: RegisterCredentials): string | null => {
+    const name = (data.name || "").trim();
+    const phone = (data.phone || "").trim();
+    const email = (data.email || "").trim();
+    const password = data.password || "";
+    const confirmPassword = data.confirmPassword || "";
+
+    if (!name || !phone || !email || !password || !confirmPassword) {
+      return "Vui lòng điền đầy đủ thông tin";
+    }
+
+    if (name.length < 2) {
+      return "Họ và tên phải có ít nhất 2 ký tự";
+    }
+
+    // Chỉ chấp nhận đúng 10 chữ số
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(phone)) {
+      return "Số điện thoại phải gồm đúng 10 chữ số";
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return "Email không đúng định dạng";
+    }
+
+    if (password.length < 6) {
+      return "Mật khẩu cần tối thiểu 6 ký tự";
+    }
+
+    if (password !== confirmPassword) {
+      return "Mật khẩu không khớp";
+    }
+
+    return null;
+  };
+
   // Hàm xử lý thay đổi input
   const handleInputChange = (field: keyof RegisterCredentials, value: string) => {
     setFormData(prev => ({
@@ -63,28 +101,16 @@ const Register = () => {
   // Hàm submit form sử dụng API thực tế
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // setError("");
-
-    // Validation
-    if (!formData.name || !formData.phone || !formData.email || !formData.password || !formData.confirmPassword) {
-      setError("Vui lòng điền đầy đủ thông tin");
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Mật khẩu không khớp");
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError("Mật khẩu cần tối thiểu 6 ký tự");
-      return;
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setError("Email không đúng định dạng");
+    // Chuẩn hóa và validate
+    const trimmed = {
+      ...formData,
+      name: formData.name.trim(),
+      phone: formData.phone.trim(),
+      email: formData.email.trim()
+    };
+    const validationError = validateForm(trimmed);
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
@@ -93,7 +119,7 @@ const Register = () => {
     try {
       console.log("Đang gửi dữ liệu đăng ký:", formData);
 
-      const response = await authService.register(formData);
+      const response = await authService.register(trimmed);
 
       console.log("Phản hồi từ server:", response);
 
@@ -103,10 +129,10 @@ const Register = () => {
         setError(""); // Clear any previous errors
         setShowSuccessModal(true);
 
-        // Tự động chuyển về trang đăng nhập sau 4 giây
+        // Tự động chuyển về trang đăng nhập sau 10 giây
         setTimeout(() => {
           navigate("/login", { replace: true });
-        }, 4000);
+        }, 15000);
       } else {
         // Nếu API trả về thông điệp dạng 'thành công' nhưng success=false, vẫn coi là success
         if (/thành công/i.test(response.message || "")) {
@@ -273,7 +299,11 @@ const Register = () => {
                         type="tel"
                         placeholder="Nhập số điện thoại"
                         value={formData.phone}
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        onChange={(e) => {
+                          // Chỉ cho phép số và tối đa 10 ký tự
+                          const digitsOnly = e.target.value.replace(/[^\d]/g, '').slice(0, 10);
+                          handleInputChange('phone', digitsOnly);
+                        }}
                         className="pl-10"
                         required
                       />

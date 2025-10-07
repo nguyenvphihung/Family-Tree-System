@@ -214,7 +214,7 @@ const Login = () => {
                 )}
 
                 {success && (
-                  <Alert className="border-emerald-200 bg-emerald-50">
+                  <Alert variant="success" className="border-emerald-200 bg-emerald-50">
                     <CheckCircle className="h-4 w-4 text-emerald-600" />
                     <AlertDescription className="text-emerald-800">
                       Đăng nhập thành công! Đang chuyển hướng...
