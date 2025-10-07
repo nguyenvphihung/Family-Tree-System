@@ -81,7 +81,7 @@ const FundraisingDemo: React.FC = () => {
             </div>
             
             {vnpayService['TMN_CODE'] === 'YOUR_TMN_CODE' && (
-              <Alert>
+              <Alert variant="destructive">
                 <AlertDescription>
                   Cần cấu hình TMN_CODE và SECRET_KEY trong file vnpayService.ts
                 </AlertDescription>
@@ -127,7 +127,7 @@ const FundraisingDemo: React.FC = () => {
 
             {paymentUrl && (
               <div className="space-y-3">
-                <Alert>
+                <Alert variant="success" className="border-emerald-200 bg-emerald-50">
                   <CheckCircle className="h-4 w-4" />
                   <AlertDescription>
                     URL thanh toán đã được tạo thành công!

@@ -250,7 +250,7 @@ const Register = () => {
 
           {/* Right Panel - Register Form */}
           <div className="w-full max-w-md mx-auto lg:mx-0 mb-[30px]">
-            <Card className="backdrop-blur-sm bg-white/80 border-0 shadow-xl">
+            <Card className="backdrop-blur-sm bg-white/80 border-0 shadow-xl mb-[30px]">
               <CardHeader className="space-y-2 text-center">
                 <CardTitle className="text-2xl font-bold">Tạo tài khoản</CardTitle>
                 <CardDescription>
@@ -259,7 +259,7 @@ const Register = () => {
               </CardHeader>
 
               <CardContent className="space-y-4">
-                {success ? (
+                {success && !showSuccessModal ? (
                   <div className="w-full rounded-lg border border-emerald-400 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
                     <p className="font-semibold">Đăng ký tài khoản thành công</p>
                   </div>
