@@ -180,14 +180,7 @@ export async function makeRequest(endpoint: string, method: string, data: any, r
 
 
 
-            // Nếu vẫn rỗng, đặt default message theo status code để tránh 'undefined'
-            if (!serverErrorMessage || serverErrorMessage.trim() === '') {
-                const status = error.response.status;
-                serverErrorMessage = status === 404 ? 'Không tìm thấy tài nguyên (404)'
-                    : status === 401 ? 'Không được phép, vui lòng đăng nhập (401)'
-                        : status === 400 ? 'Yêu cầu không hợp lệ (400)'
-                            : 'Đã xảy ra lỗi khi gọi API';
-            }
+        
 
             // Hiển thị error từ server trong console để theo dõi
             console.log(' Server error message:', serverErrorMessage);

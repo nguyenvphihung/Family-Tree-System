@@ -12,6 +12,13 @@ import {
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Eye,
   EyeOff,
   Users,
@@ -42,6 +49,7 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const navigate = useNavigate();
 
   // Hàm xử lý thay đổi input
@@ -55,7 +63,7 @@ const Register = () => {
   // Hàm submit form sử dụng API thực tế
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    // setError("");
 
     // Validation
     if (!formData.name || !formData.phone || !formData.email || !formData.password || !formData.confirmPassword) {
@@ -89,16 +97,25 @@ const Register = () => {
 
       console.log("Phản hồi từ server:", response);
 
-      if (response.success) {
+      if (response.success || /thành công/i.test(response.message || "")) {
         console.log("Đăng ký thành công:", response.message);
         setSuccess(true);
+        setError(""); // Clear any previous errors
+        setShowSuccessModal(true);
 
-        // Tự động chuyển về trang đăng nhập sau 3 giây
+        // Tự động chuyển về trang đăng nhập sau 4 giây
         setTimeout(() => {
           navigate("/login", { replace: true });
-        }, 3000);
+        }, 4000);
       } else {
-        setError(response.message || "Đăng ký thất bại");
+        // Nếu API trả về thông điệp dạng 'thành công' nhưng success=false, vẫn coi là success
+        if (/thành công/i.test(response.message || "")) {
+          setSuccess(true);
+          setError("");
+          setShowSuccessModal(true);
+        } else {
+          setError(response.message || "Đăng ký thất bại");
+        }
       }
     } catch (error: any) {
       console.error("Lỗi đăng ký:", error);
@@ -109,7 +126,7 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 overflow-y-auto">
+    <div className="h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 overflow-hidden">
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-emerald-300/20 to-teal-300/20 rounded-full blur-3xl animate-pulse"></div>
@@ -118,11 +135,11 @@ const Register = () => {
       </div>
 
       {/* Main Content Container */}
-      <div className="relative z-10 py-8 px-4 min-h-screen">
-        <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-start lg:items-center">
+      <div className="relative z-10 h-full px-4 py-6">
+        <div className="w-full max-w-6xl mx-auto h-full grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
 
           {/* Left Panel - Welcome Section */}
-          <div className="hidden lg:flex flex-col justify-center space-y-8 p-8">
+          <div className="hidden lg:flex flex-col justify-center space-y-8 p-8 mb-[30px]">
             <div className="space-y-6">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
@@ -206,7 +223,7 @@ const Register = () => {
           </div>
 
           {/* Right Panel - Register Form */}
-          <div className="w-full max-w-md mx-auto lg:mx-0">
+          <div className="w-full max-w-md mx-auto lg:mx-0 mb-[30px]">
             <Card className="backdrop-blur-sm bg-white/80 border-0 shadow-xl">
               <CardHeader className="space-y-2 text-center">
                 <CardTitle className="text-2xl font-bold">Tạo tài khoản</CardTitle>
@@ -216,19 +233,16 @@ const Register = () => {
               </CardHeader>
 
               <CardContent className="space-y-4">
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-
-                {success && (
-                  <Alert className="border-emerald-200 bg-emerald-50">
-                    <CheckCircle className="h-4 w-4 text-emerald-600" />
-                    <AlertDescription className="text-emerald-800">
-                      Đăng ký thành công! Đang chuyển hướng đến trang đăng nhập...
-                    </AlertDescription>
-                  </Alert>
+                {success ? (
+                  <div className="w-full rounded-lg border border-emerald-400 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                    <p className="font-semibold">Đăng ký tài khoản thành công</p>
+                  </div>
+                ) : (
+                  error && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -341,10 +355,22 @@ const Register = () => {
 
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
-                    disabled={isLoading}
+                    className={`w-full transition-all duration-300 ${success
+                      ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                      : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+                      }`}
+                    disabled={isLoading || success}
                   >
-                    {isLoading ? "Đang đăng ký..." : "Tạo tài khoản"}
+                    {success ? (
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle className="h-4 w-4" />
+                        <span>Đăng ký thành công!</span>
+                      </div>
+                    ) : isLoading ? (
+                      "Đang đăng ký..."
+                    ) : (
+                      "Tạo tài khoản"
+                    )}
                   </Button>
                 </form>
 
@@ -368,6 +394,58 @@ const Register = () => {
       {/* Response Area để hiển thị thông báo từ makeRequest */}
       <div id="response-area" style={{ display: 'none' }} className="fixed bottom-4 right-4 p-4 rounded-lg shadow-lg max-w-md">
       </div>
+
+      {/* Success Modal */}
+      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="text-center">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mb-4 shadow-lg">
+              <CheckCircle className="h-8 w-8 text-white" />
+            </div>
+            <DialogTitle className="text-2xl font-bold text-green-800">
+              🎉 Đăng ký thành công!
+            </DialogTitle>
+            <DialogDescription className="text-green-700 text-lg mt-2">
+              Bạn đã tạo tài khoản thành công trong hệ thống Family Tree System.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-6 space-y-4">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                  <CheckCircle className="h-4 w-4 text-white" />
+                </div>
+                <span className="text-green-800 font-medium">Tài khoản đã được tạo</span>
+              </div>
+              <div className="flex items-center space-x-3 mt-2">
+                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                  <CheckCircle className="h-4 w-4 text-white" />
+                </div>
+                <span className="text-green-800 font-medium">Thông tin đã được lưu trữ</span>
+              </div>
+              <div className="flex items-center space-x-3 mt-2">
+                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                  <CheckCircle className="h-4 w-4 text-white" />
+                </div>
+                <span className="text-green-800 font-medium">Sẵn sàng đăng nhập</span>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <p className="text-gray-600 text-sm">
+                Bạn sẽ được chuyển hướng đến trang đăng nhập sau ít giây...
+              </p>
+              <Button
+                onClick={() => navigate("/login", { replace: true })}
+                className="mt-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+              >
+                Đăng nhập ngay
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
