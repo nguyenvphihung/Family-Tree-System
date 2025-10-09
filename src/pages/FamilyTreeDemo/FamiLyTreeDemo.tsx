@@ -83,16 +83,18 @@ const FamilyTreeDemo: React.FC = () => {
   const [isDeletingPerson, setIsDeletingPerson] = useState(false);
 
   useEffect(() => {
+    // Auto center tree when tree data is loaded
+    if (hasTreeData && currentTreeId) {
+      const timer = setTimeout(() => {
+        const svgElement = document.querySelector('.family-tree-svg') as any;
+        if (svgElement && svgElement.centerTreeView) {
+          svgElement.centerTreeView();
+        }
+      }, 1000); // Wait for tree to load
 
-    const timer = setTimeout(() => {
-      const svgElement = document.querySelector('.family-tree-svg') as any;
-      if (svgElement && svgElement.centerTreeView) {
-        svgElement.centerTreeView();
-      }
-    }, 1000); // Wait for tree to load
-
-    return () => clearTimeout(timer);
-  }, []);
+      return () => clearTimeout(timer);
+    }
+  }, [hasTreeData, currentTreeId, treeViewKey]); // Trigger when tree data changes
 
   // Load tree data when component mounts
   useEffect(() => {
@@ -306,19 +308,38 @@ const FamilyTreeDemo: React.FC = () => {
 
   const handleZoomIn = () => {
     setZoomLevel((prev) => Math.min(prev + 0.2, 3));
+    // Apply zoom to current tree
+    const svgElement = document.querySelector('.family-tree-svg') as any;
+    if (svgElement && svgElement.setZoom) {
+      svgElement.setZoom(Math.min(zoomLevel + 0.2, 3));
+    }
   };
 
   const handleZoomOut = () => {
     setZoomLevel((prev) => Math.max(prev - 0.2, 0.3));
+    // Apply zoom to current tree
+    const svgElement = document.querySelector('.family-tree-svg') as any;
+    if (svgElement && svgElement.setZoom) {
+      svgElement.setZoom(Math.max(zoomLevel - 0.2, 0.3));
+    }
   };
 
   const handleZoomReset = () => {
     setZoomLevel(1);
+    // Reset zoom and center the current tree
+    const svgElement = document.querySelector('.family-tree-svg') as any;
+    if (svgElement) {
+      if (svgElement.setZoom) {
+        svgElement.setZoom(1);
+      }
+      if (svgElement.centerTreeView) {
+        svgElement.centerTreeView();
+      }
+    }
   };
 
   const handleZoomCenter = () => {
-    setZoomLevel(1);
-    // Center the tree view
+    // Center the current tree without changing zoom level
     const svgElement = document.querySelector('.family-tree-svg') as any;
     if (svgElement && svgElement.centerTreeView) {
       svgElement.centerTreeView();
@@ -665,9 +686,9 @@ const FamilyTreeDemo: React.FC = () => {
         parent1Id: selectedPerson.id,
         parent2Id: selectedPerson.spouses?.[0]?.id || "", // Sử dụng spouse nếu có
         child: {
-          name: childData.name || "",
+          name: childData.name || "unknown",
           gender: childData.gender || "M",
-          birthday: childData.birthday || new Date().toISOString().split('T')[0],
+          birthday: childData.birthday || null,
           birthPlace: childData.birthPlace || ""
         },
         childrenType: "BIOLOGICAL" as const,
@@ -709,9 +730,9 @@ const FamilyTreeDemo: React.FC = () => {
       const addParentRequest = {
         childId: selectedPerson.id,
         newParent: {
-          name: parentData.name || "",
+          name: parentData.name || "unknown",
           gender: parentData.gender || "M",
-          birthday: parentData.birthday || new Date().toISOString().split('T')[0],
+          birthday: parentData.birthday || null,
           birthPlace: parentData.birthPlace || ""
         }
       };
@@ -747,13 +768,13 @@ const FamilyTreeDemo: React.FC = () => {
 
       const addSpouseRequest = {
         newSpouse: {
-          name: spouseData.name || "",
+          name: spouseData.name || "unknown",
           gender: spouseData.gender || "F",
-          birthday: spouseData.birthday || new Date().toISOString().split('T')[0],
+          birthday: spouseData.birthday || null,
           birthPlace: spouseData.birthPlace || ""
         },
-        marriageDate: spouseData.marriageDate || new Date().toISOString().split('T')[0],
-        divorceDate: spouseData.divorceDate || ""
+        marriageDate: spouseData.marriageDate || null,
+        divorceDate: spouseData.divorceDate || null
       };
 
       await familyService.addSpouse(currentTreeId, selectedPerson.id, addSpouseRequest);
@@ -782,9 +803,9 @@ const FamilyTreeDemo: React.FC = () => {
       }
 
       const createRootRequest = {
-        name: rootData.name || "",
+        name: rootData.name || "unknown",
         gender: rootData.gender || "M",
-        birthday: rootData.birthday || new Date().toISOString().split('T')[0],
+        birthday: rootData.birthday || null,
         birthPlace: rootData.birthPlace || ""
       };
 

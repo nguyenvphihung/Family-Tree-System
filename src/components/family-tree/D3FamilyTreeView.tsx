@@ -67,35 +67,42 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
     loadTreeData();
   }, [treeId]);
 
+  // Auto center tree when data is loaded
+  useEffect(() => {
+    if (treeData && svgRef.current) {
+      // Delay to ensure DOM is updated
+      const timer = setTimeout(() => {
+        centerTreeView();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [treeData]);
+
   // Function to center the tree view
   const centerTreeView = () => {
-    if (svgRef.current) {
+    if (svgRef.current && zoomBehaviorRef.current) {
       const svg = d3.select(svgRef.current);
       const width = parseInt(svg.attr("width")) || 2000;
       const height = parseInt(svg.attr("height")) || 1200;
       const centerX = width / 2;
       const centerY = height / 2;
 
-      const svgGroup = svg.select("g");
-      svgGroup.transition()
+      svg.transition()
         .duration(750)
-        .attr("transform", `translate(${centerX}, ${centerY}) scale(1)`);
-
-      // Clear saved transform
-      sessionStorage.removeItem('familyTreeTransform');
+        .call(zoomBehaviorRef.current.transform, d3.zoomIdentity.translate(centerX, centerY).scale(1));
     }
   };
 
   // Expose center function to parent component
   useEffect(() => {
-    if (svgRef.current) {
+    if (svgRef.current && zoomBehaviorRef.current) {
       (svgRef.current as any).centerTreeView = centerTreeView;
       (svgRef.current as any).zoomIn = handleZoomIn;
       (svgRef.current as any).zoomOut = handleZoomOut;
       (svgRef.current as any).zoomReset = handleZoomReset;
       (svgRef.current as any).zoomCenter = handleZoomCenter;
     }
-  }, [treeData]);
+  }, [treeData, zoomBehaviorRef.current]);
 
   const loadTreeData = async () => {
     try {
@@ -120,15 +127,8 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
   useEffect(() => {
     if (!treeData || !svgRef.current) return;
 
-    // Lấy width/height từ sessionStorage nếu có
-    let width = 2000;
-    let height = 1200;
-    const sessionWidth = sessionStorage.getItem('familyTreeSvgWidth');
-    const sessionHeight = sessionStorage.getItem('familyTreeSvgHeight');
-    if (sessionWidth && sessionHeight) {
-      width = parseInt(sessionWidth, 10);
-      height = parseInt(sessionHeight, 10);
-    }
+    const width = 2000;
+    const height = 1200;
 
     const svg = d3.select(svgRef.current)
       .attr("width", width)
@@ -137,54 +137,46 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
 
     svg.selectAll("*").remove();
 
+    // Tạo shadow filter
+    const defs = svg.append("defs");
+    const filter = defs.append("filter")
+      .attr("id", "shadow")
+      .attr("x", "-50%")
+      .attr("y", "-50%")
+      .attr("width", "200%")
+      .attr("height", "200%");
+
+    filter.append("feDropShadow")
+      .attr("dx", 2)
+      .attr("dy", 2)
+      .attr("stdDeviation", 3)
+      .attr("flood-color", "rgba(0,0,0,0.3)");
+
     // Nhóm chính để hỗ trợ zoom/pan
-    const svgGroup = svg
-      .call(
-        d3
-          .zoom<SVGSVGElement, unknown>()
-          .scaleExtent([0.2, 3])
-          .on("start", function () {
-            d3.select(this).style("cursor", "grabbing");
-          })
-          .on("zoom", (event) => {
-            svgMain.attr("transform", event.transform);
-            // Lưu transform vào sessionStorage
-            sessionStorage.setItem('familyTreeTransform', JSON.stringify({
-              x: event.transform.x,
-              y: event.transform.y,
-              k: event.transform.k
-            }));
-          })
-          .on("end", function () {
-            d3.select(this).style("cursor", "grab");
-          })
-      )
-      .append("g");
+    const zoomBehavior = d3
+      .zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.2, 3])
+      .on("start", function () {
+        d3.select(this).style("cursor", "grabbing");
+      })
+      .on("zoom", (event) => {
+        svgMain.attr("transform", event.transform);
+      })
+      .on("end", function () {
+        d3.select(this).style("cursor", "grab");
+      });
+
+    // Store zoom behavior for external control
+    zoomBehaviorRef.current = zoomBehavior;
+
+    const svgGroup = svg.call(zoomBehavior).append("g");
 
     // Tính toán vị trí trung tâm - căn giữa cây gia phả
     const centerX = width / 2;
     const centerY = height / 2;
 
     // Luôn bắt đầu với vị trí trung tâm để đảm bảo cây hiển thị ở giữa
-    let initialTransform = `translate(${centerX}, ${centerY}) scale(1)`;
-
-    // Chỉ load transform từ sessionStorage nếu user đã tương tác trước đó
-    // và không phải lần đầu vào trang
-    const saved = sessionStorage.getItem('familyTreeTransform');
-    const isFirstLoad = !sessionStorage.getItem('familyTreeInitialized');
-
-    if (saved && !isFirstLoad) {
-      try {
-        const { x, y, k } = JSON.parse(saved);
-        initialTransform = `translate(${x || centerX},${y || centerY}) scale(${k || 1})`;
-      } catch {
-        // Nếu parse lỗi, dùng vị trí trung tâm
-        initialTransform = `translate(${centerX}, ${centerY}) scale(1)`;
-      }
-    } else {
-      // Đánh dấu đã khởi tạo để lần sau có thể load transform
-      sessionStorage.setItem('familyTreeInitialized', 'true');
-    }
+    const initialTransform = `translate(${centerX}, ${centerY}) scale(1)`;
 
     const svgMain = svgGroup.append("g").attr("transform", initialTransform);
 
@@ -501,11 +493,6 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
   const handleViewInfo = () => {
     if (selectedNode && onViewInfo) {
       onViewInfo(selectedNode);
-      // Lưu width/height SVG vào sessionStorage khi mở contextMenu
-      if (svgRef.current) {
-        sessionStorage.setItem('familyTreeSvgWidth', svgRef.current.clientWidth.toString());
-        sessionStorage.setItem('familyTreeSvgHeight', svgRef.current.clientHeight.toString());
-      }
     }
   };
 
@@ -517,36 +504,51 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
 
   // Zoom functions
   const handleZoomIn = () => {
-    if (svgRef.current) {
+    if (svgRef.current && zoomBehaviorRef.current) {
       const svg = d3.select(svgRef.current);
-      const zoom = d3.zoom().scaleExtent([0.2, 3]);
-      svg.transition().duration(300).call(zoom.scaleBy, 1.2);
+      svg.transition().duration(300).call(zoomBehaviorRef.current.scaleBy, 1.2);
     }
     if (onZoomIn) onZoomIn();
   };
 
   const handleZoomOut = () => {
-    if (svgRef.current) {
+    if (svgRef.current && zoomBehaviorRef.current) {
       const svg = d3.select(svgRef.current);
-      const zoom = d3.zoom().scaleExtent([0.2, 3]);
-      svg.transition().duration(300).call(zoom.scaleBy, 0.8);
+      svg.transition().duration(300).call(zoomBehaviorRef.current.scaleBy, 0.8);
     }
     if (onZoomOut) onZoomOut();
   };
 
   const handleZoomReset = () => {
-    if (svgRef.current) {
+    if (svgRef.current && zoomBehaviorRef.current) {
       const svg = d3.select(svgRef.current);
-      const svgGroup = svg.select("g");
-      svgGroup.transition()
+      const width = parseInt(svg.attr("width")) || 2000;
+      const height = parseInt(svg.attr("height")) || 1200;
+      const centerX = width / 2;
+      const centerY = height / 2;
+
+      svg.transition()
         .duration(750)
-        .attr("transform", "scale(1)");
+        .call(zoomBehaviorRef.current.transform, d3.zoomIdentity.translate(centerX, centerY).scale(1));
     }
     if (onZoomReset) onZoomReset();
   };
 
   const handleZoomCenter = () => {
-    centerTreeView();
+    if (svgRef.current && zoomBehaviorRef.current) {
+      const svg = d3.select(svgRef.current);
+      const width = parseInt(svg.attr("width")) || 2000;
+      const height = parseInt(svg.attr("height")) || 1200;
+      const centerX = width / 2;
+      const centerY = height / 2;
+
+      // Get current scale
+      const currentTransform = d3.zoomTransform(svgRef.current);
+
+      svg.transition()
+        .duration(750)
+        .call(zoomBehaviorRef.current.transform, d3.zoomIdentity.translate(centerX, centerY).scale(currentTransform.k));
+    }
     if (onZoomCenter) onZoomCenter();
   };
 
