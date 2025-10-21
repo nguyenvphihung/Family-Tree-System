@@ -2,16 +2,15 @@ import { Phone } from "lucide-react";
 
 // API Endpoints Configuration
 export const API_ENDPOINTS = {
-  // Auth endpoints
+  // Auth endpoints (auth-controller)
   AUTH: {
-    LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
+    LOGIN: '/auth/login', // POST /auth/login - Đăng nhập
+    REGISTER: '/auth/register', // POST /auth/register - Đăng ký
     LOGOUT: '/auth/logout',
     REFRESH: '/auth/refresh',
     ME: '/auth/me',
     FORGOT_PASSWORD: '/auth/forgot-password',
     RESET_PASSWORD: '/auth/reset-password',
-
   },
 
   // User endpoints
@@ -25,46 +24,52 @@ export const API_ENDPOINTS = {
     BY_ID: '/users',
   },
 
-  // Family/Relations endpoints
+  // Tree Management endpoints (tree-controller)
+  TREES: {
+    GET_USER_TREES: '/trees', // GET /trees - Lấy tất cả cây của 1 người dùng
+    CREATE_TREE: '/trees', // POST /trees - Tạo mới 1 cây
+    UPDATE_TREE: (treeId: string) => `/trees/${treeId}`, // PUT /trees/{treeId} - Sửa thông tin cây
+    DELETE_TREE: (treeId: string) => `/trees/${treeId}`, // DELETE /trees/{treeId} - Xoá cây
+  },
+
+  // Relations endpoints (relation-controller)
   RELATIONS: {
-    // Tree management
-    CREATE_TREE: '/trees',
-    GET_USER_TREES: '/trees',
-    UPDATE_TREE: '/trees',
-    DELETE_TREE: '/trees',
-    GET_TREE_RELATIONS: '/relations/trees',
-    GET_PERSON_TREE_RELATIONS: '/relations/trees',
+    // Get tree data
+    GET_TREE_RELATIONS: (treeId: string) => `/relations/trees/${treeId}`, // GET /relations/trees/{treeId} - Lấy cây không biết Person
+    GET_PERSON_TREE_RELATIONS: (treeId: string, personId: string) => `/relations/trees/${treeId}/persons/${personId}`, // GET /relations/trees/{treeId}/persons/{personId} - Lấy cây kể từ Person
 
-    // Tree relations
-    ADD_CHILD: '/relations/trees',
-    ADD_PARENT: '/relations/trees',
-    CREATE_ROOT_PERSON: '/relations/trees',
-    ADD_SPOUSE: '/relations/trees',
-
-    // Person management
-    DELETE_PERSON: '/persons',
+    // Add relations
+    ADD_CHILD: (treeId: string) => `/relations/trees/${treeId}/children`, // POST /relations/trees/{treeId}/children - Thêm con cái
+    ADD_PARENT: (treeId: string) => `/relations/trees/${treeId}/parent`, // POST /relations/trees/{treeId}/parent - Thêm cha mẹ
+    CREATE_ROOT_PERSON: (treeId: string) => `/relations/trees/${treeId}/root`, // POST /relations/trees/{treeId}/root - Tạo người đầu tiên
+    ADD_SPOUSE: (treeId: string, spouseId: string) => `/relations/trees/${treeId}/spouses/${spouseId}`, // POST /relations/trees/{treeId}/spouses/{spouseId} - Thêm vợ/chồng
   },
 
-  // Album endpoints
-  ALBUMS: {
-    CREATE_ALBUM: '/albums',
-    UPDATE_ALBUM: '/albums',
-    DELETE_ALBUM: '/albums',
-    GET_USER_ALBUMS: '/albums',
-    GET_ALBUM_BY_ID: '/albums',
-  },
-
-  // Image endpoints
-  IMAGES: {
-    GET_IMAGE: '/images',
-    GET_IMAGES_BY_ALBUM: '/images/by-album',
-    UPLOAD_IMAGE: '/images/upload',
-    DELETE_IMAGE: '/images',
-  },
-
-  // Person endpoints
+  // Person Management endpoints (person-controller)
   PERSONS: {
-    // Only endpoints in spec used in FE now
+    GET_PERSON: '/persons', // GET /persons?personId={personId} - Lấy thông tin 1 người
+    UPDATE_PERSON: (personId: string) => `/persons/${personId}`, // PUT /persons/{personId} - Cập nhật toàn bộ thông tin
+    DELETE_PERSON: (personId: string) => `/persons/${personId}`, // DELETE /persons/{personId} - Xoá 1 người
+    UPDATE_DEATH_INFO: (personId: string) => `/persons/${personId}/death-info`, // PATCH /persons/{personId}/death-info - Cập nhật thông tin người mất
+    UPDATE_BIRTH_INFO: (personId: string) => `/persons/${personId}/birth-info`, // PATCH /persons/{personId}/birth-info - Cập nhật thông tin khai sinh
+    UPLOAD_AVATAR: '/persons/upload-avatar', // PATCH /persons/upload-avatar - Thêm/cập nhật avatar
+  },
+
+  // Album Management endpoints (album-controller)
+  ALBUMS: {
+    GET_ALBUM_BY_ID: (albumId: string) => `/albums/${albumId}`, // GET /albums/{albumId} - Tìm album bằng Id
+    GET_USER_ALBUMS: '/albums', // GET /albums?userId={userId} - Lấy tất cả album của 1 người dùng
+    CREATE_ALBUM: '/albums', // POST /albums - Tạo mới 1 album
+    UPDATE_ALBUM: (albumId: string) => `/albums/${albumId}`, // PUT /albums/{albumId} - Sửa thông tin album
+    DELETE_ALBUM: (albumId: string) => `/albums/${albumId}`, // DELETE /albums/{albumId} - Xoá album
+  },
+
+  // Image Management endpoints (image-controller)
+  IMAGES: {
+    GET_IMAGE: (imageId: string) => `/images/${imageId}`, // GET /images/{imageId} - Lấy ảnh theo imageId
+    GET_IMAGES_BY_ALBUM: '/images/by-album', // GET /images/by-album?albumId={albumId} - Lấy ảnh theo albumId
+    UPLOAD_IMAGE: '/images/upload', // POST /images/upload?name={name}&albumId={albumId} - Upload ảnh
+    DELETE_IMAGE: (imageId: string) => `/images/${imageId}`, // DELETE /images/{imageId} - Xóa ảnh
   },
 
   // Onboarding endpoints
@@ -72,6 +77,12 @@ export const API_ENDPOINTS = {
     COMPLETE: '/onboarding/complete',
     STEPS: '/onboarding/steps',
     SAVE_STEP: '/onboarding/save-step',
+  },
+
+  // VNPay endpoints (vn-pay-controller)
+  VNPAY: {
+    CREATE_PAYMENT: '/vnpay/create-payment', // POST /vnpay/create-payment - Tạo thanh toán
+    PAYMENT_CALLBACK: '/vnpay/payment-callback', // GET /vnpay/payment-callback - Callback thanh toán
   },
 } as const;
 
