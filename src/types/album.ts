@@ -37,6 +37,7 @@ export interface CreateAlbumResponse {
 
 // ==================== UPDATE ALBUM ====================
 export interface UpdateAlbumRequest {
+    albumId: string;
     name: string;
 }
 

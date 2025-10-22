@@ -24,46 +24,77 @@ class ImageService {
         }
     }
 
-    // GET /images/by-album - Lấy ảnh theo albumId
+    // GET /images/by-album/{albumId} - Lấy ảnh theo albumId
     async getImagesByAlbum(albumId: string): Promise<Image[]> {
         try {
-            const result = await makeRequest(API_ENDPOINTS.IMAGES.GET_IMAGES_BY_ALBUM, 'GET', null, null, { albumId });
+            console.log('[ImageService] Getting images for album:', albumId);
+            const result = await makeRequest(API_ENDPOINTS.IMAGES.GET_IMAGES_BY_ALBUM(albumId), 'GET', null, null);
             if (result.error) {
+                console.error('[ImageService] Error getting images:', result.error);
                 throw new Error(result.error.message);
             }
+            console.log('[ImageService] Images loaded:', result.data.data);
             return result.data.data;
         } catch (error: any) {
+            console.error('[ImageService] Exception getting images:', error);
             throw error;
         }
     }
 
-    // POST /images/upload - Upload image using FormData
+    // POST /images/upload?albumId={albumId} - Upload image using FormData
     // Parameters: albumId (query param)
     // Request body: FormData with 'file' field
     async uploadImage(data: UploadImageRequest): Promise<Image> {
         try {
-            const formData = new FormData();
-            formData.append('file', data.file);
+            const { file, albumId } = data;
 
-            console.log('[Image Service] Uploading image to album:', data.albumId);
+            console.log('[ImageService] uploadImage:', {
+                albumId,
+                fileType: typeof file,
+                fileLength: typeof file === 'string' ? file.length : (file as File).size
+            });
 
-            const result = await makeRequest(
-                API_ENDPOINTS.IMAGES.UPLOAD_IMAGE(data.albumId),
-                'POST',
-                formData,
-                'response-area'
-            );
+            const endpoint = `${API_ENDPOINTS.IMAGES.UPLOAD_IMAGE}?albumId=${encodeURIComponent(albumId)}`;
 
-            if (result.error) {
-                throw new Error(result.error.message || 'Upload failed');
+            if (!file) {
+                throw new Error('No file provided');
             }
 
-            console.log('[Image Service] Upload successful:', result.data);
+            // Create FormData for multipart upload (like HTML test)
+            const formData = new FormData();
 
-            // ✅ Return image data từ response
-            return result.data.data; // result.data.data chứa ImageResponse
+            if (typeof file === 'string') {
+                // Convert base64 string to Blob
+                const fileStr = file as string;
+                const base64Data = fileStr.split(',')[1] || fileStr;
+                const mimeMatch = fileStr.match(/data:([^;]+);/);
+                const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: mimeType });
+
+                formData.append('file', blob, 'image.jpg');
+                console.log('[ImageService] Converted base64 to Blob:', { size: blob.size, type: mimeType });
+            } else {
+                // Already a File object
+                const fileObj = file as File;
+                formData.append('file', fileObj);
+                console.log('[ImageService] Using File object:', { name: fileObj.name, size: fileObj.size });
+            }
+
+            const result = await makeRequest(endpoint, 'POST', formData, 'response-area');
+            if (result.error) {
+                throw new Error(result.error.message);
+            }
+            console.log('[ImageService] Upload successful:', result.data?.data ?? result.data);
+            return result.data?.data ?? result.data;
         } catch (error: any) {
-            console.error('[Image Service] Upload error:', error);
+            console.error('[ImageService] Upload error:', error);
             throw error;
         }
     }

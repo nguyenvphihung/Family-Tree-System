@@ -75,7 +75,7 @@ export interface UpdateBirthInfoResponse {
 
 // ==================== UPLOAD AVATAR ====================
 export interface UploadAvatarRequest {
-    avatar: string; // base64 string
+    avatar: string | File; // Support both base64 string and File object
 }
 
 export interface UploadAvatarResponse {

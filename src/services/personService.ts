@@ -108,18 +108,50 @@ class PersonService {
     // PATCH /persons/{personId}/upload-avatar - Thêm hoặc cập nhật avatar
     async uploadAvatar(personId: string, data: UploadAvatarRequest): Promise<PersonInfo> {
         try {
-            console.log('[UploadAvatar] Request data:', { personId, data });
+            const { avatar } = data;
+            console.log('[UploadAvatar] Starting upload for person:', personId, {
+                avatarType: typeof avatar,
+                avatarLength: typeof avatar === 'string' ? avatar.length : (avatar as File).size
+            });
+
+            // Create FormData for multipart upload (like image upload)
+            const formData = new FormData();
+
+            if (typeof avatar === 'string') {
+                // Convert base64 string to Blob
+                const avatarStr = avatar as string;
+                const base64Data = avatarStr.split(',')[1] || avatarStr;
+                const mimeMatch = avatarStr.match(/data:([^;]+);/);
+                const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: mimeType });
+
+                formData.append('avatar', blob, 'avatar.jpg');
+                console.log('[UploadAvatar] Converted base64 to Blob:', { size: blob.size, type: mimeType });
+            } else {
+                // Already a File object
+                const avatarFile = avatar as File;
+                formData.append('avatar', avatarFile);
+                console.log('[UploadAvatar] Using File object:', { name: avatarFile.name, size: avatarFile.size });
+            }
+
             const result = await makeRequest(
                 API_ENDPOINTS.PERSONS.UPLOAD_AVATAR(personId),
                 'PATCH',
-                data,
+                formData,
                 'response-area'
             );
             console.log('[UploadAvatar] API response:', result);
             if (result.error) {
                 throw new Error(result.error.message);
             }
-            console.log('[UploadAvatar] Returned data:', result.data.data);
+            console.log('[UploadAvatar] Upload successful:', result.data.data);
             return result.data.data;
         } catch (error: any) {
             console.error('[UploadAvatar] Error:', error);

@@ -9,6 +9,7 @@ import {
     UpdateAlbumRequest,
     UpdateAlbumResponse,
     DeleteAlbumResponse,
+
 } from '../types/album';
 
 class AlbumService {
@@ -54,7 +55,7 @@ class AlbumService {
     // PUT /albums/{albumId} - Sửa thông tin album
     async updateAlbum(albumId: string, name: string): Promise<Album> {
         try {
-            const data: UpdateAlbumRequest = { name };
+            const data: UpdateAlbumRequest = { albumId, name };
             const result = await makeRequest(API_ENDPOINTS.ALBUMS.UPDATE_ALBUM(albumId), 'PUT', data, 'response-area');
             if (result.error) {
                 throw new Error(result.error.message);

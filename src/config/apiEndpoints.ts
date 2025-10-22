@@ -67,8 +67,8 @@ export const API_ENDPOINTS = {
   // Image Management endpoints (image-controller)
   IMAGES: {
     GET_IMAGE: (imageId: string) => `/images/${imageId}`,
-    GET_IMAGES_BY_ALBUM: '/images/by-album',
-    UPLOAD_IMAGE: (albumId: string) => `/images/upload?albumId=${albumId}`,
+    GET_IMAGES_BY_ALBUM: (albumId: string) => `/images/by-album/${albumId}`, // GET /images/by-album/{albumId}
+    UPLOAD_IMAGE: '/images/upload', // POST /images/upload?albumId={albumId}
     DELETE_IMAGE: (imageId: string) => `/images/${imageId}`,
   },
   // Onboarding endpoints

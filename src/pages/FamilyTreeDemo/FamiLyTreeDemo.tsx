@@ -533,13 +533,16 @@ const FamilyTreeDemo: React.FC = () => {
 
   const loadAlbumImages = async (albumId: string) => {
     try {
+      console.log('[FamilyTreeDemo] Loading images for album:', albumId);
       setLoading(true);
       const images = await imageService.getImagesByAlbum(albumId);
-      setAlbumImages(images);
-      console.log('Album images loaded:', images);
+      console.log('[FamilyTreeDemo] Images received:', images);
+      console.log('[FamilyTreeDemo] Number of images:', images?.length || 0);
+      setAlbumImages(images || []);
     } catch (error: any) {
-      console.error('Error loading album images:', error);
+      console.error('[FamilyTreeDemo] Error loading album images:', error);
       setError(error.message || 'Failed to load album images');
+      setAlbumImages([]); // Clear images on error
     } finally {
       setLoading(false);
     }
@@ -564,13 +567,20 @@ const FamilyTreeDemo: React.FC = () => {
       });
       console.log('[Upload Handler] Upload successful');
 
-      // Refresh images or show success message
-      // await fetchImages(); // if you have a function to refresh
-      // setUploadSuccess(true); // if you have success state
+      // Close modal
+      setShowUploadModal(false);
+
+      // Refresh album images after successful upload
+      if (selectedAlbum && selectedAlbum.id === imageData.albumId) {
+        await loadAlbumImages(imageData.albumId);
+      }
+
+      // Show success notification
+      showLocalToast('Upload ảnh thành công', 'success');
 
     } catch (error) {
       console.error('[Upload Handler] Upload failed:', error);
-      // Handle error (show notification, etc.)
+      showLocalToast('Upload ảnh thất bại', 'error');
     }
   };
   // Delete image
