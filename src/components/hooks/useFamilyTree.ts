@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import familyService from '../../services/familyService';
+
 import { CreateTreeRequest, UpdateTreeRequest } from '../../types/tree';
 import { CreateAlbumRequest, UpdateAlbumRequest } from '../../types/album';
 import { AddChildRequest, AddParentRequest, CreateRootPersonRequest, AddSpouseRequest } from '../../types/relation';
 import { UploadImageRequest } from '../../types/image';
+import { albumService, imageService, personService, relationService, treeService } from '@/services';
 
 export const useFamilyTree = () => {
     const [loading, setLoading] = useState(false);
@@ -22,7 +23,7 @@ export const useFamilyTree = () => {
         clearMessages();
 
         try {
-            const result = await familyService.createTree(data);
+            const result = await treeService.createTree(data);
             console.log('Tree created:', result);
             setSuccessMessage('Tạo cây gia phả thành công!');
             return result;
@@ -41,7 +42,7 @@ export const useFamilyTree = () => {
         clearMessages();
 
         try {
-            const result = await familyService.getUserTrees(userId);
+            const result = await treeService.getUserTrees(userId);
             console.log('User trees fetched:', result);
             setSuccessMessage('Hiển thị danh sách cây thành công!');
             return result;
@@ -60,7 +61,7 @@ export const useFamilyTree = () => {
         clearMessages();
 
         try {
-            const result = await familyService.updateTree(treeId, data);
+            const result = await treeService.updateTree(treeId, data.name);
             console.log('Tree updated:', result);
             setSuccessMessage('Cập nhật thông tin cây thành công!');
             return result;
@@ -79,13 +80,13 @@ export const useFamilyTree = () => {
         clearMessages();
 
         try {
-            const result = await familyService.deleteTree(treeId);
+            const result = await treeService.deleteTree(treeId);
             console.log('Tree deleted:', result);
-            // Không hiển thị thông báo ở đây vì familyService.deleteTree() đã hiển thị rồi
+            // Không hiển thị thông báo ở đây vì treeService.deleteTree() đã hiển thị rồi
             return result;
         } catch (err: any) {
             console.error('Error deleting tree:', err);
-            // Không set error ở đây vì familyService.deleteTree() đã xử lý rồi
+            // Không set error ở đây vì treeService.deleteTree() đã xử lý rồi
             throw err;
         } finally {
             setLoading(false);
@@ -98,7 +99,7 @@ export const useFamilyTree = () => {
         clearMessages();
 
         try {
-            const result = await familyService.getTreeRelations(treeId);
+            const result = await relationService.getTreeRelations(treeId);
             console.log('Tree relations fetched:', result);
             setSuccessMessage('Lấy thông tin cây thành công!');
             return result;
@@ -117,7 +118,7 @@ export const useFamilyTree = () => {
         clearMessages();
 
         try {
-            const result = await familyService.getPersonTreeRelations(treeId, personId);
+            const result = await relationService.getPersonTreeRelations(treeId, personId);
             console.log('Person tree relations fetched:', result);
             setSuccessMessage('Lấy thông tin người thành công!');
             return result;
@@ -136,7 +137,7 @@ export const useFamilyTree = () => {
         clearMessages();
 
         try {
-            const result = await familyService.addChild(treeId, data);
+            const result = await relationService.addChild(treeId, data);
             console.log('Child added:', result);
             setSuccessMessage('Thêm con thành công!');
             return result;
@@ -155,7 +156,7 @@ export const useFamilyTree = () => {
         clearMessages();
 
         try {
-            const result = await familyService.addParent(treeId, data);
+            const result = await relationService.addParent(treeId, data);
             console.log('Parent added:', result);
             setSuccessMessage('Thêm cha/mẹ thành công!');
             return result;
@@ -174,7 +175,7 @@ export const useFamilyTree = () => {
         clearMessages();
 
         try {
-            const result = await familyService.createRootPerson(treeId, data);
+            const result = await relationService.createRootPerson(treeId, data);
             console.log('Root person created:', result);
             setSuccessMessage('Tạo người gốc thành công!');
             return result;
@@ -193,7 +194,7 @@ export const useFamilyTree = () => {
         clearMessages();
 
         try {
-            const result = await familyService.addSpouse(treeId, spouseId, data);
+            const result = await relationService.addSpouse(treeId, spouseId, data);
             console.log('Spouse added:', result);
             setSuccessMessage('Thêm vợ/chồng thành công!');
             return result;
@@ -212,7 +213,7 @@ export const useFamilyTree = () => {
         clearMessages();
 
         try {
-            const result = await familyService.createAlbum(data);
+            const result = await albumService.createAlbum(data);
             console.log('Album created:', result);
             setSuccessMessage('Tạo album thành công!');
             return result;
@@ -231,7 +232,7 @@ export const useFamilyTree = () => {
         clearMessages();
 
         try {
-            const result = await familyService.updateAlbum(albumId, data);
+            const result = await albumService.updateAlbum(albumId, data.name);
             console.log('Album updated:', result);
             setSuccessMessage('Cập nhật album thành công!');
             return result;
@@ -250,7 +251,7 @@ export const useFamilyTree = () => {
         clearMessages();
 
         try {
-            const result = await familyService.deleteAlbum(albumId);
+            const result = await albumService.deleteAlbum(albumId);
             console.log('Album deleted:', result);
             setSuccessMessage('Xóa album thành công!');
             return result;
@@ -269,7 +270,7 @@ export const useFamilyTree = () => {
         clearMessages();
 
         try {
-            const result = await familyService.getUserAlbums(userId);
+            const result = await albumService.getUserAlbums(userId);
             console.log('User albums fetched:', result);
             setSuccessMessage('Lấy danh sách album thành công!');
             return result;
@@ -288,7 +289,7 @@ export const useFamilyTree = () => {
         clearMessages();
 
         try {
-            const result = await familyService.getImage(imageId);
+            const result = await imageService.getImage(imageId);
             console.log('Image fetched:', result);
             setSuccessMessage('Lấy ảnh thành công!');
             return result;
@@ -307,7 +308,7 @@ export const useFamilyTree = () => {
         clearMessages();
 
         try {
-            const result = await familyService.getImagesByAlbum(albumId);
+            const result = await imageService.getImagesByAlbum(albumId);
             console.log('Images by album fetched:', result);
             setSuccessMessage('Lấy danh sách ảnh theo album thành công!');
             return result;
@@ -326,7 +327,7 @@ export const useFamilyTree = () => {
         clearMessages();
         console.log("uploadImage data:", data);
         try {
-            const result = await familyService.uploadImage(data);
+            const result = await imageService.uploadImage(data);
             console.log('Image uploaded:', result);
             setSuccessMessage('Upload ảnh thành công!');
             return result;
@@ -345,7 +346,7 @@ export const useFamilyTree = () => {
         clearMessages();
 
         try {
-            const result = await familyService.deleteImage(imageId);
+            const result = await imageService.deleteImage(imageId);
             console.log('Image deleted:', result);
             setSuccessMessage('Xóa ảnh thành công!');
             return result;
@@ -364,7 +365,7 @@ export const useFamilyTree = () => {
         clearMessages();
 
         try {
-            const result = await familyService.deletePerson(personId);
+            const result = await personService.deletePerson(personId);
             console.log('Person deleted:', result);
             setSuccessMessage('Xóa người thành công!');
             return result;

@@ -9,9 +9,6 @@ export { default as relationService } from './relationService';
 export { vnpayService } from './vnpayService';
 export { mockDataService } from './mockDataService';
 
-// Keep familyService for backward compatibility (deprecated)
-export { default as familyService } from './familyService';
-
 // Export individual services types
 export * from './authService';
 export * from './userService';

@@ -1,8 +1,8 @@
 import React, { Children, useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { FamilyMember } from '../../types/family';
-import familyService from '../../services/familyService';
-import { personService } from '../../services';
+
+import { personService, relationService } from '../../services';
 import { getPersonAvatar } from '../../assets/avatars';
 import { formatDateCompact } from '../../utils/familyUtils';
 import cameraIcon from '../../assets/avatars/camera.png';
@@ -157,7 +157,7 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
             console.log(`[PREPROCESS] Child ${index}: Converting ID "${childIdOrObject}" to object...`);
 
             // Get child's full tree relations (includes their spouses and children)
-            const childTreeData = await familyService.getPersonTreeRelations(treeId, childIdOrObject);
+            const childTreeData = await relationService.getPersonTreeRelations(treeId, childIdOrObject);
 
             if (childTreeData) {
               console.log(`[PREPROCESS] Child ${index} SUCCESS:`, {
@@ -187,7 +187,7 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
 
             try {
               // Even if it's an object, we need to get full relations from API
-              const childTreeData = await familyService.getPersonTreeRelations(treeId, childIdOrObject.id);
+              const childTreeData = await relationService.getPersonTreeRelations(treeId, childIdOrObject.id);
 
               if (childTreeData) {
                 console.log(`[PREPROCESS] Child ${index} relations fetched:`, {
@@ -453,7 +453,7 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
       }
 
       console.log('D3FamilyTreeView - Loading tree data for treeId:', treeId);
-      const result = await familyService.getTreeRelations(treeId);
+      const result = await relationService.getTreeRelations(treeId);
       console.log('D3FamilyTreeView - Tree data loaded:', result);
 
       if (result.code === 200) {

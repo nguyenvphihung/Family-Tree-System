@@ -8,9 +8,9 @@ import AddSpouseModal from "../../components/family-tree/AddSpouseModal";
 import AddRootModal from "../../components/family-tree/AddRootModal";
 import DeleteConfirmModal from "../../components/family-tree/DeleteConfirmModal";
 import DeleteTreeConfirmModal from "../../components/family-tree/DeleteTreeConfirmModal";
-import familyService from "../../services/familyService";
+
 import { useAuth } from "../../components/hooks/useAuth";
-import { imageService } from "@/services";
+import { imageService, treeService, personService, relationService, albumService } from "@/services";
 
 const FamilyTreeDemo: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -26,7 +26,7 @@ const FamilyTreeDemo: React.FC = () => {
   const handleUpdateTree = async (treeId: string, treeData: { name: string }) => {
     try {
       setLoading(true);
-      await familyService.updateTree(treeId, { name: treeData.name });
+      await treeService.updateTree(treeId, treeData.name);
       await getTrees();
     } catch (error: any) {
       setError(error.message || 'Failed to update tree');
@@ -128,7 +128,7 @@ const FamilyTreeDemo: React.FC = () => {
 
   const getTrees = async () => {
     try {
-      const trees = await familyService.getTrees();
+      const trees = await treeService.getTrees();
       console.log('User trees loaded:', trees);
 
       setUserTrees(trees);
@@ -160,7 +160,7 @@ const FamilyTreeDemo: React.FC = () => {
   // Hàm chỉ refresh danh sách cây mà không tự động chọn cây đầu tiên
   const refreshTreeList = async () => {
     try {
-      const trees = await familyService.getTrees();
+      const trees = await treeService.getTrees();
       console.log('Tree list refreshed:', trees);
       setUserTrees(trees);
 
@@ -236,7 +236,7 @@ const FamilyTreeDemo: React.FC = () => {
       setError(null);
 
       // Load tree relations data
-      const data = await familyService.getTreeRelations(treeId, 7);
+      const data = await relationService.getTreeRelations(treeId, 7);
       console.log('Tree data loaded for tree:', treeId, data);
       console.log('Data type:', typeof data, 'Data length:', Array.isArray(data) ? data.length : 'Not array');
 
@@ -275,7 +275,7 @@ const FamilyTreeDemo: React.FC = () => {
 
     try {
       setLoading(true);
-      const data = await familyService.getPersonTreeRelations(currentTreeId, personId, 7);
+      const data = await relationService.getPersonTreeRelations(currentTreeId, personId, 7);
       console.log('Person tree relations loaded:', data);
       setPersonTreeData(data);
       setShowPersonTreeModal(true);
@@ -357,7 +357,7 @@ const FamilyTreeDemo: React.FC = () => {
   const handleCreateTree = async (treeData: any) => {
     try {
       setLoading(true);
-      await familyService.createTree({
+      await treeService.createTree({
         name: treeData.name
       });
       // Refresh user trees and switch to the new tree
@@ -417,7 +417,7 @@ const FamilyTreeDemo: React.FC = () => {
   const loadUserAlbums = async (userId: string) => {
     try {
       setLoading(true);
-      const albums = await familyService.getUserAlbums(userId);
+      const albums = await albumService.getUserAlbums(userId);
       setUserAlbums(albums);
       console.log('User albums loaded:', albums);
     } catch (error: any) {
@@ -433,7 +433,7 @@ const FamilyTreeDemo: React.FC = () => {
     try {
       setLoading(true);
       if (!user?.id) throw new Error('User is not authenticated');
-      const newAlbum = await familyService.createAlbum({
+      const newAlbum = await albumService.createAlbum({
         userId: user.id,
         name: albumData.name
       });
@@ -456,9 +456,7 @@ const FamilyTreeDemo: React.FC = () => {
   const handleUpdateAlbum = async (albumId: string, albumData: any) => {
     try {
       setLoading(true);
-      const updatedAlbum = await familyService.updateAlbum(albumId, {
-        name: albumData.name
-      });
+      const updatedAlbum = await albumService.updateAlbum(albumId, albumData.name);
 
       if (user?.id) {
         await loadUserAlbums(user.id);
@@ -475,7 +473,7 @@ const FamilyTreeDemo: React.FC = () => {
   const handleDeleteAlbum = async (albumId: string) => {
     try {
       setLoading(true);
-      await familyService.deleteAlbum(albumId);
+      await albumService.deleteAlbum(albumId);
       if (user?.id) {
         await loadUserAlbums(user.id);
       }
@@ -515,7 +513,7 @@ const FamilyTreeDemo: React.FC = () => {
     // 2) Nếu không thấy theo tên, thử coi chuỗi là ID và gọi API
     try {
       setLoading(true);
-      const album = await familyService.getAlbumById(q);
+      const album = await albumService.getAlbumById(q);
       if (album) {
         const exists = userAlbums.some((a: any) => a.id === album.id);
         if (!exists) setUserAlbums([album, ...userAlbums]);
@@ -536,7 +534,7 @@ const FamilyTreeDemo: React.FC = () => {
   const loadAlbumImages = async (albumId: string) => {
     try {
       setLoading(true);
-      const images = await familyService.getImagesByAlbum(albumId);
+      const images = await imageService.getImagesByAlbum(albumId);
       setAlbumImages(images);
       console.log('Album images loaded:', images);
     } catch (error: any) {
@@ -579,7 +577,7 @@ const FamilyTreeDemo: React.FC = () => {
   const handleDeleteImage = async (imageId: string) => {
     try {
       setLoading(true);
-      await familyService.deleteImage(imageId);
+      await imageService.deleteImage(imageId);
 
       // Refresh album images if album is selected
       if (selectedAlbum) {
@@ -597,7 +595,7 @@ const FamilyTreeDemo: React.FC = () => {
   const loadImageDetail = async (imageId: string) => {
     try {
       setLoading(true);
-      const imageData = await familyService.getImage(imageId);
+      const imageData = await imageService.getImage(imageId);
       console.log('Image detail loaded:', imageData);
       setSelectedImage(imageData);
       setShowImageDetailModal(true);
@@ -644,8 +642,8 @@ const FamilyTreeDemo: React.FC = () => {
 
       const personName = selectedPerson.name;
 
-      // Gọi API xóa thông qua familyService
-      await familyService.deletePerson(selectedPerson.id);
+      // Gọi API xóa thông qua personService
+      await personService.deletePerson(selectedPerson.id);
 
       // Đóng modal
       setShowDeleteConfirmModal(false);
@@ -693,7 +691,7 @@ const FamilyTreeDemo: React.FC = () => {
       };
 
       // Call API to add child
-      await familyService.addChild(currentTreeId, addChildRequest);
+      await relationService.addChild(currentTreeId, addChildRequest);
 
       // Close modal
       setShowAddChildModal(false);
@@ -733,7 +731,7 @@ const FamilyTreeDemo: React.FC = () => {
         }
       };
 
-      await familyService.addParent(currentTreeId, addParentRequest);
+      await relationService.addParent(currentTreeId, addParentRequest);
 
       // Close modal
       setShowAddParentModal(false);
@@ -773,7 +771,7 @@ const FamilyTreeDemo: React.FC = () => {
         divorceDate: spouseData.divorceDate || null
       };
 
-      await familyService.addSpouse(currentTreeId, selectedPerson.id, addSpouseRequest);
+      await relationService.addSpouse(currentTreeId, selectedPerson.id, addSpouseRequest);
 
       // Close modal
       setShowAddSpouseModal(false);
@@ -805,7 +803,7 @@ const FamilyTreeDemo: React.FC = () => {
         birthPlace: rootData.birthPlace || ""
       };
 
-      await familyService.createRootPerson(currentTreeId, createRootRequest);
+      await relationService.createRootPerson(currentTreeId, createRootRequest);
 
       // Close modal first
       setShowAddRootModal(false);
