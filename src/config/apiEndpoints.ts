@@ -52,7 +52,7 @@ export const API_ENDPOINTS = {
     DELETE_PERSON: (personId: string) => `/persons/${personId}`, // DELETE /persons/{personId} - Xoá 1 người
     UPDATE_DEATH_INFO: (personId: string) => `/persons/${personId}/death-info`, // PATCH /persons/{personId}/death-info - Cập nhật thông tin người mất
     UPDATE_BIRTH_INFO: (personId: string) => `/persons/${personId}/birth-info`, // PATCH /persons/{personId}/birth-info - Cập nhật thông tin khai sinh
-    UPLOAD_AVATAR: '/persons/upload-avatar', // PATCH /persons/upload-avatar - Thêm/cập nhật avatar
+    UPLOAD_AVATAR: (personId: string) => `/persons/${personId}/upload-avatar`, // PATCH /persons/{personId}/upload-avatar - Thêm/cập nhật avatar
   },
 
   // Album Management endpoints (album-controller)
@@ -68,7 +68,7 @@ export const API_ENDPOINTS = {
   IMAGES: {
     GET_IMAGE: (imageId: string) => `/images/${imageId}`, // GET /images/{imageId} - Lấy ảnh theo imageId
     GET_IMAGES_BY_ALBUM: '/images/by-album', // GET /images/by-album?albumId={albumId} - Lấy ảnh theo albumId
-    UPLOAD_IMAGE: '/images/upload', // POST /images/upload?name={name}&albumId={albumId} - Upload ảnh
+    UPLOAD_IMAGE: '/images/upload', // POST /images/upload?albumId={albumId} - Upload ảnh (body: { file: string })
     DELETE_IMAGE: (imageId: string) => `/images/${imageId}`, // DELETE /images/{imageId} - Xóa ảnh
   },
 

@@ -27,7 +27,6 @@ export interface GetImagesByAlbumResponse {
 // ==================== UPLOAD IMAGE ====================
 export interface UploadImageRequest {
     file: string; // base64 file content
-    name: string; // query parameter
     albumId: string; // query parameter
     originalFile?: File; // optional raw file for multipart fallback (browser only)
 }

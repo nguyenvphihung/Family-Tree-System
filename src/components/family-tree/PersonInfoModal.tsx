@@ -17,7 +17,9 @@ const PersonInfoModal: React.FC<PersonInfoModalProps> = ({
 }) => {
   if (!person) return null;
 
-
+  // Debug: Log person data to check death info
+  console.log('PersonInfoModal - Person data:', person);
+  console.log('PersonInfoModal - Death date:', person.deathDate);
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Không rõ';
@@ -34,7 +36,7 @@ const PersonInfoModal: React.FC<PersonInfoModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y">
         <DialogHeader>
           <DialogTitle>Thông tin chi tiết: {person.name}</DialogTitle>
         </DialogHeader>
@@ -76,7 +78,19 @@ const PersonInfoModal: React.FC<PersonInfoModalProps> = ({
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Thông tin bổ sung</h3>
                 <div className="space-y-2 text-sm">
-                  {/* <div><span className="font-medium">Tree ID:</span> {person.treeId || 'Không rõ'}</div> */}
+                  {/* Thông tin người mất */}
+                  {(person.deathDate || person.deathPlace || person.gravePlace) && (
+                    <div className="border-t pt-2 mt-2">
+                      <div className="font-medium text-red-600 mb-1">Thông tin người mất:</div>
+                      <div><span className="font-medium">Ngày mất:</span> {formatDate(person.deathDate)}</div>
+                      {person.deathPlace && (
+                        <div><span className="font-medium">Nơi mất:</span> {person.deathPlace}</div>
+                      )}
+                      {person.gravePlace && (
+                        <div><span className="font-medium">Nơi an táng:</span> {person.gravePlace}</div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -137,11 +151,7 @@ const PersonInfoModal: React.FC<PersonInfoModalProps> = ({
             )}
         </div>
 
-        <div className="flex justify-end pt-4">
-          <Button onClick={onClose}>
-            Đóng
-          </Button>
-        </div>
+
       </DialogContent>
     </Dialog>
   );

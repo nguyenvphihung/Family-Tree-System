@@ -286,11 +286,13 @@ class FamilyService {
     }
   }
 
-  // POST /images/upload - Upload base64 image to album with query name & albumId
+  // POST /images/upload - Upload base64 image to album
+  // Parameters: albumId (query param only)
+  // Request body: { file: string }
   async uploadImage(data: UploadImageRequest): Promise<UploadImageResponse['data']> {
     try {
-      const { file, name, albumId } = data;
-      const endpoint = `${API_ENDPOINTS.IMAGES.UPLOAD_IMAGE}?name=${encodeURIComponent(name)}&albumId=${encodeURIComponent(albumId)}`;
+      const { file, albumId } = data;
+      const endpoint = `${API_ENDPOINTS.IMAGES.UPLOAD_IMAGE}?albumId=${encodeURIComponent(albumId)}`;
       if (!file) {
         throw new Error('No file provided');
       }

@@ -10,6 +10,7 @@ export interface PersonInfo {
     birthPlace: string;
     deathPlace?: string;
     gravePlace?: string;
+    deathDate?: string;
     generation: string;
     createdAt: string;
 }
@@ -48,9 +49,9 @@ export interface DeletePersonResponse {
 
 // ==================== UPDATE DEATH INFO ====================
 export interface UpdateDeathInfoRequest {
-    deathPlace: string;
-    gravePlace: string;
-    deathDate: string;
+    deathPlace?: string;
+    gravePlace?: string;
+    deathDate?: string; // ISO DateTime format: "2025-10-21T06:07:17.576Z"
 }
 
 export interface UpdateDeathInfoResponse {
@@ -62,7 +63,7 @@ export interface UpdateDeathInfoResponse {
 
 // ==================== UPDATE BIRTH INFO ====================
 export interface UpdateBirthInfoRequest {
-    birthLocation: string;
+    birthLocation?: string;
 }
 
 export interface UpdateBirthInfoResponse {

@@ -37,11 +37,14 @@ class ImageService {
     }
 
     // POST /images/upload - Upload ảnh
+    // Parameters: albumId (query param)
+    // Request body: { file: string }
     async uploadImage(data: UploadImageRequest): Promise<Image> {
         try {
-            const { file, name, albumId } = data;
-            const endpoint = `${API_ENDPOINTS.IMAGES.UPLOAD_IMAGE}?name=${encodeURIComponent(name)}&albumId=${encodeURIComponent(albumId)}`;
-
+            const { file, albumId } = data;
+            const endpoint = `${API_ENDPOINTS.IMAGES.UPLOAD_IMAGE}?albumId=${encodeURIComponent(albumId)}`;
+            console.log('Uploading image to endpoint:', endpoint);
+            console.log('File data length:', file.length);
             if (!file) {
                 throw new Error('No file provided');
             }

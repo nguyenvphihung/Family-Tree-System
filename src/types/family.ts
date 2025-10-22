@@ -9,6 +9,9 @@ export interface FamilyMember {
   gender: 'M' | 'F';
   birthday?: string | null;
   birthPlace?: string | null;
+  deathPlace?: string | null;
+  gravePlace?: string | null;
+  deathDate?: string | null; // Thêm trường ngày mất
   generation?: number;
   createdAt?: string;
   spouses?: FamilyMember[];

@@ -1,16 +1,9 @@
 import { useState } from 'react';
 import familyService from '../../services/familyService';
-import {
-    CreateTreeRequest,
-    UpdateTreeRequest,
-    CreateAlbumRequest,
-    UpdateAlbumRequest,
-    AddChildRequest,
-    AddParentRequest,
-    CreateRootPersonRequest,
-    AddSpouseRequest,
-    UploadImageRequest
-} from '../../types/family';
+import { CreateTreeRequest, UpdateTreeRequest } from '../../types/tree';
+import { CreateAlbumRequest, UpdateAlbumRequest } from '../../types/album';
+import { AddChildRequest, AddParentRequest, CreateRootPersonRequest, AddSpouseRequest } from '../../types/relation';
+import { UploadImageRequest } from '../../types/image';
 
 export const useFamilyTree = () => {
     const [loading, setLoading] = useState(false);

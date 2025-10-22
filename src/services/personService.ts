@@ -12,10 +12,18 @@ class PersonService {
     // GET /persons?personId={personId} - Lấy thông tin 1 người
     async getPerson(personId: string): Promise<PersonInfo> {
         try {
-            const result = await makeRequest(API_ENDPOINTS.PERSONS.GET_PERSON, 'GET', null, null, { personId });
+            console.log('[GetPerson] Request for personId:', personId);
+            const result = await makeRequest(
+                `${API_ENDPOINTS.PERSONS.GET_PERSON}?personId=${personId}`,
+                'GET',
+                null,
+                'response-area'
+            );
+            console.log('[GetPerson] API response:', result);
             if (result.error) {
                 throw new Error(result.error.message);
             }
+            console.log('[GetPerson] Returned data:', result.data.data);
             return result.data.data;
         } catch (error: any) {
             throw error;
@@ -79,36 +87,42 @@ class PersonService {
     // PATCH /persons/{personId}/birth-info - Cập nhật thông tin về khai sinh
     async updateBirthInfo(personId: string, data: UpdateBirthInfoRequest): Promise<PersonInfo> {
         try {
+            console.log('[UpdateBirthInfo] Request data:', { personId, data });
             const result = await makeRequest(
                 API_ENDPOINTS.PERSONS.UPDATE_BIRTH_INFO(personId),
                 'PATCH',
                 data,
                 'response-area'
             );
+            console.log('[UpdateBirthInfo] API response:', result);
             if (result.error) {
                 throw new Error(result.error.message);
             }
+            console.log('[UpdateBirthInfo] Returned data:', result.data.data);
             return result.data.data;
         } catch (error: any) {
             throw error;
         }
     }
 
-    // PATCH /persons/upload-avatar?personId={personId} - Thêm hoặc cập nhật avatar
+    // PATCH /persons/{personId}/upload-avatar - Thêm hoặc cập nhật avatar
     async uploadAvatar(personId: string, data: UploadAvatarRequest): Promise<PersonInfo> {
         try {
+            console.log('[UploadAvatar] Request data:', { personId, data });
             const result = await makeRequest(
-                API_ENDPOINTS.PERSONS.UPLOAD_AVATAR,
+                API_ENDPOINTS.PERSONS.UPLOAD_AVATAR(personId),
                 'PATCH',
                 data,
-                'response-area',
-                { personId }
+                'response-area'
             );
+            console.log('[UploadAvatar] API response:', result);
             if (result.error) {
                 throw new Error(result.error.message);
             }
+            console.log('[UploadAvatar] Returned data:', result.data.data);
             return result.data.data;
         } catch (error: any) {
+            console.error('[UploadAvatar] Error:', error);
             throw error;
         }
     }

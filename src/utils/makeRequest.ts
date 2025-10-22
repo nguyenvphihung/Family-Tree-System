@@ -48,7 +48,7 @@ export async function makeRequest(endpoint: string, method: string, data: any, r
         }
 
         // Lấy thông báo thành công từ server response
-        const serverMessage = response.data.message || 'Thao tác thành công';
+        const serverMessage = response.data.message || 'Cập nhật thành công';
         const successMessage = `${serverMessage}`;
 
         // Hiển thị message từ server trong console để theo dõi

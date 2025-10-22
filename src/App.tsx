@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import AppRouter from "./routes";
+import { Toaster } from "./components/ui/toaster";
 
 function App() {
   const [currentTheme, setCurrentTheme] = useState('family-tree');
@@ -41,6 +42,7 @@ function App() {
   return (
     <div className={`min-h-screen ${currentTheme === 'gradient-animated' ? 'bg-gradient-animated' : `bg-${currentTheme}`}`}>
       <AppRouter />
+      <Toaster />
     </div>
   );
 }

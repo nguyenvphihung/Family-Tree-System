@@ -6,4 +6,6 @@ export { default as AddRootModal } from './AddRootModal';
 export { default as PersonInfoModal } from './PersonInfoModal';
 export { default as DeleteConfirmModal } from './DeleteConfirmModal';
 export { default as ContextMenu } from './ContextMenu';
+export { default as EditPersonModal } from './EditPersonModal';
+export { default as DeathInfoModal } from './DeathInfoModal';
 export type { FamilyMember } from '../../types/family';

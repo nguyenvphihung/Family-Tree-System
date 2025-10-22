@@ -25,7 +25,7 @@ const FamilyTreeDemo: React.FC = () => {
   const handleUpdateTree = async (treeId: string, treeData: { name: string }) => {
     try {
       setLoading(true);
-      await familyService.updateTree(treeId, { treeId, name: treeData.name });
+      await familyService.updateTree(treeId, { name: treeData.name });
       await getTrees();
     } catch (error: any) {
       setError(error.message || 'Failed to update tree');
@@ -456,7 +456,6 @@ const FamilyTreeDemo: React.FC = () => {
     try {
       setLoading(true);
       const updatedAlbum = await familyService.updateAlbum(albumId, {
-        albumId: albumId,
         name: albumData.name
       });
 
@@ -561,7 +560,6 @@ const FamilyTreeDemo: React.FC = () => {
       setLoading(true);
       const uploadedImage = await familyService.uploadImage({
         file: imageData.file, // base64 content
-        name: imageData.name,
         albumId: imageData.albumId
       });
 
@@ -1189,29 +1187,6 @@ const FamilyTreeDemo: React.FC = () => {
           </div>
           {/* Sections */}
           <div className="space-y-2 flex-1">
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-2">
-              <div className="flex items-center justify-between mb-1">
-                <h4 className="font-bold text-gray-900 text-xs">DISCOVERIES</h4>
-                <span className="bg-rose-100 text-rose-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                  1
-                </span>
-              </div>
-              <div className="flex items-center space-x-2 text-[11px] text-gray-600">
-                <svg
-                  className="w-3.5 h-3.5 text-rose-500"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <span className="font-medium">One consistency issue</span>
-              </div>
-            </div>
-
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 flex items-center justify-between">
               <h4 className="font-bold text-gray-900 text-xs">
                 PHOTOS & VIDEOS
@@ -1452,6 +1427,12 @@ const FamilyTreeDemo: React.FC = () => {
                 onDeletePerson={(person) => {
                   setSelectedPerson(person);
                   setShowDeleteConfirmModal(true);
+                }}
+                onPersonUpdated={(updatedPerson) => {
+                  // Update selectedPerson if it's the same person being updated
+                  if (selectedPerson && selectedPerson.id === updatedPerson.id) {
+                    setSelectedPerson(updatedPerson);
+                  }
                 }}
               />
             )}
@@ -1930,7 +1911,7 @@ const FamilyTreeDemo: React.FC = () => {
                   {albumImages.map((image: any) => (
                     <div key={image.id} className="relative group">
                       <img
-                        src={`data:image/jpeg;base64,${image.base64}`}
+                        src={image.url}
                         alt={image.name}
                         className="w-full h-24 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={() => loadImageDetail(image.id)}
@@ -1973,10 +1954,8 @@ const FamilyTreeDemo: React.FC = () => {
                     ? base64WithPrefix.split(',')[1]
                     : base64WithPrefix; // Gửi base64 thuần theo API
 
-                  // Upload ảnh vào album (Photo Manager)
                   handleUploadImage({
                     file: base64Only,
-                    name: (formData.get('name') as string) || file.name,
                     albumId: selectedAlbum.id
                   });
                 };
@@ -1990,15 +1969,6 @@ const FamilyTreeDemo: React.FC = () => {
                   accept="image/*"
                   required
                   className="w-full border border-gray-300 rounded px-3 py-2"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Image Name (optional)</label>
-                <input
-                  type="text"
-                  name="name"
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                  placeholder="Enter image name"
                 />
               </div>
               <div className="flex justify-end space-x-2">
@@ -2143,10 +2113,10 @@ const FamilyTreeDemo: React.FC = () => {
               </button>
             </div>
             <div className="space-y-4">
-              {selectedImage.base64 && (
+              {selectedImage.url && (
                 <div className="text-center">
                   <img
-                    src={`data:image/jpeg;base64,${selectedImage.base64}`}
+                    src={selectedImage.url}
                     alt={selectedImage.name}
                     className="max-w-full h-auto rounded-lg shadow-md"
                   />
@@ -2179,3 +2149,4 @@ const FamilyTreeDemo: React.FC = () => {
 };
 
 export default FamilyTreeDemo;
+
