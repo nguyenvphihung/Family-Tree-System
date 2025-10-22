@@ -66,12 +66,11 @@ export const API_ENDPOINTS = {
 
   // Image Management endpoints (image-controller)
   IMAGES: {
-    GET_IMAGE: (imageId: string) => `/images/${imageId}`, // GET /images/{imageId} - Lấy ảnh theo imageId
-    GET_IMAGES_BY_ALBUM: '/images/by-album', // GET /images/by-album?albumId={albumId} - Lấy ảnh theo albumId
-    UPLOAD_IMAGE: '/images/upload', // POST /images/upload?albumId={albumId} - Upload ảnh (body: { file: string })
-    DELETE_IMAGE: (imageId: string) => `/images/${imageId}`, // DELETE /images/{imageId} - Xóa ảnh
+    GET_IMAGE: (imageId: string) => `/images/${imageId}`,
+    GET_IMAGES_BY_ALBUM: '/images/by-album',
+    UPLOAD_IMAGE: (albumId: string) => `/images/upload?albumId=${albumId}`,
+    DELETE_IMAGE: (imageId: string) => `/images/${imageId}`,
   },
-
   // Onboarding endpoints
   ONBOARDING: {
     COMPLETE: '/onboarding/complete',

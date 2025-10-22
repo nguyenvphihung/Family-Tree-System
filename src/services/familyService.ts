@@ -276,41 +276,81 @@ class FamilyService {
   // GET /images/by-album - Get images by albumId
   async getImagesByAlbum(albumId: string): Promise<GetImagesByAlbumResponse['data']> {
     try {
+      console.log('[FamilyService] getImagesByAlbum called with:', {
+        albumId,
+        endpoint: API_ENDPOINTS.IMAGES.GET_IMAGES_BY_ALBUM,
+        fullUrl: `${API_ENDPOINTS.IMAGES.GET_IMAGES_BY_ALBUM}?albumId=${albumId}`
+      });
       const result = await makeRequest(API_ENDPOINTS.IMAGES.GET_IMAGES_BY_ALBUM, 'GET', null, null, { albumId });
       if (result.error) {
+        console.error('[FamilyService] getImagesByAlbum error:', result.error);
         throw new Error(result.error.message);
       }
+      console.log('[FamilyService] getImagesByAlbum success:', result.data.data);
       return result.data.data;
     } catch (error: any) {
+      console.error('[FamilyService] getImagesByAlbum exception:', error);
       throw error;
     }
   }
 
-  // POST /images/upload - Upload base64 image to album
-  // Parameters: albumId (query param only)
-  // Request body: { file: string }
+  // POST /images/upload - Upload image using FormData
+  // Parameters: albumId (query param)
+  // Request body: FormData with 'file' field
+  // Response: { data: { id, name, url, albumId } }
   async uploadImage(data: UploadImageRequest): Promise<UploadImageResponse['data']> {
     try {
       const { file, albumId } = data;
+
       const endpoint = `${API_ENDPOINTS.IMAGES.UPLOAD_IMAGE}?albumId=${encodeURIComponent(albumId)}`;
+
       if (!file) {
         throw new Error('No file provided');
       }
 
-      // API spec requires JSON body { file }
-      const body = { file };
+      console.log('[FamilyService] uploadImage:', {
+        albumId,
+        fileType: typeof file,
+        fileLength: typeof file === 'string' ? file.length : file.size
+      });
 
-      const result = await makeRequest(endpoint, 'POST', body, 'response-area');
+      // Create FormData for multipart upload (like HTML test)
+      const formData = new FormData();
+
+      if (typeof file === 'string') {
+        // Convert base64 string to Blob
+        const base64Data = file.split(',')[1] || file;
+        const mimeMatch = file.match(/data:([^;]+);/);
+        const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: mimeType });
+
+        formData.append('file', blob, 'image.jpg');
+        console.log('[FamilyService] Converted base64 to Blob:', { size: blob.size, type: mimeType });
+      } else {
+        // Already a File object
+        formData.append('file', file);
+        console.log('[FamilyService] Using File object:', { name: file.name, size: file.size });
+      }
+
+      const result = await makeRequest(endpoint, 'POST', formData, 'response-area');
       if (result.error) {
+        console.error('[FamilyService] uploadImage error:', result.error);
         throw new Error(result.error.message);
       }
+      console.log('[FamilyService] uploadImage success:', result.data?.data ?? result.data);
       return result.data?.data ?? result.data;
     } catch (error: any) {
+      console.error('[FamilyService] uploadImage exception:', error);
       throw error;
     }
-  }
-
-  // DELETE /images/{imageId} - Delete image by ID
+  }  // DELETE /images/{imageId} - Delete image by ID
   async deleteImage(imageId: string): Promise<DeleteImageResponse['data']> {
     try {
       const result = await makeRequest(API_ENDPOINTS.IMAGES.DELETE_IMAGE(imageId), 'DELETE', null, 'response-area');

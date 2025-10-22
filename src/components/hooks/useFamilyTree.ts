@@ -324,7 +324,7 @@ export const useFamilyTree = () => {
     const uploadImage = async (data: UploadImageRequest) => {
         setLoading(true);
         clearMessages();
-
+        console.log("uploadImage data:", data);
         try {
             const result = await familyService.uploadImage(data);
             console.log('Image uploaded:', result);

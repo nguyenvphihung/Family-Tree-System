@@ -3,9 +3,8 @@
 export interface Image {
     id: string;
     name: string;
-    data: string;
+    url: string;       // Image URL from server
     albumId: string;
-    base64: string;
 }
 
 // ==================== GET IMAGE ====================
@@ -26,9 +25,8 @@ export interface GetImagesByAlbumResponse {
 
 // ==================== UPLOAD IMAGE ====================
 export interface UploadImageRequest {
-    file: string; // base64 file content
+    file: string | File; // Support both base64 string and File object
     albumId: string; // query parameter
-    originalFile?: File; // optional raw file for multipart fallback (browser only)
 }
 
 export interface UploadImageResponse {

@@ -1,3 +1,4 @@
+import { Album } from './../types/album';
 import { API_ENDPOINTS } from '../config/apiEndpoints';
 import { makeRequest } from '../utils';
 import {
@@ -36,28 +37,33 @@ class ImageService {
         }
     }
 
-    // POST /images/upload - Upload ảnh
+    // POST /images/upload - Upload image using FormData
     // Parameters: albumId (query param)
-    // Request body: { file: string }
+    // Request body: FormData with 'file' field
     async uploadImage(data: UploadImageRequest): Promise<Image> {
         try {
-            const { file, albumId } = data;
-            const endpoint = `${API_ENDPOINTS.IMAGES.UPLOAD_IMAGE}?albumId=${encodeURIComponent(albumId)}`;
-            console.log('Uploading image to endpoint:', endpoint);
-            console.log('File data length:', file.length);
-            if (!file) {
-                throw new Error('No file provided');
-            }
+            const formData = new FormData();
+            formData.append('file', data.file);
 
-            // API spec requires JSON body { file }
-            const body = { file };
+            console.log('[Image Service] Uploading image to album:', data.albumId);
 
-            const result = await makeRequest(endpoint, 'POST', body, 'response-area');
+            const result = await makeRequest(
+                API_ENDPOINTS.IMAGES.UPLOAD_IMAGE(data.albumId),
+                'POST',
+                formData,
+                'response-area'
+            );
+
             if (result.error) {
-                throw new Error(result.error.message);
+                throw new Error(result.error.message || 'Upload failed');
             }
-            return result.data?.data ?? result.data;
+
+            console.log('[Image Service] Upload successful:', result.data);
+
+            // ✅ Return image data từ response
+            return result.data.data; // result.data.data chứa ImageResponse
         } catch (error: any) {
+            console.error('[Image Service] Upload error:', error);
             throw error;
         }
     }

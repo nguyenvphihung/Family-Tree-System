@@ -10,6 +10,7 @@ import DeleteConfirmModal from "../../components/family-tree/DeleteConfirmModal"
 import DeleteTreeConfirmModal from "../../components/family-tree/DeleteTreeConfirmModal";
 import familyService from "../../services/familyService";
 import { useAuth } from "../../components/hooks/useAuth";
+import { imageService } from "@/services";
 
 const FamilyTreeDemo: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -482,6 +483,7 @@ const FamilyTreeDemo: React.FC = () => {
       if (selectedAlbum?.id === albumId) {
         setSelectedAlbum(null);
         setAlbumImages([]);
+
       }
       // Hiển thị thông báo xóa thành công màu đỏ theo yêu cầu
       showLocalToast('Xoá album thành công', 'error');
@@ -557,26 +559,22 @@ const FamilyTreeDemo: React.FC = () => {
   // Upload image
   const handleUploadImage = async (imageData: any) => {
     try {
-      setLoading(true);
-      const uploadedImage = await familyService.uploadImage({
-        file: imageData.file, // base64 content
+      console.log('[Upload Handler] Starting upload:', imageData);
+      await imageService.uploadImage({
+        file: imageData.file,
         albumId: imageData.albumId
       });
+      console.log('[Upload Handler] Upload successful');
 
-      // Refresh album images if album is selected
-      if (selectedAlbum) {
-        await loadAlbumImages(selectedAlbum.id);
-      }
+      // Refresh images or show success message
+      // await fetchImages(); // if you have a function to refresh
+      // setUploadSuccess(true); // if you have success state
 
-      setShowUploadModal(false);
-    } catch (error: any) {
-      console.error('Error uploading image:', error);
-      setError(error.message || 'Failed to upload image');
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error('[Upload Handler] Upload failed:', error);
+      // Handle error (show notification, etc.)
     }
   };
-
   // Delete image
   const handleDeleteImage = async (imageId: string) => {
     try {
@@ -1845,6 +1843,10 @@ const FamilyTreeDemo: React.FC = () => {
                       className={`flex items-center justify-between p-2 rounded border ${selectedAlbum?.id === album.id ? 'bg-blue-50 border-blue-300' : 'hover:bg-gray-50'}`}
                       onClick={(e) => {
                         e.stopPropagation(); // Không cho click lan ra ngoài
+                        console.log('[Album Selection] Selected album:', {
+                          albumId: album.id,
+                          albumName: album.name
+                        });
                         setSelectedAlbum(album);
                         loadAlbumImages(album.id);
                       }}
@@ -1939,27 +1941,29 @@ const FamilyTreeDemo: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-96">
             <h2 className="text-lg font-bold mb-4">Upload Image to {selectedAlbum?.name}</h2>
-            <form onSubmit={(e) => {
+            <form onSubmit={async (e) => {
               e.preventDefault();
-              const formData = new FormData(e.target as HTMLFormElement);
+
               const form = e.target as HTMLFormElement;
               const fileInput = form.querySelector('input[type="file"]') as HTMLInputElement;
               const file = fileInput.files?.[0];
 
-              if (file && selectedAlbum) {
-                const reader = new FileReader();
-                reader.onload = () => {
-                  const base64WithPrefix = reader.result as string;
-                  const base64Only = base64WithPrefix.includes(',')
-                    ? base64WithPrefix.split(',')[1]
-                    : base64WithPrefix; // Gửi base64 thuần theo API
+              console.log('[Upload Form] Submitting upload for album');
 
-                  handleUploadImage({
-                    file: base64Only,
-                    albumId: selectedAlbum.id
-                  });
-                };
-                reader.readAsDataURL(file);
+              if (file && selectedAlbum) {
+                await handleUploadImage({
+                  file: file,
+                  albumId: selectedAlbum.id
+                });
+
+                // Reset form after successful upload
+                form.reset();
+              } else {
+                console.error('[Upload Form] Missing file or album:', {
+                  hasFile: !!file,
+                  hasAlbum: !!selectedAlbum
+                });
+                alert('Vui lòng chọn file và album');
               }
             }}>
               <div className="mb-4">
