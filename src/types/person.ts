@@ -48,9 +48,9 @@ export interface DeletePersonResponse {
 
 // ==================== UPDATE DEATH INFO ====================
 export interface UpdateDeathInfoRequest {
-    deathPlace: string;
-    gravePlace: string;
-    deathDate: string;
+    deathPlace?: string;
+    gravePlace?: string;
+    deathDate?: string;
 }
 
 export interface UpdateDeathInfoResponse {

@@ -36,6 +36,7 @@ import {
   loadVietnamBoundary,
 } from "./Components/VietNamBoundary";
 import { isPointInPolygon } from "./utils";
+import { useAuth } from "@/components/hooks/useAuth";
 
 const ALL_PROVINCES = "all";
 interface MapState {
@@ -148,6 +149,7 @@ function mapReducer(state: MapState, action: MapAction): MapState {
 }
 
 const CemeteryMap: React.FC = () => {
+  const { user, isAuthenticated } = useAuth();
   const [graves, setGraves] = useState<Grave[]>([]);
   const [isMapInitialized, setIsMapInitialized] = useState(false);
   const [state, dispatch] = useReducer(mapReducer, initialState);
@@ -182,57 +184,52 @@ const CemeteryMap: React.FC = () => {
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(
     null
   );
-  const isMapInitializedRef = useRef<boolean>(false);
-  const isMountedRef = useRef<boolean>(false);
 
   useEffect(() => {
-    // Đánh dấu component đã mount
-    isMountedRef.current = true;
-    
-    // Nếu Google Maps đã sẵn sàng (từ lần mount trước), dispatch ngay
-    if (window.google?.maps?.Map && !isMapApiReady) {
-      console.log("✅ Google Maps API đã sẵn sàng (từ cache)");
-      dispatch({ type: "MAP_API_READY" });
-      return;
-    }
-    
-    // Load Google Maps API
+    console.log("🚀 Starting Google Maps API load...");
     loadGoogleMapsAPI()
       .then(() => {
-        if (isMountedRef.current) {
-          console.log("✅ Google Maps API sẵn sàng");
-          dispatch({ type: "MAP_API_READY" });
-        }
+        console.log("✅ Google Maps API loaded successfully, dispatching MAP_API_READY");
+        dispatch({ type: "MAP_API_READY" });
       })
       .catch((error) => {
-        if (isMountedRef.current) {
-          console.error("❌ Lỗi tải Google Maps API:", error);
-          dispatch({
-            type: "DATA_FETCH_ERROR",
-            payload: "Lỗi tải Google Maps API.",
-          });
-        }
+        console.error("❌ Failed to load Google Maps API:", error);
+        dispatch({
+          type: "DATA_FETCH_ERROR",
+          payload: "Lỗi tải Google Maps API.",
+        });
       });
+  }, []);
 
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, [isMapApiReady]);
-
+  // Fetch graves data khi map API sẵn sàng và user đã authenticated
   useEffect(() => {
+    console.log("🔍 Checking conditions - isMapApiReady:", isMapApiReady, "isAuthenticated:", isAuthenticated);
     if (!isMapApiReady) return;
+    
+    if (!isAuthenticated) {
+      console.log("⏸️ Chờ user đăng nhập...");
+      dispatch({
+        type: "DATA_FETCH_ERROR",
+        payload: "Vui lòng đăng nhập để xem bản đồ mộ phần.",
+      });
+      return;
+    }
+
+    console.log("👤 User:", user?.name, "- Đang tải dữ liệu mộ...");
+    
     fetchGravesFromAPI()
       .then((data) => {
         setGraves(data);
         dispatch({ type: "DATA_FETCH_SUCCESS" });
       })
-      .catch(() =>
+      .catch((error) => {
+        console.error("Lỗi tải dữ liệu:", error);
         dispatch({
           type: "DATA_FETCH_ERROR",
-          payload: "Không thể tải dữ liệu mộ.",
+          payload: "Không thể tải dữ liệu mộ. Vui lòng thử lại.",
         })
-      );
-  }, [isMapApiReady]);
+      });
+  }, [isMapApiReady, isAuthenticated, user]);
 
   const handleClearDirections = useCallback(() => {
     if (directionsRendererRef.current) {
@@ -269,86 +266,83 @@ const CemeteryMap: React.FC = () => {
   }, [dispatch, handleClearDirections]);
 
   useEffect(() => {
-    console.log("🔍 Map init check:", {
-      isMapApiReady,
-      hasMapDiv: !!mapDivRef.current,
-      hasMapInstance: !!mapInstanceRef.current,
-      isInitialized: isMapInitializedRef.current,
-      hasGoogle: !!window.google?.maps,
-    });
-
-    if (!isMapApiReady || !window.google?.maps) {
-      console.log("⏸️ Chờ Google Maps API...");
-      return;
-    }
-
-    if (!mapDivRef.current) {
-      console.log("⏸️ Chờ map div render...");
-      return;
-    }
-
-    if (mapInstanceRef.current || isMapInitializedRef.current) {
-      console.log("⏸️ Map đã được khởi tạo rồi");
-      return;
-    }
-
-    console.log("🗺️ Khởi tạo Google Maps...");
-    isMapInitializedRef.current = true;
-
-    // Đợi một chút để đảm bảo DOM đã sẵn sàng
-    setTimeout(() => {
+    console.log("🗺️ Map init useEffect - isMapApiReady:", isMapApiReady, "mapDivRef.current:", !!mapDivRef.current, "mapInstanceRef.current:", !!mapInstanceRef.current);
+    
+    if (!isMapApiReady || mapInstanceRef.current) return;
+    
+    // Retry logic: wait for mapDivRef to be available
+    const initMap = () => {
       if (!mapDivRef.current) {
-        console.error("❌ mapDivRef.current is null sau setTimeout!");
-        isMapInitializedRef.current = false;
+        console.log("⏳ mapDivRef not ready yet, retrying in 50ms...");
+        setTimeout(initMap, 50);
         return;
       }
+      
+      console.log("🗺️ Đang khởi tạo map...");
+      const map = new window.google.maps.Map(mapDivRef.current, {
+        center: { lat: 16.047079, lng: 108.20623 },
+        zoom: 6,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+      });
 
-      try {
-        const map = new window.google.maps.Map(mapDivRef.current, {
-          center: { lat: 16.047079, lng: 108.20623 },
-          zoom: 6,
-          mapTypeControl: false,
-          streetViewControl: false,
-          fullscreenControl: false,
+      mapInstanceRef.current = map;
+      infoWindowRef.current = new window.google.maps.InfoWindow();
+      directionsServiceRef.current = new window.google.maps.DirectionsService();
+      directionsRendererRef.current =
+        new window.google.maps.DirectionsRenderer();
+      directionsRendererRef.current.setMap(map);
+      
+      console.log("✅ Map đã khởi tạo xong, setting isMapInitialized = true");
+      // Mark map as initialized to trigger markers creation
+      setIsMapInitialized(true);
+
+      loadVietnamBoundary().catch((err) => {
+        console.error("❌ Lỗi khi tải biên giới Việt Nam:", err);
+      });
+
+      if (addressSearchRef.current) {
+        const defaultBounds = new google.maps.LatLngBounds(
+          new google.maps.LatLng(8.18, 102.14),
+          new google.maps.LatLng(23.39, 109.46)
+        );
+        const autocomplete = new window.google.maps.places.Autocomplete(
+          addressSearchRef.current,
+          {
+            bounds: defaultBounds,
+            componentRestrictions: { country: "vn" },
+            types: ["geocode", "establishment"],
+            fields: ["geometry", "name", "formatted_address"],
+          }
+        );
+        autocompleteRef.current = autocomplete;
+        autocomplete.addListener("place_changed", () => {
+          const map = mapInstanceRef.current;
+          const autocomplete = autocompleteRef.current;
+          if (!map || !autocomplete) return;
+
+          handleClearDirections();
+          const place = autocomplete.getPlace();
+
+          if (!place.geometry || !place.geometry.location) {
+            dispatch({ type: "SET_SELECTED_PLACE", payload: null });
+            return;
+          }
+          dispatch({ type: "SET_SELECTED_PLACE", payload: place });
+
+          if (place.geometry.viewport) {
+            map.fitBounds(place.geometry.viewport);
+          } else {
+            map.panTo(place.geometry.location);
+            map.setZoom(17);
+          }
         });
-
-        mapInstanceRef.current = map;
-        infoWindowRef.current = new window.google.maps.InfoWindow();
-        directionsServiceRef.current = new window.google.maps.DirectionsService();
-        directionsRendererRef.current =
-          new window.google.maps.DirectionsRenderer();
-        directionsRendererRef.current.setMap(map);
-
-        loadVietnamBoundary().catch((err) => {
-          console.error("❌ Lỗi khi tải biên giới Việt Nam:", err);
-        });
-
-        if (addressSearchRef.current) {
-          const defaultBounds = new google.maps.LatLngBounds(
-            new google.maps.LatLng(8.18, 102.14),
-            new google.maps.LatLng(23.39, 109.46)
-          );
-          const autocomplete = new window.google.maps.places.Autocomplete(
-            addressSearchRef.current,
-            {
-              bounds: defaultBounds,
-              componentRestrictions: { country: "vn" },
-              types: ["geocode", "establishment"],
-              fields: ["geometry", "name", "formatted_address"],
-            }
-          );
-          autocompleteRef.current = autocomplete;
-          autocomplete.addListener("place_changed", handlePlaceSelected);
-        }
-
-        console.log("✅ Google Maps đã được khởi tạo thành công!");
-        setIsMapInitialized(true);
-      } catch (error) {
-        console.error("❌ Lỗi khởi tạo map:", error);
-        isMapInitializedRef.current = false;
       }
-    }, 100);
-  }, [isMapApiReady, isDataLoading, handlePlaceSelected]);
+    };
+    
+    initMap();
+  }, [isMapApiReady, dispatch, handleClearDirections]);
 
   const handleShowDirections = useCallback(
     (grave: Grave) => {
@@ -439,26 +433,21 @@ const CemeteryMap: React.FC = () => {
 
   useEffect(() => {
     const map = mapInstanceRef.current;
-    
-    console.log("🎯 Markers check:", {
+    console.log("🔄 Markers useEffect triggered:", {
       hasMap: !!map,
-      isMapInitialized,
       gravesCount: graves.length,
-      currentMarkersCount: Object.keys(markersRef.current).length,
+      isMapInitialized,
     });
-
-    if (!map || !isMapInitialized || graves.length === 0) {
-      console.log("⏸️ Chờ map hoặc graves data...");
+    
+    if (!map || graves.length === 0 || !isMapInitialized) {
+      console.log("⏭️ Skipping markers creation");
       return;
     }
 
-    console.log("📍 Tạo markers cho", graves.length, "mộ");
-
-    // Xóa tất cả markers cũ
+    console.log("🎯 Creating markers for", graves.length, "graves");
     Object.values(markersRef.current).forEach((m) => m.setMap(null));
     markersRef.current = {};
 
-    // Tạo markers mới
     graves.forEach((grave) => {
       const marker = new window.google.maps.Marker({
         position: grave.coordinates,
@@ -469,8 +458,7 @@ const CemeteryMap: React.FC = () => {
       marker.addListener("click", () => handleGraveClick(grave));
       markersRef.current[grave.id] = marker;
     });
-
-    console.log("✅ Đã tạo", Object.keys(markersRef.current).length, "markers");
+    console.log("✅ Created", Object.keys(markersRef.current).length, "markers");
   }, [graves, isMapInitialized, handleGraveClick]);
 
   const filteredGraves = useMemo(() => {
@@ -587,17 +575,22 @@ const CemeteryMap: React.FC = () => {
   }, [dispatch, selectedPlace, handleClearDirections]);
 
   const handleAddNewGrave = useCallback(
-    async (newGraveData: Omit<Grave, "id">) => {
+    async (personId: string, coords: { lat: number; lng: number }, address: string) => {
       try {
-        const newGraveFromServer = await addGraveToAPI(newGraveData);
-        setGraves((prev) => [...prev, newGraveFromServer]);
+        // Call API to update death info
+        const updatedPerson = await addGraveToAPI(personId, coords, address);
+        
+        // Reload graves data to show the newly added grave
+        const updatedGraves = await fetchGravesFromAPI();
+        setGraves(updatedGraves);
+        
         dispatch({ type: "CLOSE_NEW_GRAVE_FORM" });
         if (tempMarkerRef.current) {
           tempMarkerRef.current.setMap(null);
           tempMarkerRef.current = null;
         }
         if (addressSearchRef.current) addressSearchRef.current.value = "";
-        dispatch({ type: "SET_TOAST", payload: "Đã thêm mộ mới thành công!" });
+        dispatch({ type: "SET_TOAST", payload: "Đã cập nhật thông tin mộ thành công!" });
       } catch (error) {
         dispatch({ type: "SET_ERROR", payload: (error as Error).message });
       }
