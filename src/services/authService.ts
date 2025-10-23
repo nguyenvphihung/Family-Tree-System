@@ -5,7 +5,7 @@ import {
   RegisterResponse,
   LoginResponse
 } from "../types/auth";
-import { makeRequest } from "../utils";
+import { makeRequest } from "../components/utils";
 
 class AuthService {
   private readonly TOKEN_KEY = 'auth_token';

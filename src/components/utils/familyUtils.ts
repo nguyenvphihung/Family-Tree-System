@@ -1,5 +1,5 @@
 // Family tree utility functions
-import { FamilyMember } from '../types/family';
+import { FamilyMember } from '../../types/family';
 
 /**
  * Calculate age from birthday string

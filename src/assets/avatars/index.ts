@@ -8,7 +8,7 @@ import grandparentFemaleAvatar from './avt6.png';
 import homePageImage from './HomePage.png';
 import introduceImage from './Introduce.png';
 import mapImage from './map.png';
-import { calculateAge } from '../../utils/familyUtils';
+import { calculateAge } from '../../components/utils/familyUtils';
 
 // Age groups enum
 export enum AgeGroup {

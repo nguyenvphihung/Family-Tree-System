@@ -66,11 +66,12 @@ const UpdateBirthInfoModal: React.FC<UpdateBirthInfoModalProps> = ({
 
             console.log('UpdateBirthInfoModal - PATCH response:', updatedPerson);
 
-            toast({
-                title: "✅ Cập nhật thành công",
-                description: "Thông tin khai sinh đã được cập nhật thành công!",
-                variant: "default",
-            });
+            // Không cần toast ở đây vì makeRequest.ts đã hiển thị notification
+            // toast({
+            //     title: "✅ Cập nhật thành công",
+            //     description: "Thông tin khai sinh đã được cập nhật thành công!",
+            //     variant: "default",
+            // });
 
             // Lấy thông tin đầy đủ từ API GET /persons
             const fullPersonInfo = await personService.getPerson(person.id);

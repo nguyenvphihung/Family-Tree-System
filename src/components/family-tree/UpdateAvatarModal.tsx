@@ -29,6 +29,14 @@ const UpdateAvatarModal: React.FC<UpdateAvatarModalProps> = ({
     const [isLoading, setIsLoading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Debug: Log person data when modal opens
+    React.useEffect(() => {
+        if (isOpen && person) {
+            console.log('UpdateAvatarModal - Person data:', person);
+            console.log('UpdateAvatarModal - Avatar URL:', person.avatarUrl);
+        }
+    }, [isOpen, person]);
+
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
@@ -113,11 +121,7 @@ const UpdateAvatarModal: React.FC<UpdateAvatarModalProps> = ({
                 avatar: base64Avatar
             });
 
-            toast({
-                title: "✅ Cập nhật thành công",
-                description: "Avatar đã được cập nhật thành công!",
-                variant: "default",
-            });
+
 
             // Lấy thông tin đầy đủ từ API GET /persons
             const fullPersonInfo = await personService.getPerson(person.id);
@@ -167,15 +171,21 @@ const UpdateAvatarModal: React.FC<UpdateAvatarModalProps> = ({
                 <div className="space-y-4">
                     {/* Current Avatar */}
                     <div className="text-center">
-                        <div className="w-20 h-20 mx-auto mb-2 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+                        <div className="w-24 h-24 mx-auto mb-2 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border-2 border-gray-200">
                             {person?.avatarUrl ? (
                                 <img
                                     src={person.avatarUrl}
                                     alt={person.name}
                                     className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        // Fallback to default icon if image fails to load
+                                        console.error('Avatar failed to load:', person.avatarUrl);
+                                        e.currentTarget.style.display = 'none';
+                                        e.currentTarget.parentElement!.innerHTML = '<svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>';
+                                    }}
                                 />
                             ) : (
-                                <User className="w-8 h-8 text-gray-400" />
+                                <User className="w-10 h-10 text-gray-400" />
                             )}
                         </div>
                         <p className="text-xs text-gray-500">Ảnh hiện tại</p>

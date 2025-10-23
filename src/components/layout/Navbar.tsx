@@ -37,6 +37,13 @@ const Navbar: React.FC = () => {
             >
               About
             </Link>
+           
+            <Link
+              to="/vnpay"
+              className={isHome ? "text-slate-100/90 hover:text-white px-3 py-2 rounded-md text-sm font-medium" : "text-[hsl(var(--foreground))]/80 hover:text-[hsl(var(--foreground))] px-3 py-2 rounded-md text-sm font-medium"}
+            >
+              Payment
+            </Link>
             <Link
               to="/logout"
               className={isHome ? "bg-[hsl(var(--primary))] hover:opacity-90 text-[hsl(var(--primary-foreground))] px-4 py-2 rounded-md text-sm font-medium" : "bg-[hsl(var(--primary))] hover:opacity-90 text-[hsl(var(--primary-foreground))] px-4 py-2 rounded-md text-sm font-medium"}

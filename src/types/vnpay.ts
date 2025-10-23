@@ -1,51 +1,64 @@
-// VNPay payment interfaces for API requests and responses
+// VNPay Types
 
-// ==================== CREATE PAYMENT ====================
+// Request body for creating payment
 export interface CreatePaymentRequest {
+    fundId: string;
     amount: number;
+    content: string;
 }
 
+// Response for create payment
 export interface CreatePaymentResponse {
+    code?: number;
+    status?: string;
+    message?: string;
+    data?: {
+        paymentUrl?: string;
+        orderId?: string;
+        [key: string]: any;
+    };
+}
+
+// Fund transaction data
+export interface FundTransaction {
+    fundTransactionId: string;
+    amount: number;
+    content: string;
+    createdAt: string;
+}
+
+// Response for getting fund transactions
+export interface GetFundTransactionsResponse {
     code: number;
     status: string;
     message: string;
-    data: any; // Payment URL or payment data from backend
+    data: FundTransaction[];
 }
 
-// ==================== PAYMENT CALLBACK ====================
+// Payment callback params
 export interface PaymentCallbackParams {
     [key: string]: string;
 }
 
+// Payment callback response
 export interface PaymentCallbackResponse {
-    code: number;
-    status: string;
-    message: string;
-    data: any;
+    code?: number;
+    status?: string;
+    message?: string;
+    data?: any;
 }
 
-// ==================== LOCAL PAYMENT DATA ====================
-export interface VNPayPaymentData {
-    amount: number;
-    orderId: string;
-    orderDescription: string;
-    returnUrl?: string;
-    ipAddress?: string;
+// VNPay payment status
+export enum PaymentStatus {
+    SUCCESS = 'SUCCESS',
+    FAILED = 'FAILED',
+    PENDING = 'PENDING',
 }
 
-export interface VNPayResponse {
-    success: boolean;
-    paymentUrl?: string;
-    error?: string;
-}
-
-// ==================== VNPAY CONFIGURATION ====================
-export interface VNPayConfig {
-    PAYMENT_URL: string;
-    RETURN_URL: string;
-    TMN_CODE: string;
-    SECRET_KEY: string;
-    CURRENCY: string;
-    LOCALE: string;
-    VERSION: string;
+// Fund info for display
+export interface FundInfo {
+    fundId: string;
+    fundName: string;
+    description?: string;
+    currentBalance?: number;
 }

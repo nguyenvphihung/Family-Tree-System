@@ -48,36 +48,62 @@ export async function makeRequest(endpoint: string, method: string, data: any, r
         }
 
         // Lấy thông báo thành công từ server response
-        const serverMessage = response.data.message || 'Cập nhật thành công';
+        let serverMessage = response.data.message || 'Cập nhật thành công';
+
+        // Custom message cho trường hợp tạo root person
+        if (endpoint.includes('/relations/trees/') && endpoint.includes('/root') && method === 'POST') {
+            serverMessage = 'Tạo thành viên đầu tiên trong gia phả thành công!';
+        }
+
+        // Custom message cho xóa cây
+        if (endpoint.includes('/trees/') && method === 'DELETE') {
+            serverMessage = 'Xóa cây gia phả thành công!';
+        }
+
         const successMessage = `${serverMessage}`;
 
         // Hiển thị message từ server trong console để theo dõi
         console.log('📢 Server success message:', serverMessage);
-        console.log('� Full server response:', response.data);
+        console.log('📦 Full server response:', response.data);
         console.log('🔗 API endpoint:', endpoint, '- Method:', method);
 
-        if (responseArea) {
+        // Chỉ hiển thị toast cho mutations (POST, PUT, DELETE, PATCH), không hiển thị cho queries (GET)
+        const isMutation = ['POST', 'PUT', 'DELETE', 'PATCH'].includes((method || '').toUpperCase());
+
+        if (responseArea && isMutation) {
             // Clear timeout cũ nếu có để tránh thông báo trùng lặp
             if (currentTimeoutId) {
                 clearTimeout(currentTimeoutId);
             }
 
             responseArea.textContent = successMessage;
+
             // Quy ước: mọi DELETE thành công hiển thị màu đỏ để người dùng nhận biết thao tác xóa
             const isDelete = (method || '').toUpperCase() === 'DELETE';
-            responseArea.className = `fixed top-20 left-1/2 transform -translate-x-1/2 z-40 ${isDelete
+
+            // Tạo cây mới, cập nhật cây và xóa cây cần z-index cao hơn để hiển thị trên modal
+            const isCreateTree = endpoint.includes('/trees') && method === 'POST';
+            const isUpdateTree = endpoint.includes('/trees/') && method === 'PUT';
+            const isDeleteTree = endpoint.includes('/trees/') && method === 'DELETE';
+            const needHighZIndex = isCreateTree || isUpdateTree || isDeleteTree;
+            // z-index phải cao hơn Dialog modal (z-[9998]) và Select Family Tree modal (z-[9999])
+            const zIndexClass = needHighZIndex ? 'z-[99999]' : 'z-40';
+
+            responseArea.className = `fixed top-20 left-1/2 transform -translate-x-1/2 ${zIndexClass} ${isDelete
                 ? 'bg-red-50 border border-red-300 text-red-800'
                 : 'bg-green-50 border border-green-300 text-green-800'
                 } rounded-lg p-3 shadow-lg max-w-sm text-center text-sm font-medium`;
             responseArea.style.display = 'block';
+            responseArea.style.zIndex = needHighZIndex ? '99999' : '40';
 
-            // Tự động ẩn sau 4 giây
+            // Tạo cây, cập nhật cây và xóa cây tự động ẩn sau 2 giây, các mutation khác sau 4 giây
+            const hideDelay = needHighZIndex ? 2000 : 4000;
             currentTimeoutId = setTimeout(() => {
                 responseArea.style.display = 'none';
                 responseArea.textContent = '';
                 responseArea.className = 'response-area';
                 currentTimeoutId = null;
-            }, 4000);
+            }, hideDelay);
         }
 
         // Reload tree if successful

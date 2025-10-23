@@ -13,11 +13,7 @@ function App() {
     }
   }, []);
 
-  // Save theme to localStorage when it changes
-  const handleThemeChange = (theme: string) => {
-    setCurrentTheme(theme);
-    localStorage.setItem('family-tree-theme', theme);
-  };
+ 
 
   // Apply theme to body
   useEffect(() => {

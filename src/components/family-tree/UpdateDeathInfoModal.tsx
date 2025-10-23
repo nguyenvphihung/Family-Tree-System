@@ -91,11 +91,7 @@ const UpdateDeathInfoModal: React.FC<UpdateDeathInfoModalProps> = ({
             const fullPersonInfo = await personService.getPerson(person.id);
             console.log('UpdateDeathInfoModal - Full person info:', fullPersonInfo);
 
-            toast({
-                title: "✅ Cập nhật thành công",
-                description: "Thông tin người mất đã được cập nhật thành công!",
-                variant: "default",
-            });
+
 
             // Thay vì reload toàn bộ tree, chỉ cập nhật UI ngay lập tức
             // để tránh D3 re-layout làm thay đổi vị trí node

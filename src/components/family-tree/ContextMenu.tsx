@@ -71,8 +71,6 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
     };
   };
 
-  if (!isVisible) return null;
-
   const handleClick = (action: () => void) => {
     action();
     onClose();
@@ -106,7 +104,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
       return;
     }
 
-    // Mở modal ngay lập tức và load dữ liệu bên trong modal
+    // Mở modal và đóng context menu
     setShowEditModal(true);
     onClose();
   };
@@ -259,133 +257,137 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 
   return (
     <>
-      {/* Backdrop to close menu when clicking outside */}
-      <div
-        className="fixed inset-0 z-40"
-        onClick={onClose}
-      />
+      {/* Backdrop to close menu when clicking outside - chỉ hiển thị khi menu visible */}
+      {isVisible && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={onClose}
+        />
+      )}
 
-      {/* Context Menu */}
-      <div
-        className="absolute z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-48"
-        style={{
-          left: `${x}px`,
-          top: `${y}px`,
-          transform: 'translate(10px, 10px)' // Offset để menu không che node
-        }}
-      >
-        {/* Add relationship options */}
-        <button
-          onClick={() => handleClick(onAddChild)}
-          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3"
+      {/* Context Menu - chỉ hiển thị khi visible */}
+      {isVisible && (
+        <div
+          className="absolute z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-48"
+          style={{
+            left: `${x}px`,
+            top: `${y}px`,
+            transform: 'translate(10px, 10px)' // Offset để menu không che node
+          }}
         >
-          <Plus className="w-4 h-4 text-green-600" />
-          <span>Thêm con</span>
-        </button>
-
-        <button
-          onClick={() => handleClick(onAddParent)}
-          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3"
-        >
-          <Users className="w-4 h-4 text-blue-600" />
-          <span>Thêm cha/mẹ</span>
-        </button>
-
-        <button
-          onClick={() => handleClick(onAddSpouse)}
-          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3"
-        >
-          <Heart className="w-4 h-4 text-pink-600" />
-          <span>Thêm vợ/chồng</span>
-        </button>
-
-        <div className="border-t border-gray-200 my-1" />
-
-        {/* Information and editing options */}
-        <button
-          onClick={handleViewInfo}
-          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3"
-        >
-          <Info className="w-4 h-4 text-blue-600" />
-          <span>Xem thông tin</span>
-        </button>
-
-        <button
-          onClick={handleEditPerson}
-          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3"
-        >
-          <Edit className="w-4 h-4 text-purple-600" />
-          <span>Chỉnh sửa thông tin</span>
-        </button>
-
-        {/* Cập nhật riêng lẻ */}
-        <button
-          onClick={handleOpenDeathInfoModal}
-          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3"
-        >
-          <Skull className="w-4 h-4 text-red-600" />
-          <span>Cập nhật thông tin mất</span>
-        </button>
-
-        <button
-          onClick={handleOpenBirthInfoModal}
-          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3"
-        >
-          <Baby className="w-4 h-4 text-blue-600" />
-          <span>Cập nhật thông tin sinh</span>
-        </button>
-
-        <button
-          onClick={handleOpenAvatarModal}
-          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3"
-        >
-          <Camera className="w-4 h-4 text-green-600" />
-          <span>Cập nhật ảnh đại diện</span>
-        </button>
-
-        <div className="border-t border-gray-200 my-1" />
-
-        {/* Delete option */}
-        {!showDeleteConfirm ? (
+          {/* Add relationship options */}
           <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="w-full px-4 py-2 text-left text-sm hover:bg-red-50 text-red-600 flex items-center gap-3"
-            disabled={isDeleting}
+            onClick={() => handleClick(onAddChild)}
+            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3"
           >
-            <Trash2 className="w-4 h-4" />
-            <span>Xóa người này</span>
+            <Plus className="w-4 h-4 text-green-600" />
+            <span>Thêm con</span>
           </button>
-        ) : (
-          <div className="px-4 py-3 bg-red-50 border-t border-red-100">
-            <p className="text-xs text-red-800 mb-2 font-medium">
-              Xác nhận xóa {selectedPerson?.name || 'người này'}?
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={handleDeleteWithAPI}
-                disabled={isDeleting}
-                className="flex-1 px-3 py-1.5 bg-red-600 text-white text-xs rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
-              >
-                {isDeleting ? (
-                  <>
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                    <span>Đang xóa...</span>
-                  </>
-                ) : (
-                  <span>Xác nhận</span>
-                )}
-              </button>
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                disabled={isDeleting}
-                className="flex-1 px-3 py-1.5 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300 disabled:opacity-50"
-              >
-                Hủy
-              </button>
+
+          <button
+            onClick={() => handleClick(onAddParent)}
+            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3"
+          >
+            <Users className="w-4 h-4 text-blue-600" />
+            <span>Thêm cha/mẹ</span>
+          </button>
+
+          <button
+            onClick={() => handleClick(onAddSpouse)}
+            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3"
+          >
+            <Heart className="w-4 h-4 text-pink-600" />
+            <span>Thêm vợ/chồng</span>
+          </button>
+
+          <div className="border-t border-gray-200 my-1" />
+
+          {/* Information and editing options */}
+          <button
+            onClick={handleViewInfo}
+            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3"
+          >
+            <Info className="w-4 h-4 text-blue-600" />
+            <span>Xem thông tin</span>
+          </button>
+
+          <button
+            onClick={handleEditPerson}
+            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3"
+          >
+            <Edit className="w-4 h-4 text-purple-600" />
+            <span>Chỉnh sửa thông tin</span>
+          </button>
+
+          {/* Cập nhật riêng lẻ */}
+          <button
+            onClick={handleOpenDeathInfoModal}
+            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3"
+          >
+            <Skull className="w-4 h-4 text-red-600" />
+            <span>Cập nhật thông tin mất</span>
+          </button>
+
+          <button
+            onClick={handleOpenBirthInfoModal}
+            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3"
+          >
+            <Baby className="w-4 h-4 text-blue-600" />
+            <span>Cập nhật thông tin sinh</span>
+          </button>
+
+          <button
+            onClick={handleOpenAvatarModal}
+            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-3"
+          >
+            <Camera className="w-4 h-4 text-green-600" />
+            <span>Cập nhật ảnh đại diện</span>
+          </button>
+
+          <div className="border-t border-gray-200 my-1" />
+
+          {/* Delete option */}
+          {!showDeleteConfirm ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full px-4 py-2 text-left text-sm hover:bg-red-50 text-red-600 flex items-center gap-3"
+              disabled={isDeleting}
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Xóa người này</span>
+            </button>
+          ) : (
+            <div className="px-4 py-3 bg-red-50 border-t border-red-100">
+              <p className="text-xs text-red-800 mb-2 font-medium">
+                Xác nhận xóa {selectedPerson?.name || 'người này'}?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleDeleteWithAPI}
+                  disabled={isDeleting}
+                  className="flex-1 px-3 py-1.5 bg-red-600 text-white text-xs rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <span>Đang xóa...</span>
+                    </>
+                  ) : (
+                    <span>Xác nhận</span>
+                  )}
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isDeleting}
+                  className="flex-1 px-3 py-1.5 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300 disabled:opacity-50"
+                >
+                  Hủy
+                </button>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* Edit Person Modal */}
       <EditPersonModal

@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
-import { useFamilyTree } from '../hooks/useFamilyTree';
+import React from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { treeService } from '@/services';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Trash2, CheckCircle } from 'lucide-react';
+import { AlertTriangle, Trash2, X } from 'lucide-react';
 
 interface DeleteTreeConfirmModalProps {
     tree: {
@@ -18,30 +19,42 @@ const DeleteTreeConfirmModal: React.FC<DeleteTreeConfirmModalProps> = ({
     onSuccess,
     onCancel
 }) => {
-    const { deleteTree, loading, error, successMessage, clearMessages } = useFamilyTree();
+    const { mutate: deleteTree, isPending, isError, error, isSuccess } = useMutation({
+        mutationFn: (treeId: string) => treeService.deleteTree(treeId),
+        onSuccess: () => {
+            // Đóng modal ngay lập tức
+            onCancel();
+            // Gọi callback onSuccess và reload sau 2 giây
+            setTimeout(() => {
+                onSuccess();
+                // Reload page để cập nhật danh sách cây
+                window.location.reload();
+            }, 2000);
+        },
+        onError: (err: any) => {
+            // Không cần toast, hiển thị trực tiếp trong modal
+        },
+    });
 
-    // Clear messages khi component unmount
-    useEffect(() => {
-        return () => {
-            clearMessages();
-        };
-    }, [clearMessages]);
-
-    const handleDelete = async () => {
-        try {
-            await deleteTree(tree.id);
-            // Gọi onSuccess ngay lập tức sau khi xóa thành công
-            onSuccess();
-        } catch (err) {
-            console.error('Failed to delete tree:', err);
-        }
+    const handleDelete = () => {
+        deleteTree(tree.id);
     };
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md relative">
+                {/* Close Button (X) */}
+                <button
+                    onClick={onCancel}
+                    disabled={isPending}
+                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Đóng"
+                >
+                    <X className="w-5 h-5" />
+                </button>
+
                 {/* Header */}
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-3 mb-4 pr-8">
                     <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
                         <AlertTriangle className="w-5 h-5 text-red-600" />
                     </div>
@@ -64,41 +77,23 @@ const DeleteTreeConfirmModal: React.FC<DeleteTreeConfirmModalProps> = ({
                     </p>
                 </div>
 
-                {/* Success Message */}
-                {successMessage && (
-                    <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded flex items-center">
-                        <CheckCircle className="w-5 h-5 mr-2" />
-                        {successMessage}
-                    </div>
-                )}
-
-                {/* Error Message */}
-                {error && (
+                {/* Error Message - chỉ hiển thị lỗi, success sẽ dùng toast */}
+                {isError && error && (
                     <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                        {error}
+                        {(error as any)?.message || 'Đã có lỗi xảy ra'}
                     </div>
                 )}
 
                 {/* Actions */}
                 <div className="flex gap-3 justify-end">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={onCancel}
-                        disabled={loading || successMessage !== null}
-                        className="px-4 py-2"
-                    >
-                        {successMessage ? 'Đóng' : 'Hủy'}
-                    </Button>
-
-                    {!successMessage && (
+                    {!isSuccess && (
                         <Button
                             type="button"
                             onClick={handleDelete}
-                            disabled={loading}
+                            disabled={isPending}
                             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2"
                         >
-                            {loading ? (
+                            {isPending ? (
                                 <>
                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                                     Đang xóa...

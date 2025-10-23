@@ -4,7 +4,7 @@ import { FamilyMember } from '../../types/family';
 
 import { personService, relationService } from '../../services';
 import { getPersonAvatar } from '../../assets/avatars';
-import { formatDateCompact } from '../../utils/familyUtils';
+import { formatDateCompact } from '../utils/familyUtils';
 import cameraIcon from '../../assets/avatars/camera.png';
 import ContextMenu from './ContextMenu';
 
@@ -326,6 +326,8 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
       console.log('D3FamilyTreeView - Root person full info:', rootPersonInfo);
       console.log('D3FamilyTreeView - birthPlace from API:', rootPersonInfo.birthPlace);
       console.log('D3FamilyTreeView - Original treeData birthPlace:', treeData.birthPlace);
+      console.log('D3FamilyTreeView - avatarUrl from API:', rootPersonInfo.avatarUrl);
+      console.log('D3FamilyTreeView - Original treeData avatarUrl:', treeData.avatarUrl);
 
       // Enhance root person with additional info but preserve original structure
       const enhancedRoot = {
@@ -347,6 +349,7 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
         birthPlace: enhancedRoot.birthPlace,
         deathPlace: enhancedRoot.deathPlace,
         deathDate: enhancedRoot.deathDate,
+        avatarUrl: enhancedRoot.avatarUrl,
         spousesCount: enhancedRoot.spouses?.length || 0,
         childrenCount: enhancedRoot.children?.length || 0,
         cached: cachedPersonInfo,
@@ -371,6 +374,12 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
               }
 
               const spouseInfo = await personService.getPerson(spouse.id);
+              console.log('D3FamilyTreeView - Spouse info from API:', {
+                id: spouse.id,
+                name: spouse.name,
+                avatarUrl: spouseInfo.avatarUrl,
+                originalAvatarUrl: spouse.avatarUrl
+              });
               return {
                 ...spouse, // Keep ALL original spouse properties
                 // Only add/override specific fields

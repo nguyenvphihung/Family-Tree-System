@@ -1,3 +1,4 @@
+
 // Tree Controller Types
 
 export interface Tree {
@@ -28,6 +29,7 @@ export interface GetUserTreesResponse {
 
 // ==================== UPDATE TREE ====================
 export interface UpdateTreeRequest {
+    treeId: string;
     name: string;
 }
 

@@ -8,4 +8,5 @@ export { default as DeleteConfirmModal } from './DeleteConfirmModal';
 export { default as ContextMenu } from './ContextMenu';
 export { default as EditPersonModal } from './EditPersonModal';
 export { default as DeathInfoModal } from './DeathInfoModal';
+export { default as EditTreeNameModal } from './EditTreeNameModal';
 export type { FamilyMember } from '../../types/family';

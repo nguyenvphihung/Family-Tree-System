@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { authService } from '../services/authService';
-import familyService from '../services/familyService';
+import { authService, relationService, personService } from '@/services';
 
 // Auth Store
 interface AuthState {
@@ -144,7 +143,7 @@ export const useFamilyTreeStore = create<FamilyTreeStore>()(
       createTreeRoot: async (treeId: string, data: any) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await familyService.createRootPerson(treeId, data);
+          const response = await relationService.createRootPerson(treeId, data);
           set({ isLoading: false });
           return response;
         } catch (error: any) {
@@ -156,27 +155,25 @@ export const useFamilyTreeStore = create<FamilyTreeStore>()(
         }
       },
 
-      //sinh ra để làm gì ?  kh biết luôn à :)), cái này có thấy sài đâu, nó đang sài của familyService hết mà ?
-      // t đổi qua familyService khi chieu khong nho co cai nay
-      // addChildren: async (treeId: string, data: any) => {
-      //   try {
-      //     set({ isLoading: true, error: null });
-      //     const response = await familyService.addChildren(treeId, data);
-      //     set({ isLoading: false });
-      //     return response;
-      //   } catch (error: any) {
-      //     set({
-      //       error: error.response?.data?.message || "Lỗi thêm con",
-      //       isLoading: false
-      //     });
-      //     throw error;
-      //   }
-      // },
+      addChildren: async (treeId: string, data: any) => {
+        try {
+          set({ isLoading: true, error: null });
+          const response = await relationService.addChild(treeId, data);
+          set({ isLoading: false });
+          return response;
+        } catch (error: any) {
+          set({
+            error: error.response?.data?.message || "Lỗi thêm con",
+            isLoading: false
+          });
+          throw error;
+        }
+      },
 
       addParent: async (treeId: string, data: any) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await familyService.addParent(treeId, data);
+          const response = await relationService.addParent(treeId, data);
           set({ isLoading: false });
           return response;
         } catch (error: any) {
@@ -191,7 +188,7 @@ export const useFamilyTreeStore = create<FamilyTreeStore>()(
       addSpouse: async (treeId: string, spouseId: string, data: any) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await familyService.addSpouse(treeId, spouseId, data);
+          const response = await relationService.addSpouse(treeId, spouseId, data);
           set({ isLoading: false });
           return response;
         } catch (error: any) {
@@ -206,7 +203,7 @@ export const useFamilyTreeStore = create<FamilyTreeStore>()(
       getPersonWithRelations: async (treeId: string, personId: string) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await familyService.getPersonTreeRelations(treeId, personId);
+          const response = await relationService.getPersonTreeRelations(treeId, personId);
           set({ isLoading: false });
           return response;
         } catch (error: any) {
@@ -221,7 +218,7 @@ export const useFamilyTreeStore = create<FamilyTreeStore>()(
       deletePerson: async (personId: string) => {
         try {
           set({ isLoading: true, error: null });
-          await familyService.deletePerson(personId);
+          await personService.deletePerson(personId);
 
           // Remove person from members list
           set((state) => ({

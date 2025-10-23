@@ -6,12 +6,11 @@ export { default as treeService } from './treeService';
 export { default as albumService } from './albumService';
 export { default as imageService } from './imageService';
 export { default as relationService } from './relationService';
-export { vnpayService } from './vnpayService';
-export { mockDataService } from './mockDataService';
+export { default as vnpayService } from './vnpayService';
 
 // Export individual services types
 export * from './authService';
 export * from './userService';
 export * from './personService';
-export * from './vnpayService';
-export * from './mockDataService';
+
+

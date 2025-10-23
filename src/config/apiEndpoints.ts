@@ -78,11 +78,13 @@ export const API_ENDPOINTS = {
     SAVE_STEP: '/onboarding/save-step',
   },
 
-  // VNPay endpoints (vn-pay-controller)
+  // VNPay endpoints (vnpay-controller)
   VNPAY: {
     CREATE_PAYMENT: '/vnpay/create-payment', // POST /vnpay/create-payment - Tạo thanh toán
-    PAYMENT_CALLBACK: '/vnpay/payment-callback', // GET /vnpay/payment-callback - Callback thanh toán
+    GET_FUND_TRANSACTIONS: (fundId: string) => `/vnpay/${fundId}`, // GET /vnpay/{fundId} - Lấy danh sách giao dịch
+    PAYMENT_CALLBACK: '/vnpay/payment-callback', // GET /vnpay/payment-callback - Xử lý callback từ VNPay
   },
+
 } as const;
 
 // API Response Status

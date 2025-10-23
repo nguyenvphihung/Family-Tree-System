@@ -8,6 +8,7 @@ import AddSpouseModal from "../../components/family-tree/AddSpouseModal";
 import AddRootModal from "../../components/family-tree/AddRootModal";
 import DeleteConfirmModal from "../../components/family-tree/DeleteConfirmModal";
 import DeleteTreeConfirmModal from "../../components/family-tree/DeleteTreeConfirmModal";
+import EditTreeNameModal from "../../components/family-tree/EditTreeNameModal";
 
 import { useAuth } from "../../components/hooks/useAuth";
 import { imageService, treeService, personService, relationService, albumService } from "@/services";
@@ -23,11 +24,13 @@ const FamilyTreeDemo: React.FC = () => {
   const [albumToDelete, setAlbumToDelete] = useState<any | null>(null);
   const [newAlbumName, setNewAlbumName] = useState('');
   // Cập nhật tên cây
-  const handleUpdateTree = async (treeId: string, treeData: { name: string }) => {
+  const handleUpdateTree = async (treeId: string, newName: string) => {
     try {
       setLoading(true);
-      await treeService.updateTree(treeId, treeData.name);
+      await treeService.updateTree(treeId, newName);
       await getTrees();
+      // Đóng modal Select Family Tree sau khi cập nhật thành công
+      setShowTreeSelector(false);
     } catch (error: any) {
       setError(error.message || 'Failed to update tree');
     } finally {
@@ -47,6 +50,8 @@ const FamilyTreeDemo: React.FC = () => {
   const [showCreateTreeModal, setShowCreateTreeModal] = useState(false);
   const [showDeleteTreeModal, setShowDeleteTreeModal] = useState(false);
   const [selectedTreeForDelete, setSelectedTreeForDelete] = useState<any>(null);
+  const [showEditTreeNameModal, setShowEditTreeNameModal] = useState(false);
+  const [selectedTreeForEdit, setSelectedTreeForEdit] = useState<any>(null);
 
   // Album & Image management states
   const [userAlbums, setUserAlbums] = useState<any[]>([]);
@@ -348,9 +353,38 @@ const FamilyTreeDemo: React.FC = () => {
   };
 
   // Function để xử lý khi click vào node
-  const handleNodeClick = (person: FamilyMember) => {
+  const handleNodeClick = async (person: FamilyMember) => {
+    console.log('handleNodeClick - Person data:', person);
+    console.log('handleNodeClick - Avatar URL (before fetch):', person.avatarUrl);
+
+    // Always fetch latest person info from API to ensure fresh data
+    if (person.id) {
+      try {
+        console.log('handleNodeClick - Fetching latest person info for:', person.id);
+        const fullPersonInfo = await personService.getPerson(person.id);
+        console.log('handleNodeClick - Full person info from API:', fullPersonInfo);
+
+        // Merge with existing person data, prioritizing API response
+        const enrichedPerson = {
+          ...person,
+          avatarUrl: fullPersonInfo.avatarUrl || person.avatarUrl,
+          birthPlace: fullPersonInfo.birthPlace || person.birthPlace,
+          deathPlace: fullPersonInfo.deathPlace || person.deathPlace,
+          deathDate: fullPersonInfo.deathDate || person.deathDate,
+          gravePlace: fullPersonInfo.gravePlace || person.gravePlace,
+        };
+
+        console.log('handleNodeClick - Enriched person with fresh avatarUrl:', enrichedPerson.avatarUrl);
+        setSelectedPerson(enrichedPerson);
+        return;
+      } catch (error) {
+        console.error('handleNodeClick - Failed to fetch person info:', error);
+        // Fallback to original person data if API fails
+      }
+    }
+
     setSelectedPerson(person);
-    console.log('Selected person:', person);
+    console.log('Selected person (fallback):', person);
   };
 
   // Create new tree
@@ -1619,7 +1653,7 @@ const FamilyTreeDemo: React.FC = () => {
 
       {/* Tree Selector Modal */}
       {showTreeSelector && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-lg p-6 w-96 max-h-96 overflow-y-auto">
             <h2 className="text-lg font-bold mb-4">Select Family Tree</h2>
             {userTrees.length > 0 ? (
@@ -1642,10 +1676,8 @@ const FamilyTreeDemo: React.FC = () => {
                       {/* Edit Tree Button */}
                       <button
                         onClick={() => {
-                          const newName = window.prompt(`Enter new name for "${tree.name}":`, tree.name);
-                          if (newName && newName.trim() && newName !== tree.name) {
-                            handleUpdateTree(tree.id, { name: newName.trim() });
-                          }
+                          setSelectedTreeForEdit(tree);
+                          setShowEditTreeNameModal(true);
                         }}
                         className="p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded"
                         title="Edit Tree Name"
@@ -1660,6 +1692,8 @@ const FamilyTreeDemo: React.FC = () => {
                         onClick={() => {
                           setSelectedTreeForDelete(tree);
                           setShowDeleteTreeModal(true);
+                          // Đóng modal Select Family Tree khi mở modal xóa cây
+                          setShowTreeSelector(false);
                         }}
                         className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
                         title="Delete Tree"
@@ -2074,6 +2108,19 @@ const FamilyTreeDemo: React.FC = () => {
         />
       )}
 
+      {/* Edit Tree Name Modal */}
+      {showEditTreeNameModal && selectedTreeForEdit && (
+        <EditTreeNameModal
+          isOpen={showEditTreeNameModal}
+          tree={selectedTreeForEdit}
+          onClose={() => {
+            setShowEditTreeNameModal(false);
+            setSelectedTreeForEdit(null);
+          }}
+          onSave={handleUpdateTree}
+        />
+      )}
+
       {/* Person Tree Relations Modal */}
       {showPersonTreeModal && personTreeData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -2138,14 +2185,8 @@ const FamilyTreeDemo: React.FC = () => {
                 <h3 className="font-medium mb-2">Image Information:</h3>
                 <div className="bg-gray-100 p-4 rounded-lg space-y-2 text-sm">
                   <div><strong>Name:</strong> {selectedImage.name || 'N/A'}</div>
-                  <div><strong>ID:</strong> {selectedImage.id || 'N/A'}</div>
-                  <div><strong>Album ID:</strong> {selectedImage.albumId || 'N/A'}</div>
-                  {selectedImage.createdAt && (
-                    <div><strong>Created:</strong> {new Date(selectedImage.createdAt).toLocaleString()}</div>
-                  )}
-                  {selectedImage.size && (
-                    <div><strong>Size:</strong> {(selectedImage.size / 1024).toFixed(2)} KB</div>
-                  )}
+               
+                
                 </div>
               </div>
             </div>

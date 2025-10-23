@@ -1,6 +1,6 @@
 import { API_ENDPOINTS } from "../config/apiEndpoints";
 import { UserProfile, UpdateUserProfile } from "../types/user";
-import { makeRequest } from "../utils";
+import { makeRequest } from "../components/utils";
 
 class UserService {
   async getProfile(): Promise<UserProfile> {

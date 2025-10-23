@@ -1,6 +1,6 @@
 import { Album } from './../types/album';
 import { API_ENDPOINTS } from '../config/apiEndpoints';
-import { makeRequest } from '../utils';
+import { makeRequest } from '../components/utils';
 import {
     Image,
     GetImageResponse,

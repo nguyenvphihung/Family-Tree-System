@@ -1,5 +1,5 @@
 import { API_ENDPOINTS } from '../config/apiEndpoints';
-import { makeRequest } from '../utils';
+import { makeRequest } from '../components/utils';
 import {
     Tree,
     CreateTreeRequest,
@@ -53,7 +53,7 @@ class TreeService {
     // PUT /trees/{treeId} - Sửa thông tin cây
     async updateTree(treeId: string, name: string): Promise<Tree> {
         try {
-            const data: UpdateTreeRequest = { name };
+            const data: UpdateTreeRequest = { treeId, name };
             const result = await makeRequest(API_ENDPOINTS.TREES.UPDATE_TREE(treeId), 'PUT', data, 'response-area');
             if (result.error) {
                 throw new Error(result.error.message);
@@ -67,6 +67,7 @@ class TreeService {
     // DELETE /trees/{treeId} - Xóa cây
     async deleteTree(treeId: string): Promise<string> {
         try {
+            // Hiển thị toast notification khi xóa thành công
             const result = await makeRequest(API_ENDPOINTS.TREES.DELETE_TREE(treeId), 'DELETE', null, 'response-area');
             if (result.error) {
                 throw new Error(result.error.message || 'Failed to delete tree');
