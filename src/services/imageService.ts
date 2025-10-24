@@ -41,9 +41,7 @@ class ImageService {
         }
     }
 
-    // POST /images/upload?albumId={albumId} - Upload image using FormData
-    // Parameters: albumId (query param)
-    // Request body: FormData with 'file' field
+ 
     async uploadImage(data: UploadImageRequest): Promise<Image> {
         try {
             const { file, albumId } = data;

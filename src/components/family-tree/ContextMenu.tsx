@@ -8,6 +8,7 @@ import EditPersonModal from './EditPersonModal';
 import UpdateDeathInfoModal from './UpdateDeathInfoModal';
 import UpdateBirthInfoModal from './UpdateBirthInfoModal';
 import UpdateAvatarModal from './UpdateAvatarModal';
+import DeleteConfirmModal from './DeleteConfirmModal';
 
 interface ContextMenuProps {
   isVisible: boolean;
@@ -221,30 +222,29 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
     try {
       await personService.deletePerson(selectedPerson.id);
 
-      toast({
-        title: "Thành công",
-        description: `Đã xóa ${selectedPerson.name || 'người này'} khỏi cây gia phả`,
-      });
+      // Hiển thị thông báo thành công
+     
+      // Đóng modal ngay lập tức
+      setShowDeleteConfirm(false);
+      setIsDeleting(false);
 
       // Call parent's delete handler
       onDelete();
 
-      // Refresh tree if callback provided
+      // Refresh tree if callback provided - QUAN TRỌNG: phải reload tree để cập nhật hasTreeData
       if (onRefresh) {
-        onRefresh();
+        await onRefresh();
       }
 
       onClose();
     } catch (error: any) {
       console.error('Error deleting person:', error);
+      setIsDeleting(false);
       toast({
         title: "Lỗi xóa người",
         description: error.message || "Không thể xóa người này. Vui lòng thử lại sau.",
         variant: "destructive",
       });
-    } finally {
-      setIsDeleting(false);
-      setShowDeleteConfirm(false);
     }
   };
 
@@ -347,45 +347,17 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
           <div className="border-t border-gray-200 my-1" />
 
           {/* Delete option */}
-          {!showDeleteConfirm ? (
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="w-full px-4 py-2 text-left text-sm hover:bg-red-50 text-red-600 flex items-center gap-3"
-              disabled={isDeleting}
-            >
-              <Trash2 className="w-4 h-4" />
-              <span>Xóa người này</span>
-            </button>
-          ) : (
-            <div className="px-4 py-3 bg-red-50 border-t border-red-100">
-              <p className="text-xs text-red-800 mb-2 font-medium">
-                Xác nhận xóa {selectedPerson?.name || 'người này'}?
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleDeleteWithAPI}
-                  disabled={isDeleting}
-                  className="flex-1 px-3 py-1.5 bg-red-600 text-white text-xs rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
-                >
-                  {isDeleting ? (
-                    <>
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      <span>Đang xóa...</span>
-                    </>
-                  ) : (
-                    <span>Xác nhận</span>
-                  )}
-                </button>
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  disabled={isDeleting}
-                  className="flex-1 px-3 py-1.5 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300 disabled:opacity-50"
-                >
-                  Hủy
-                </button>
-              </div>
-            </div>
-          )}
+          <button
+            onClick={() => {
+              setShowDeleteConfirm(true);
+              onClose(); // Đóng context menu khi mở modal xóa
+            }}
+            className="w-full px-4 py-2 text-left text-sm hover:bg-red-50 text-red-600 flex items-center gap-3"
+            disabled={isDeleting}
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>Xóa người này</span>
+          </button>
         </div>
       )}
 
@@ -433,6 +405,15 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
         onSuccess={() => onClose()}
         onRefresh={onRefresh}
         onPersonUpdated={onPersonUpdated}
+      />
+
+      {/* Delete Confirm Modal */}
+      <DeleteConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteWithAPI}
+        person={selectedPerson}
+        isDeleting={isDeleting}
       />
     </>
   );
