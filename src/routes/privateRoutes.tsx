@@ -10,6 +10,7 @@ import MembersPage from "../pages/Members";
 import Logout from "@/pages/Logout/Logout";
 import SnapshotEditor from "@/pages/SnapshotEditor";
 import Calendar from "@/pages/Calendar/Calendar";
+import CemeteryMap from "@/pages/CemeterryMap/CemeteryMap";
 
 const VNPayPage = lazy(() => import("@/pages/VNPay"));
 const PaymentCallback = lazy(() => import("@/pages/VNPay/PaymentCallback"));
@@ -37,6 +38,8 @@ export const privateRoutes: RouteObject[] = [
         path: "/vnpay/callback",
         element: <PaymentCallback />,
     },
+    { path: "/grave-map", element: <CemeteryMap /> },
+
 ];
 
 export default privateRoutes;

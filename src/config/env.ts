@@ -10,7 +10,16 @@ export const env = {
   NODE_ENV: import.meta.env.NODE_ENV || "development",
   SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL || "",
   SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY || "",
+  GOOGLE_MAPS_API_KEY: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyAAG18gnaHR2uzoZKGuQMoxuNleYaLr8so",
 } as const;
 
 export const isDevelopment = env.NODE_ENV === "development";
 export const isProduction = env.NODE_ENV === "production";
+
+// Debug: Log env variables (chỉ trong development)
+if (isDevelopment) {
+  console.log("🔧 Environment loaded:", {
+    hasGoogleMapsKey: !!env.GOOGLE_MAPS_API_KEY,
+    keySource: import.meta.env.VITE_GOOGLE_MAPS_API_KEY ? "from .env" : "from fallback",
+  });
+}
