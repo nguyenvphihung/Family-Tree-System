@@ -78,7 +78,7 @@ export const loadGoogleMapsAPI = (): Promise<void> => {
       loadCallbacks = [];
     };
 
-    // Tạo script mới - SỬA: bỏ "directions" library vì nó không tồn tại
+    // Tạo script mới - Thêm loading=async để tối ưu performance
     const script = document.createElement("script");
     script.src = `https://maps.googleapis.com/maps/api/js?key=${env.GOOGLE_MAPS_API_KEY}&libraries=places&callback=initGoogleMaps&loading=async`;
     script.async = true;

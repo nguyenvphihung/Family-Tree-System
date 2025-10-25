@@ -6,7 +6,7 @@ import { getProvinceByCoords } from "./provinces.data";
 
 const API_BASE_URL = env.API_BASE_URL;
 
-// Helper: Parse gravePlace string "lat,lng,zoom" -> coordinates
+// Helper: Parse gravePlace string "lat,lng" or "lat,lng,zoom" (legacy) -> coordinates
 const parseGravePlace = (
   gravePlace: string
 ): { lat: number; lng: number } | null => {
@@ -175,7 +175,7 @@ export const addGraveToAPI = async (
     // Prepare death info update (không set deathDate - để user tự cập nhật sau)
     const deathInfoUpdate: UpdateDeathInfoRequest = {
       deathPlace: address,
-      gravePlace: `${coords.lat},${coords.lng},16`, // Format: "lat,lng,zoom"
+      gravePlace: `${coords.lat},${coords.lng}`, // Format: "lat,lng" (không lưu zoom)
       // deathDate không được set - để user tự cập nhật sau qua tính năng Edit
     };
 
@@ -207,8 +207,8 @@ export const updateGraveInAPI = async (
     }
 
     if (updatedData.coordinates) {
-      // Format: "lat,lng,zoom"
-      deathInfoUpdate.gravePlace = `${updatedData.coordinates.lat},${updatedData.coordinates.lng},16`;
+      // Format: "lat,lng" (không lưu zoom)
+      deathInfoUpdate.gravePlace = `${updatedData.coordinates.lat},${updatedData.coordinates.lng}`;
     }
 
     // TODO: Thêm deathDate khi có dữ liệu

@@ -31,6 +31,7 @@ import {
 import { loadGoogleMapsAPI } from "./googleMapsLoader";
 import { AddGraveForm } from "./Components/AddGrave";
 import { EditableField } from "./Components/Edit";
+import "./CemeteryMap.css";
 import {
   vietnamBoundary,
   loadVietnamBoundary,
@@ -184,12 +185,13 @@ const CemeteryMap: React.FC = () => {
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(
     null
   );
+  
+  // Store graves IDs to detect actual changes
+  const gravesIdsRef = useRef<string>("");
 
   useEffect(() => {
-    console.log("🚀 Starting Google Maps API load...");
     loadGoogleMapsAPI()
       .then(() => {
-        console.log("✅ Google Maps API loaded successfully, dispatching MAP_API_READY");
         dispatch({ type: "MAP_API_READY" });
       })
       .catch((error) => {
@@ -203,19 +205,15 @@ const CemeteryMap: React.FC = () => {
 
   // Fetch graves data khi map API sẵn sàng và user đã authenticated
   useEffect(() => {
-    console.log("🔍 Checking conditions - isMapApiReady:", isMapApiReady, "isAuthenticated:", isAuthenticated);
     if (!isMapApiReady) return;
     
     if (!isAuthenticated) {
-      console.log("⏸️ Chờ user đăng nhập...");
       dispatch({
         type: "DATA_FETCH_ERROR",
         payload: "Vui lòng đăng nhập để xem bản đồ mộ phần.",
       });
       return;
     }
-
-    console.log("👤 User:", user?.name, "- Đang tải dữ liệu mộ...");
     
     fetchGravesFromAPI()
       .then((data) => {
@@ -266,25 +264,25 @@ const CemeteryMap: React.FC = () => {
   }, [dispatch, handleClearDirections]);
 
   useEffect(() => {
-    console.log("🗺️ Map init useEffect - isMapApiReady:", isMapApiReady, "mapDivRef.current:", !!mapDivRef.current, "mapInstanceRef.current:", !!mapInstanceRef.current);
-    
     if (!isMapApiReady || mapInstanceRef.current) return;
     
     // Retry logic: wait for mapDivRef to be available
     const initMap = () => {
       if (!mapDivRef.current) {
-        console.log("⏳ mapDivRef not ready yet, retrying in 50ms...");
         setTimeout(initMap, 50);
         return;
       }
       
-      console.log("🗺️ Đang khởi tạo map...");
       const map = new window.google.maps.Map(mapDivRef.current, {
         center: { lat: 16.047079, lng: 108.20623 },
         zoom: 6,
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
+        gestureHandling: "greedy",
+        zoomControl: true,
+        clickableIcons: false,
+        // Bỏ mapId để dùng Raster rendering (có thể mượt hơn trên một số máy)
       });
 
       mapInstanceRef.current = map;
@@ -294,13 +292,13 @@ const CemeteryMap: React.FC = () => {
         new window.google.maps.DirectionsRenderer();
       directionsRendererRef.current.setMap(map);
       
-      console.log("✅ Map đã khởi tạo xong, setting isMapInitialized = true");
       // Mark map as initialized to trigger markers creation
       setIsMapInitialized(true);
 
-      loadVietnamBoundary().catch((err) => {
-        console.error("❌ Lỗi khi tải biên giới Việt Nam:", err);
-      });
+      // TODO: Vietnam boundary có thể gây lag - tạm thời disable
+      // loadVietnamBoundary().catch((err) => {
+      //   console.error("❌ Lỗi khi tải biên giới Việt Nam:", err);
+      // });
 
       if (addressSearchRef.current) {
         const defaultBounds = new google.maps.LatLngBounds(
@@ -433,18 +431,17 @@ const CemeteryMap: React.FC = () => {
 
   useEffect(() => {
     const map = mapInstanceRef.current;
-    console.log("🔄 Markers useEffect triggered:", {
-      hasMap: !!map,
-      gravesCount: graves.length,
-      isMapInitialized,
-    });
-    
-    if (!map || graves.length === 0 || !isMapInitialized) {
-      console.log("⏭️ Skipping markers creation");
+    if (!map || graves.length === 0 || !isMapInitialized) return;
+
+    // Kiểm tra xem graves có thực sự thay đổi không (so sánh IDs)
+    const currentGravesIds = graves.map(g => g.id).sort().join(',');
+    if (gravesIdsRef.current === currentGravesIds) {
+      // Graves không thay đổi, không cần re-create markers
       return;
     }
+    gravesIdsRef.current = currentGravesIds;
 
-    console.log("🎯 Creating markers for", graves.length, "graves");
+    // Chỉ tạo/xóa markers khi graves thực sự thay đổi
     Object.values(markersRef.current).forEach((m) => m.setMap(null));
     markersRef.current = {};
 
@@ -454,12 +451,91 @@ const CemeteryMap: React.FC = () => {
         title: grave.name,
         map,
         visible: true,
+        optimized: true,
+        icon: {
+          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+              <circle cx="20" cy="20" r="18" fill="#4a5568" stroke="#ffffff" stroke-width="2"/>
+              <text x="20" y="28" font-size="22" text-anchor="middle" fill="#ffffff">🪦</text>
+            </svg>
+          `),
+          scaledSize: new window.google.maps.Size(40, 40),
+          anchor: new window.google.maps.Point(20, 40),
+        },
       });
-      marker.addListener("click", () => handleGraveClick(grave));
+      
+      // Inline click handler - không dùng callback để tránh re-render
+      marker.addListener("click", () => {
+        dispatch({ type: "SELECT_GRAVE", payload: grave });
+        const info = infoWindowRef.current;
+        if (!info || !marker) return;
+
+        const infoContent = `
+          <div style="font-family: Arial, sans-serif; padding: 5px;">
+            <strong style="font-size: 1.1em; display: block; margin-bottom: 5px;">${grave.name}</strong>
+            <button id="info-window-directions-btn" style="color: #007bff; border: none; padding: 0; background: none; cursor: pointer;">
+              Chỉ đường
+            </button>
+          </div>`;
+        info.setContent(infoContent);
+
+        google.maps.event.clearListeners(info, "domready");
+        info.addListener("domready", () => {
+          const btn = document.getElementById("info-window-directions-btn");
+          if (btn) {
+            btn.addEventListener("click", () => {
+              // Inline directions logic
+              if (!navigator.geolocation || !directionsServiceRef.current || !directionsRendererRef.current) {
+                dispatch({ type: "SET_TOAST", payload: "Trình duyệt không hỗ trợ chỉ đường." });
+                return;
+              }
+              info.close();
+              
+              navigator.geolocation.getCurrentPosition(
+                (position) => {
+                  const origin = { lat: position.coords.latitude, lng: position.coords.longitude };
+                  
+                  // Clear old directions
+                  if (directionsRendererRef.current) {
+                    directionsRendererRef.current.setMap(null);
+                    directionsRendererRef.current = new window.google.maps.DirectionsRenderer();
+                    directionsRendererRef.current.setMap(map);
+                  }
+                  
+                  dispatch({ type: "SET_TOAST", payload: "Đang tìm đường đi..." });
+
+                  const request: google.maps.DirectionsRequest = {
+                    origin: new google.maps.LatLng(origin.lat, origin.lng),
+                    destination: grave.coordinates,
+                    travelMode: google.maps.TravelMode.DRIVING,
+                  };
+
+                  directionsServiceRef.current?.route(request, (response, status) => {
+                    if (status === "OK" && directionsRendererRef.current) {
+                      directionsRendererRef.current.setDirections(response);
+                      dispatch({ type: "SET_DIRECTIONS_VISIBLE", payload: true });
+                      dispatch({ type: "SET_TOAST", payload: null });
+                    } else {
+                      dispatch({ type: "SET_TOAST", payload: "Không thể tìm thấy đường đi." });
+                      dispatch({ type: "SET_DIRECTIONS_VISIBLE", payload: false });
+                    }
+                  });
+                },
+                () => {
+                  dispatch({ type: "SET_TOAST", payload: "Không thể lấy vị trí của bạn." });
+                }
+              );
+            });
+          }
+        });
+
+        info.open({ anchor: marker, map });
+        map.panTo(grave.coordinates);
+      });
+      
       markersRef.current[grave.id] = marker;
     });
-    console.log("✅ Created", Object.keys(markersRef.current).length, "markers");
-  }, [graves, isMapInitialized, handleGraveClick]);
+  }, [graves, isMapInitialized, dispatch]); // CHỈ phụ thuộc vào graves và isMapInitialized
 
   const filteredGraves = useMemo(() => {
     const filtered = graves.filter(
@@ -513,7 +589,16 @@ const CemeteryMap: React.FC = () => {
             tempMarkerRef.current = new window.google.maps.Marker({
               position: clicked,
               map,
-              icon: "http://googleusercontent.com/maps/google.com/0",
+              icon: {
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+                    <circle cx="20" cy="20" r="18" fill="#ef4444" stroke="#ffffff" stroke-width="2"/>
+                    <text x="20" y="28" font-size="22" text-anchor="middle" fill="#ffffff">📍</text>
+                  </svg>
+                `),
+                scaledSize: new window.google.maps.Size(40, 40),
+                anchor: new window.google.maps.Point(20, 40),
+              },
             });
 
             dispatch({
@@ -659,8 +744,36 @@ const CemeteryMap: React.FC = () => {
   if (error)
     return (
       <div className="min-h-screen flex items-center justify-center bg-red-50">
-        <AlertCircle className="w-12 h-12 text-red-500" />
-        <p className="ml-4 text-red-700">{error}</p>
+        <div className="max-w-2xl mx-auto text-center p-8">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="w-12 h-12 text-red-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-red-900 mb-4">Lỗi tải bản đồ</h2>
+          <p className="text-red-700 mb-6">{error}</p>
+          {error.includes("RefererNotAllowedMapError") && (
+            <div className="bg-white p-6 rounded-lg shadow-md text-left">
+              <h3 className="font-semibold text-gray-900 mb-3">💡 Cách khắc phục:</h3>
+              <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                <li>Vào <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Google Cloud Console</a></li>
+                <li>Chọn <strong>APIs & Services → Credentials</strong></li>
+                <li>Chọn API key đang sử dụng</li>
+                <li>Thêm domain sau vào <strong>HTTP referrers</strong>:</li>
+              </ol>
+              <div className="mt-3 bg-gray-100 p-3 rounded font-mono text-xs">
+                http://localhost:5173/*<br/>
+                http://localhost:5174/*<br/>
+                http://127.0.0.1:5173/*<br/>
+                http://127.0.0.1:5174/*
+              </div>
+            </div>
+          )}
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-6 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+          >
+            Tải lại trang
+          </button>
+        </div>
       </div>
     );
 
@@ -673,28 +786,106 @@ const CemeteryMap: React.FC = () => {
     );
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans relative">
+    <div className="min-h-screen bg-gray-50 font-sans">
+      {/* Top Navigation Bar */}
+      <nav className="bg-gradient-to-r from-gray-800 to-gray-900 shadow-lg sticky top-0 z-50">
+        <div className="max-w-screen-2xl mx-auto px-6">
+          <div className="flex items-center h-16">
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-3 text-sm">
+              <a href="/" className="text-gray-300 hover:text-white transition-colors">
+                Trang chủ
+              </a>
+              <span className="text-gray-500">/</span>
+              <span className="text-white font-medium">Bản đồ nghĩa trang</span>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Toast notification with animation */}
       {toast && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-green-500 text-white px-6 py-2 rounded shadow-lg z-[1002]">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-xl z-[1002] slide-in">
           {toast}
         </div>
       )}
 
+      {/* Add mode indicator with bounce animation */}
       {isAddMode && !selectedPlace && (
-        <div className="fixed top-0 left-0 right-0 pt-4 flex justify-center z-[1001] pointer-events-none">
-          <div className="bg-white px-6 py-3 rounded shadow-lg text-blue-700 font-semibold border border-blue-500">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[1001] pointer-events-none">
+          <div className="bg-white px-6 py-3 rounded-lg shadow-xl text-rose-600 font-semibold border-2 border-rose-500 bounce-slow">
+            <MapPin className="inline-block w-5 h-5 mr-2 -mt-0.5" />
             Nhấp vào bản đồ để chọn vị trí thêm mộ
           </div>
         </div>
       )}
 
-      <div className="max-w-screen-2xl mx-auto px-4 py-6">
+      <div className="max-w-screen-2xl mx-auto px-6 py-6">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="w-12 h-12 bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+              <MapPin className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Bản đồ nghĩa trang</h1>
+              <p className="text-gray-600 mt-1">Quản lý thông tin mộ phần</p>
+            </div>
+          </div>
+          
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Tổng số mộ</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{graves.length}</p>
+                </div>
+                <div className="w-12 h-12 bg-rose-50 rounded-lg flex items-center justify-center">
+                  <MapPin className="w-6 h-6 text-rose-600" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Đang hiển thị</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{filteredGraves.size}</p>
+                </div>
+                <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+                  <Search className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Đã chọn</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{selectedGrave ? 1 : 0}</p>
+                </div>
+                <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
+                  <Navigation className="w-6 h-6 text-green-600" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* === Sidebar (Thanh bên trái) === */}
-          <div className="w-full lg:w-[400px] bg-white rounded-lg shadow-sm border flex flex-col">
-            <div className="p-4 border-b">
-              {/* Lọc Tỉnh */}
-              <div className="flex justify-end items-center mb-4">
+          {/* === Sidebar === */}
+          <div className="w-full lg:w-[420px] space-y-4">
+            {/* Search & Filter Card */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Search className="w-5 h-5 text-rose-600" />
+                Tìm kiếm & Lọc
+              </h2>
+              
+              {/* Province Filter */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tỉnh/Thành phố
+                </label>
                 <select
                   value={filterProvince}
                   onChange={(e) =>
@@ -703,7 +894,7 @@ const CemeteryMap: React.FC = () => {
                       payload: e.target.value,
                     })
                   }
-                  className="border rounded px-2 py-2 text-sm"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
                 >
                   <option value={ALL_PROVINCES}>Tất cả tỉnh/thành</option>
                   {provinceData.map((p) => (
@@ -714,164 +905,202 @@ const CemeteryMap: React.FC = () => {
                 </select>
               </div>
 
-              {/* Thanh tìm kiếm địa chỉ */}
-              <div className="relative mb-3">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  ref={addressSearchRef}
-                  type="text"
-                  placeholder="Tìm địa chỉ trên bản đồ..."
-                  className="w-full pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-blue-500"
-                  disabled={isAddMode}
-                  onChange={(e) => {
-                    if (selectedPlace) {
-                      dispatch({ type: "SET_SELECTED_PLACE", payload: null });
-                    }
-                  }}
-                />
+              {/* Address Search */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tìm địa chỉ
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    ref={addressSearchRef}
+                    type="text"
+                    placeholder="Nhập địa chỉ để tìm trên bản đồ..."
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
+                    disabled={isAddMode}
+                    onChange={(e) => {
+                      if (selectedPlace) {
+                        dispatch({ type: "SET_SELECTED_PLACE", payload: null });
+                      }
+                    }}
+                  />
+                </div>
               </div>
 
-              {/* Nút thêm từ địa điểm đã chọn */}
+              {/* Add from selected place button */}
               {selectedPlace && (
-                <div className="mb-3">
+                <div className="mb-4">
                   <button
                     onClick={handleAddFromSelectedPlace}
-                    className="w-full px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-green-600"
+                    className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:from-green-600 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg"
                   >
-                    <PlusSquare size={16} />
+                    <PlusSquare size={18} />
                     Thêm mộ tại: {selectedPlace.name}
                   </button>
                 </div>
               )}
 
-              {/* Thanh tìm kiếm người thân */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Tìm theo tên hoặc quan hệ..."
-                  value={searchTerm}
-                  onChange={(e) =>
-                    dispatch({
-                      type: "SET_SEARCH_TERM",
-                      payload: e.target.value,
-                    })
-                  }
-                  className="w-full pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-blue-500"
-                />
+              {/* Person Search */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tìm người thân
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Tìm theo tên hoặc quan hệ..."
+                    value={searchTerm}
+                    onChange={(e) =>
+                      dispatch({
+                        type: "SET_SEARCH_TERM",
+                        payload: e.target.value,
+                      })
+                    }
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all"
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Danh sách người thân (có thể cuộn) */}
-            <div className="p-4 flex-1 overflow-y-auto max-h-[calc(100vh-340px)]">
-              {filteredGraves.size > 0 ? (
-                graves
-                  .filter((g) => filteredGraves.has(g.id))
-                  .map((grave) => (
-                    <div
-                      key={grave.id}
-                      className={`mb-3 p-3 rounded-lg shadow-sm border flex items-center gap-3 cursor-pointer ${
-                        selectedGrave?.id === grave.id
-                          ? "border-blue-500 bg-blue-50"
-                          : "hover:bg-gray-50"
-                      }`}
-                      onClick={() => handleGraveClick(grave)}
-                    >
-                      <div className="flex-1">
-                        <div className="font-bold">
-                          <EditableField
-                            initialValue={grave.name}
-                            onSave={(val) =>
-                              handleUpdateGrave(grave.id, "name", val)
-                            }
-                          />
+            {/* Graves List Card */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <MapPin className="w-5 h-5 text-rose-600" />
+                    Danh sách mộ phần
+                  </span>
+                  <span className="text-sm font-normal text-gray-500">
+                    {filteredGraves.size} mộ
+                  </span>
+                </h2>
+              </div>
+
+              {/* Graves List */}
+              <div className="p-4 overflow-y-auto max-h-[calc(100vh-520px)] custom-scrollbar">
+                {filteredGraves.size > 0 ? (
+                  <div className="space-y-3">
+                    {graves
+                      .filter((g) => filteredGraves.has(g.id))
+                      .map((grave) => (
+                        <div
+                          key={grave.id}
+                          className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                            selectedGrave?.id === grave.id
+                              ? "border-rose-500 bg-rose-50 shadow-md"
+                              : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+                          }`}
+                          onClick={() => handleGraveClick(grave)}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="font-semibold text-gray-900 mb-1">
+                                <EditableField
+                                  initialValue={grave.name}
+                                  onSave={(val) =>
+                                    handleUpdateGrave(grave.id, "name", val)
+                                  }
+                                />
+                              </div>
+                              <div className="text-sm text-gray-600 mb-2">
+                                <EditableField
+                                  initialValue={grave.relation}
+                                  onSave={(val) =>
+                                    handleUpdateGrave(grave.id, "relation", val)
+                                  }
+                                />
+                              </div>
+                              <div className="flex items-center gap-1 text-xs text-gray-500">
+                                <MapPin className="w-3 h-3" />
+                                {grave.location.province}
+                              </div>
+                            </div>
+                            <div className="flex gap-1">
+                              <button
+                                className="p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                                title="Chỉ đường"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleShowDirections(grave);
+                                }}
+                              >
+                                <Navigation className="w-4 h-4 text-blue-600" />
+                              </button>
+                              <button
+                                className="p-2 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
+                                title="Xóa mộ"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteGrave(grave.id);
+                                }}
+                                disabled={deletingId !== null}
+                              >
+                                {deletingId === grave.id ? (
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
+                                ) : (
+                                  <Trash2 className="w-4 h-4 text-red-600" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-sm text-gray-600">
-                          <EditableField
-                            initialValue={grave.relation}
-                            onSave={(val) =>
-                              handleUpdateGrave(grave.id, "relation", val)
-                            }
-                          />
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {grave.location.province}
-                        </div>
-                      </div>
-                      <button
-                        className="ml-2 p-2 rounded-full hover:bg-blue-100"
-                        title="Chỉ đường"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleShowDirections(grave);
-                        }}
-                      >
-                        <Navigation className="w-4 h-4 text-blue-500" />
-                      </button>
-                      <button
-                        className="ml-2 p-2 rounded-full hover:bg-red-100 disabled:opacity-50"
-                        title="Xóa mộ"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteGrave(grave.id);
-                        }}
-                        disabled={deletingId !== null}
-                      >
-                        {deletingId === grave.id ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
-                        ) : (
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        )}
-                      </button>
-                    </div>
-                  ))
-              ) : (
-                <div className="text-gray-500 text-center py-8">
-                  Không tìm thấy mộ phù hợp.
-                </div>
-              )}
+                      ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500 text-sm">Không tìm thấy mộ phù hợp</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           {/* === Bản đồ === */}
           <div className="flex-1">
-            <div className="bg-white rounded-lg shadow-sm border overflow-hidden relative h-full">
-              {/* Nút điều khiển Zoom/Fit */}
-              <div className="absolute top-3 left-3 z-10 flex gap-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative">
+              {/* Map Controls */}
+              <div className="absolute top-4 left-4 z-10 flex gap-2">
                 <button
-                  className="px-3 py-2 rounded bg-white shadow hover:bg-gray-100"
+                  className="p-3 rounded-lg bg-white shadow-md hover:shadow-lg hover:bg-gray-50 transition-all"
                   onClick={() => handleZoom(1)}
+                  title="Phóng to"
                 >
-                  <ZoomIn size={18} />
+                  <ZoomIn className="w-5 h-5 text-gray-700" />
                 </button>
                 <button
-                  className="px-3 py-2 rounded bg-white shadow hover:bg-gray-100"
+                  className="p-3 rounded-lg bg-white shadow-md hover:shadow-lg hover:bg-gray-50 transition-all"
                   onClick={() => handleZoom(-1)}
+                  title="Thu nhỏ"
                 >
-                  <ZoomOut size={18} />
+                  <ZoomOut className="w-5 h-5 text-gray-700" />
                 </button>
                 <button
-                  className="px-3 py-2 rounded bg-white shadow hover:bg-gray-100"
+                  className="p-3 rounded-lg bg-white shadow-md hover:shadow-lg hover:bg-gray-50 transition-all"
                   onClick={handleFitBounds}
+                  title="Hiển thị tất cả"
                 >
-                  <LocateFixed size={18} />
+                  <LocateFixed className="w-5 h-5 text-gray-700" />
                 </button>
                 {isDirectionsVisible && (
                   <button
-                    className="px-3 py-2 rounded bg-white shadow hover:bg-gray-100 text-red-500"
+                    className="p-3 rounded-lg bg-white shadow-md hover:shadow-lg hover:bg-red-50 transition-all"
                     onClick={handleClearDirections}
                     title="Xóa đường đi"
                   >
-                    <XCircle size={18} />
+                    <XCircle className="w-5 h-5 text-red-600" />
                   </button>
                 )}
               </div>
 
-              {/* Nút Thêm Mộ Mới trên bản đồ */}
-              <div className="absolute top-3 right-3 z-10">
+              {/* Add Grave Button */}
+              <div className="absolute top-4 right-4 z-10">
                 <button
-                  className={`px-3 py-2 rounded bg-white shadow hover:bg-gray-100 ${
-                    isAddMode ? "text-red-500" : "text-blue-500"
+                  className={`px-5 py-3 rounded-lg shadow-md hover:shadow-lg font-semibold transition-all flex items-center gap-2 ${
+                    isAddMode
+                      ? "bg-white text-red-600 hover:bg-gray-50"
+                      : "bg-white text-gray-700 hover:bg-gray-50"
                   }`}
                   onClick={() => {
                     dispatch({ type: "TOGGLE_ADD_MODE" });
@@ -879,24 +1108,34 @@ const CemeteryMap: React.FC = () => {
                       addressSearchRef.current.value = "";
                   }}
                   title={
-                    isAddMode ? "Hủy Thêm" : "Thêm Mộ Mới (Nhấp vào bản đồ)"
+                    isAddMode ? "Hủy thêm mộ" : "Thêm mộ mới (nhấp vào bản đồ)"
                   }
                 >
-                  {isAddMode ? <XCircle size={18} /> : <Plus size={18} />}
+                  {isAddMode ? (
+                    <>
+                      <XCircle className="w-5 h-5" />
+                      Hủy
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-5 h-5" />
+                      Thêm mộ
+                    </>
+                  )}
                 </button>
               </div>
 
-              {/* Div chứa bản đồ Google */}
+              {/* Map Container */}
               <div
                 ref={mapDivRef}
                 style={{
                   height: "calc(100vh - 100px)",
                   minHeight: "600px",
                   width: "100%",
+                  // Chỉ dùng position relative để tách layer
+                  position: "relative",
+                  cursor: isAddMode && !selectedPlace ? "crosshair" : "default",
                 }}
-                className={
-                  isAddMode && !selectedPlace ? "cursor-crosshair" : ""
-                }
               />
             </div>
           </div>
@@ -930,4 +1169,4 @@ const CemeteryMap: React.FC = () => {
   );
 };
 
-export default CemeteryMap;
+export default React.memo(CemeteryMap);
