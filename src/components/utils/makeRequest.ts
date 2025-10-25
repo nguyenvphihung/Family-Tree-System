@@ -58,14 +58,22 @@ export async function makeRequest(endpoint: string, method: string, data: any, r
         // Custom message cho xóa cây
         if (endpoint.includes('/trees/') && method === 'DELETE') {
             serverMessage = 'Xóa cây gia phả thành công!';
+          
         }
+       
+
+        if(endpoint.includes('/persons/') && method === 'DELETE') {
+            serverMessage = 'Xóa người thành công!';
+        }
+
+
 
         const successMessage = `${serverMessage}`;
 
         // Hiển thị message từ server trong console để theo dõi
-        console.log('📢 Server success message:', serverMessage);
-        console.log('📦 Full server response:', response.data);
-        console.log('🔗 API endpoint:', endpoint, '- Method:', method);
+        console.log(' Server success message:', serverMessage);
+        console.log(' Full server response:', response.data);
+        console.log(' API endpoint:', endpoint, '- Method:', method);
 
         // Chỉ hiển thị toast cho mutations (POST, PUT, DELETE, PATCH), không hiển thị cho queries (GET)
         const isMutation = ['POST', 'PUT', 'DELETE', 'PATCH'].includes((method || '').toUpperCase());

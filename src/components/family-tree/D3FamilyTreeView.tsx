@@ -498,7 +498,7 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
         setError(result.message || 'Lỗi tải dữ liệu');
       }
     } catch (err) {
-      setError('Lỗi kết nối server');
+      await onRefresh?.();
       console.error('Error loading tree data:', err);
     } finally {
       setIsLoading(false);

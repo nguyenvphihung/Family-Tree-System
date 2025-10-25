@@ -6,7 +6,6 @@ import AddChildModal from "../../components/family-tree/AddChildModal";
 import AddParentModal from "../../components/family-tree/AddParentModal";
 import AddSpouseModal from "../../components/family-tree/AddSpouseModal";
 import AddRootModal from "../../components/family-tree/AddRootModal";
-import DeleteConfirmModal from "../../components/family-tree/DeleteConfirmModal";
 import DeleteTreeConfirmModal from "../../components/family-tree/DeleteTreeConfirmModal";
 import EditTreeNameModal from "../../components/family-tree/EditTreeNameModal";
 
@@ -81,12 +80,10 @@ const FamilyTreeDemo: React.FC = () => {
   const [showAddChildModal, setShowAddChildModal] = useState(false);
   const [showAddParentModal, setShowAddParentModal] = useState(false);
   const [showAddSpouseModal, setShowAddSpouseModal] = useState(false);
-  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [showAddRootModal, setShowAddRootModal] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [personTreeData, setPersonTreeData] = useState<any>(null);
   const [showPersonTreeModal, setShowPersonTreeModal] = useState(false);
-  const [isDeletingPerson, setIsDeletingPerson] = useState(false);
 
   useEffect(() => {
     // Auto center tree when tree data is loaded
@@ -671,42 +668,6 @@ const FamilyTreeDemo: React.FC = () => {
     if (selectedPerson) setShowAddSpouseModal(true);
   };
 
-  // Xử lý khi click xóa person
-  const handleDeleteClick = () => {
-    if (selectedPerson) setShowDeleteConfirmModal(true);
-  };
-
-  // Xử lý xác nhận xóa
-  const handleConfirmDelete = async () => {
-    if (!selectedPerson) return;
-
-    try {
-      setIsDeletingPerson(true);
-      setLoading(true);
-
-      const personName = selectedPerson.name;
-
-      // Gọi API xóa thông qua personService
-      await personService.deletePerson(selectedPerson.id);
-
-      // Đóng modal
-      setShowDeleteConfirmModal(false);
-
-      // Clear selection
-      setSelectedPerson(null);
-
-      // Tự động reload cây
-      await loadTreeData();
-      setTreeViewKey(prev => prev + 1);
-    } catch (error: any) {
-      console.error('Error deleting person:', error);
-      setError(error.message || 'Failed to delete person');
-    } finally {
-      setIsDeletingPerson(false);
-      setLoading(false);
-    }
-  };
-
   // Function để xử lý thêm con
   const handleAddChild = async (childData: any) => {
     try {
@@ -1206,18 +1167,9 @@ const FamilyTreeDemo: React.FC = () => {
                           loadPersonTreeRelations(selectedPerson.id);
                           setShowMoreMenu(false);
                         }}
-                        className="w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50"
+                        className="w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 rounded-b-lg"
                       >
                         View Relations
-                      </button>
-                      <button
-                        onClick={() => {
-                          handleDeleteClick();
-                          setShowMoreMenu(false);
-                        }}
-                        className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 rounded-b-lg"
-                      >
-                        Delete Person
                       </button>
                     </div>
                   )}
@@ -1464,10 +1416,6 @@ const FamilyTreeDemo: React.FC = () => {
                   setSelectedPerson(person);
                   setShowPersonInfoModal(true);
                 }}
-                onDeletePerson={(person) => {
-                  setSelectedPerson(person);
-                  setShowDeleteConfirmModal(true);
-                }}
                 onPersonUpdated={(updatedPerson) => {
                   // Update selectedPerson if it's the same person being updated
                   if (selectedPerson && selectedPerson.id === updatedPerson.id) {
@@ -1640,15 +1588,6 @@ const FamilyTreeDemo: React.FC = () => {
         onClose={() => setShowAddRootModal(false)}
         onSave={handleAddRoot}
         treeName={userTrees.find(tree => tree.id === currentTreeId)?.name}
-      />
-
-      {/* Modal xác nhận xóa */}
-      <DeleteConfirmModal
-        isOpen={showDeleteConfirmModal}
-        onClose={() => !isDeletingPerson && setShowDeleteConfirmModal(false)}
-        onConfirm={handleConfirmDelete}
-        person={selectedPerson}
-        isDeleting={isDeletingPerson}
       />
 
       {/* Tree Selector Modal */}
@@ -2185,8 +2124,8 @@ const FamilyTreeDemo: React.FC = () => {
                 <h3 className="font-medium mb-2">Image Information:</h3>
                 <div className="bg-gray-100 p-4 rounded-lg space-y-2 text-sm">
                   <div><strong>Name:</strong> {selectedImage.name || 'N/A'}</div>
-               
-                
+
+
                 </div>
               </div>
             </div>
