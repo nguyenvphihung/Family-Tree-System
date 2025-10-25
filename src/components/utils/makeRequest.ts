@@ -47,33 +47,138 @@ export async function makeRequest(endpoint: string, method: string, data: any, r
                 throw new Error(`Method ${method} không được hỗ trợ`);
         }
 
-        // Lấy thông báo thành công từ server response
-        let serverMessage = response.data.message || 'Cập nhật thành công';
+        // Lấy thông báo từ server response (chỉ để log)
+        const serverMessage = response.data.message || 'Success';
 
-        // Custom message cho trường hợp tạo root person
-        if (endpoint.includes('/relations/trees/') && endpoint.includes('/root') && method === 'POST') {
-            serverMessage = 'Tạo thành viên đầu tiên trong gia phả thành công!';
+        // Hiển thị message từ server trong console để theo dõi và debug
+        console.log('📢 Server Response:', {
+            endpoint,
+            method,
+            message: serverMessage,
+            data: response.data,
+            timestamp: new Date().toISOString()
+        });
+
+        // Custom message CHO NGƯỜI DÙNG - hiển thị trên UI
+        let userMessage = 'Cập nhật thành công';
+
+        // ==================== AUTH APIs ====================
+        // Đăng nhập
+        if (endpoint.includes('/auth/login') && method === 'POST') {
+            userMessage = 'Đăng nhập thành công!';
+        }
+        // Đăng ký
+        else if (endpoint.includes('/auth/register') && method === 'POST') {
+            userMessage = 'Đăng ký tài khoản thành công!';
+        }
+        // Đăng xuất
+        else if (endpoint.includes('/auth/logout') && method === 'POST') {
+            userMessage = 'Đăng xuất thành công!';
         }
 
-        // Custom message cho xóa cây
-        if (endpoint.includes('/trees/') && method === 'DELETE') {
-            serverMessage = 'Xóa cây gia phả thành công!';
-          
+        // ==================== USER APIs ====================
+        // Cập nhật profile
+        else if (endpoint.includes('/users/profile') && method === 'PUT') {
+            userMessage = 'Cập nhật thông tin cá nhân thành công!';
         }
-       
-
-        if(endpoint.includes('/persons/') && method === 'DELETE') {
-            serverMessage = 'Xóa người thành công!';
+        // Đổi mật khẩu
+        else if (endpoint.includes('/users/change-password') && method === 'PUT') {
+            userMessage = 'Đổi mật khẩu thành công!';
+        }
+        // Upload avatar user
+        else if (endpoint.includes('/users/avatar') && method === 'POST') {
+            userMessage = 'Cập nhật ảnh đại diện thành công!';
+        }
+        // Xóa tài khoản
+        else if (endpoint.includes('/users/account') && method === 'DELETE') {
+            userMessage = 'Xóa tài khoản thành công!';
         }
 
+        // ==================== TREE APIs ====================
+        // Tạo cây mới
+        else if (endpoint.includes('/trees') && !endpoint.includes('/trees/') && method === 'POST') {
+            userMessage = 'Tạo cây gia phả thành công!';
+        }
+        // Cập nhật tên cây
+        else if (endpoint.includes('/trees/') && method === 'PUT') {
+            userMessage = 'Cập nhật tên cây thành công!';
+        }
+        // Xóa cây
+        else if (endpoint.includes('/trees/') && method === 'DELETE') {
+            userMessage = 'Xóa cây gia phả thành công!';
+        }
 
+        // ==================== RELATION APIs ====================
+        // Tạo thành viên đầu tiên trong gia phả
+        else if (endpoint.includes('/relations/trees/') && endpoint.includes('/root') && method === 'POST') {
+            userMessage = 'Tạo thành viên đầu tiên trong gia phả thành công!';
+        }
+        // Thêm con
+        else if (endpoint.includes('/relations/trees/') && endpoint.includes('/children') && method === 'POST') {
+            userMessage = 'Thêm con thành công!';
+        }
+        // Thêm cha/mẹ
+        else if (endpoint.includes('/relations/trees/') && endpoint.includes('/parent') && method === 'POST') {
+            userMessage = 'Thêm cha/mẹ thành công!';
+        }
+        // Thêm vợ/chồng
+        else if (endpoint.includes('/relations/trees/') && endpoint.includes('/spouses/') && method === 'POST') {
+            userMessage = 'Thêm vợ/chồng thành công!';
+        }
 
-        const successMessage = `${serverMessage}`;
+        // ==================== PERSON APIs ====================
+        // Xóa người
+        else if (endpoint.includes('/persons/') && method === 'DELETE') {
+            userMessage = 'Xóa người thành công!';
+        }
+        // Cập nhật thông tin người
+        else if (endpoint.includes('/persons/') && !endpoint.includes('/birth-info') && !endpoint.includes('/death-info') && !endpoint.includes('/upload-avatar') && method === 'PUT') {
+            userMessage = 'Cập nhật thông tin thành công!';
+        }
+        // Cập nhật thông tin sinh
+        else if (endpoint.includes('/persons/') && endpoint.includes('/birth-info') && method === 'PATCH') {
+            userMessage = 'Cập nhật thông tin sinh thành công!';
+        }
+        // Cập nhật thông tin mất
+        else if (endpoint.includes('/persons/') && endpoint.includes('/death-info') && method === 'PATCH') {
+            userMessage = 'Cập nhật thông tin mất thành công!';
+        }
+        // Upload avatar cho person
+        else if (endpoint.includes('/persons/') && endpoint.includes('/upload-avatar') && method === 'PATCH') {
+            userMessage = 'Cập nhật ảnh đại diện thành công!';
+        }
 
-        // Hiển thị message từ server trong console để theo dõi
-        console.log(' Server success message:', serverMessage);
-        console.log(' Full server response:', response.data);
-        console.log(' API endpoint:', endpoint, '- Method:', method);
+        // ==================== ALBUM APIs ====================
+        // Tạo album
+        else if (endpoint.includes('/albums') && !endpoint.includes('/albums/') && method === 'POST') {
+            userMessage = 'Tạo album thành công!';
+        }
+        // Cập nhật album
+        else if (endpoint.includes('/albums/') && method === 'PUT') {
+            userMessage = 'Cập nhật album thành công!';
+        }
+        // Xóa album
+        else if (endpoint.includes('/albums/') && method === 'DELETE') {
+            userMessage = 'Xóa album thành công!';
+        }
+
+        // ==================== IMAGE APIs ====================
+        // Upload ảnh vào album
+        else if (endpoint.includes('/images/upload') && method === 'POST') {
+            userMessage = 'Tải ảnh lên thành công!';
+        }
+        // Xóa ảnh
+        else if (endpoint.includes('/images/') && method === 'DELETE') {
+            userMessage = 'Xóa ảnh thành công!';
+        }
+
+        // ==================== VNPAY APIs ====================
+        // Tạo thanh toán
+        else if (endpoint.includes('/vnpay/create-payment') && method === 'POST') {
+            userMessage = 'Tạo giao dịch thanh toán thành công!';
+        }
+
+        const successMessage = `${userMessage}`;
 
         // Chỉ hiển thị toast cho mutations (POST, PUT, DELETE, PATCH), không hiển thị cho queries (GET)
         const isMutation = ['POST', 'PUT', 'DELETE', 'PATCH'].includes((method || '').toUpperCase());

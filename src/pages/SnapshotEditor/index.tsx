@@ -1,11 +1,18 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import restoreImageService from "@/services/restoreImageService";
+import { useToast } from "@/components/ui/use-toast";
 
 const SnapshotEditor = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadedImage, setUploadedImage] = useState(null);
   const [processedImage, setProcessedImage] = useState(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState("");
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [restoreMethod, setRestoreMethod] = useState<'file' | 'url'>('file'); // 'file' or 'url'
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -44,6 +51,9 @@ const SnapshotEditor = () => {
     const file = event.target.files[0];
     if (file && file.type.startsWith("image/")) {
       setUploadedImage(URL.createObjectURL(file));
+      setUploadedFile(file);
+      setRestoreMethod('file');
+      setShowUrlInput(false);
     }
   };
 
@@ -52,18 +62,113 @@ const SnapshotEditor = () => {
   };
 
   const processImage = async () => {
-    if (!uploadedImage) return;
+    if (!uploadedImage && !imageUrl) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng tải ảnh lên hoặc nhập URL ảnh",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsProcessing(true);
     setProcessedImage(null);
-    setTimeout(() => {
-      setProcessedImage(uploadedImage);
+
+    try {
+      let result;
+
+      if (restoreMethod === 'file' && uploadedFile) {
+        // Restore bằng file upload
+        toast({
+          title: "Đang xử lý...",
+          description: "Đang upload và phục hồi ảnh bằng AI...",
+        });
+        result = await restoreImageService.restoreByFile(uploadedFile);
+      } else if (restoreMethod === 'url' && imageUrl) {
+        // Restore bằng URL
+        toast({
+          title: "Đang xử lý...",
+          description: "Đang tải và phục hồi ảnh từ URL...",
+        });
+        result = await restoreImageService.restoreByUrl(imageUrl);
+      } else {
+        throw new Error("Không có dữ liệu để xử lý");
+      }
+
+      if (result.success && result.restored_url) {
+        // Cập nhật ảnh gốc từ Cloudinary (nếu có)
+        if (result.original_url) {
+          setUploadedImage(result.original_url);
+        }
+
+        setProcessedImage(result.restored_url);
+        toast({
+          title: "✅ Phục hồi thành công!",
+          description: `Đã phát hiện ${result.faces_detected} khuôn mặt. Độ phóng đại: ${result.upscale_factor.toFixed(2)}x`,
+        });
+
+        console.log('[SnapshotEditor] Restore result:', {
+          taskId: result.task_id,
+          originalUrl: result.original_url,
+          restoredUrl: result.restored_url,
+          originalSize: result.original_size,
+          restoredSize: result.restored_size,
+          upscaleFactor: result.upscale_factor,
+          facesDetected: result.faces_detected
+        });
+      } else {
+        throw new Error(result.error || "Không thể phục hồi ảnh");
+      }
+    } catch (error: any) {
+      console.error('[SnapshotEditor] Error:', error);
+      toast({
+        title: "❌ Lỗi phục hồi ảnh",
+        description: error.message || "Không thể phục hồi ảnh. Vui lòng thử lại.",
+        variant: "destructive",
+      });
+    } finally {
       setIsProcessing(false);
-    }, 2000);
+    }
   };
 
   const resetImages = () => {
     setUploadedImage(null);
     setProcessedImage(null);
+    setUploadedFile(null);
+    setImageUrl("");
+    setShowUrlInput(false);
+  };
+
+  const handleUrlSubmit = () => {
+    if (!imageUrl.trim()) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng nhập URL ảnh",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate URL format
+    try {
+      new URL(imageUrl);
+    } catch {
+      toast({
+        title: "Lỗi",
+        description: "URL không hợp lệ",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadedImage(imageUrl);
+    setRestoreMethod('url');
+    setUploadedFile(null);
+  };
+
+  const toggleInputMethod = () => {
+    setShowUrlInput(!showUrlInput);
+    resetImages();
   };
 
   const handleAttachToTree = () => {
@@ -128,42 +233,106 @@ const SnapshotEditor = () => {
             >
               {!uploadedImage && !isProcessing && (
                 <>
-                  <button
-                    onClick={handleUploadClick}
-                    className="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold rounded-full shadow-lg hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-4 focus:ring-emerald-300 transition-all transform hover:scale-105"
-                    aria-label="Tải ảnh cũ lên"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                  {/* Toggle button for input method */}
+                  <div className="mb-4 flex gap-2">
+                    <button
+                      onClick={() => { setShowUrlInput(false); setRestoreMethod('file'); }}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all ${!showUrlInput
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                      📤 Upload File
+                    </button>
+                    <button
+                      onClick={() => { setShowUrlInput(true); setRestoreMethod('url'); }}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all ${showUrlInput
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                    >
+                      🔗 Nhập URL
+                    </button>
+                  </div>
+
+                  {!showUrlInput ? (
+                    <>
+                      <button
+                        onClick={handleUploadClick}
+                        className="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold rounded-full shadow-lg hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-4 focus:ring-emerald-300 transition-all transform hover:scale-105"
+                        aria-label="Tải ảnh cũ lên"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 mr-2"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                          />
+                        </svg>
+                        Tải ảnh cũ lên
+                      </button>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        aria-label="Chọn ảnh gia đình"
                       />
-                    </svg>
-                    Tải ảnh cũ lên
-                  </button>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    onChange={handleFileChange}
-                    accept="image/*"
-                    aria-label="Chọn ảnh gia đình"
-                  />
-                  <p className="text-sm text-gray-600 mt-4 select-none">
-                    Hoặc nhấn{" "}
-                    <kbd className="px-2 py-1 bg-teal-100 rounded text-xs font-mono">
-                      Ctrl + V
-                    </kbd>
-                    hoặc kéo thả ảnh tổ tiên vào đây
-                  </p>
+                      <p className="text-sm text-gray-600 mt-4 select-none">
+                        Hoặc nhấn{" "}
+                        <kbd className="px-2 py-1 bg-teal-100 rounded text-xs font-mono">
+                          Ctrl + V
+                        </kbd>
+                        {" "}hoặc kéo thả ảnh tổ tiên vào đây
+                      </p>
+                    </>
+                  ) : (
+                    <div className="w-full space-y-4">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700">
+                          Nhập URL ảnh (Direct link)
+                        </label>
+                        <input
+                          type="text"
+                          value={imageUrl}
+                          onChange={(e) => setImageUrl(e.target.value)}
+                          placeholder="https://example.com/photo.jpg"
+                          className="w-full px-4 py-2 border-2 border-teal-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        />
+                      </div>
+                      <button
+                        onClick={handleUrlSubmit}
+                        className="w-full flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold rounded-full shadow-lg hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-4 focus:ring-emerald-300 transition-all transform hover:scale-105"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 mr-2"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                          />
+                        </svg>
+                        Tải ảnh từ URL
+                      </button>
+                      <p className="text-xs text-gray-500 text-center">
+                        💡 Lưu ý: Sử dụng direct link (ví dụ: https://i.imgur.com/xxx.jpg)
+                      </p>
+                    </div>
+                  )}
                 </>
               )}
 
@@ -191,8 +360,11 @@ const SnapshotEditor = () => {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  <p className="text-lg font-medium text-gray-800">
-                    Đang khôi phục ảnh...
+                  <p className="text-lg font-medium text-gray-800 mb-2">
+                    Đang khôi phục ảnh bằng AI...
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Quá trình này có thể mất vài phút. Vui lòng đợi...
                   </p>
                 </div>
               )}
@@ -200,25 +372,63 @@ const SnapshotEditor = () => {
               {/* Display uploaded or processed image */}
               {(uploadedImage || processedImage) && !isProcessing && (
                 <div className="w-full">
-                  <h2 className="text-xl font-bold mb-4 text-gray-900">
-                    {processedImage ? "Ảnh đã khôi phục" : "Ảnh đã tải lên"}
-                  </h2>
-                  <div className="w-full h-64 md:h-72 bg-white rounded-xl shadow-md border-2 border-teal-200 overflow-hidden">
-                    {" "}
-                    <img
-                      src={processedImage || uploadedImage}
-                      alt={
-                        processedImage ? "Ảnh đã khôi phục" : "Ảnh đã tải lên"
-                      }
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+                  {/* Show both images side by side when processed */}
+                  {processedImage ? (
+                    <div className="space-y-4">
+                      <h2 className="text-xl font-bold text-gray-900 text-center">
+                        Kết quả phục hồi
+                      </h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Original Image */}
+                        <div className="space-y-2">
+                          <h3 className="text-sm font-medium text-gray-700 text-center">
+                            Ảnh gốc
+                          </h3>
+                          <div className="w-full h-48 md:h-56 bg-white rounded-xl shadow-md border-2 border-gray-200 overflow-hidden">
+                            <img
+                              src={uploadedImage}
+                              alt="Ảnh gốc"
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        </div>
+                        {/* Restored Image */}
+                        <div className="space-y-2">
+                          <h3 className="text-sm font-medium text-emerald-700 text-center">
+                            ✨ Ảnh đã phục hồi
+                          </h3>
+                          <div className="w-full h-48 md:h-56 bg-white rounded-xl shadow-md border-2 border-emerald-200 overflow-hidden">
+                            <img
+                              src={processedImage}
+                              alt="Ảnh đã khôi phục"
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    // Show only uploaded image
+                    <>
+                      <h2 className="text-xl font-bold mb-4 text-gray-900">
+                        Ảnh đã tải lên
+                      </h2>
+                      <div className="w-full h-64 md:h-72 bg-white rounded-xl shadow-md border-2 border-teal-200 overflow-hidden">
+                        <img
+                          src={uploadedImage}
+                          alt="Ảnh đã tải lên"
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    </>
+                  )}
 
                   {/* Process button */}
                   {uploadedImage && !processedImage && (
                     <button
                       onClick={processImage}
-                      className="mt-4 md:mt-6 flex items-center justify-center px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white font-bold rounded-full shadow-lg hover:from-teal-600 hover:to-cyan-700 focus:outline-none focus:ring-4 focus:ring-teal-300 transition-all transform hover:scale-105"
+                      disabled={isProcessing}
+                      className="mt-4 md:mt-6 w-full flex items-center justify-center px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-600 text-white font-bold rounded-full shadow-lg hover:from-teal-600 hover:to-cyan-700 focus:outline-none focus:ring-4 focus:ring-teal-300 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                       aria-label="Khôi phục bằng AI"
                     >
                       <svg
@@ -232,10 +442,10 @@ const SnapshotEditor = () => {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M9 13h6m-3-3v6m3-10a9 9 0 11-18 0 9 9 0 0118 0z"
+                          d="M13 10V3L4 14h7v7l9-11h-7z"
                         />
                       </svg>
-                      Khôi phục bằng AI
+                      🤖 Khôi phục bằng AI
                     </button>
                   )}
 

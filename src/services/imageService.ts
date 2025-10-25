@@ -41,7 +41,7 @@ class ImageService {
         }
     }
 
- 
+
     async uploadImage(data: UploadImageRequest): Promise<Image> {
         try {
             const { file, albumId } = data;
@@ -57,6 +57,7 @@ class ImageService {
             if (!file) {
                 throw new Error('No file provided');
             }
+            
 
             // Create FormData for multipart upload (like HTML test)
             const formData = new FormData();
@@ -89,7 +90,6 @@ class ImageService {
             if (result.error) {
                 throw new Error(result.error.message);
             }
-            console.log('[ImageService] Upload successful:', result.data?.data ?? result.data);
             return result.data?.data ?? result.data;
         } catch (error: any) {
             console.error('[ImageService] Upload error:', error);

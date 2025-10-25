@@ -10,7 +10,7 @@ export interface PersonInfo {
     birthPlace: string;
     deathPlace?: string;
     gravePlace?: string;
-    deathDate?: string;
+    deathDate?: string; // ISO DateTime format
     generation: string;
     createdAt: string;
 }
@@ -51,7 +51,7 @@ export interface DeletePersonResponse {
 export interface UpdateDeathInfoRequest {
     deathPlace?: string;
     gravePlace?: string;
-    deathDate?: string; // ISO DateTime format: "2025-10-21T06:07:17.576Z"
+    deathDate?: string;
 }
 
 export interface UpdateDeathInfoResponse {
@@ -63,7 +63,7 @@ export interface UpdateDeathInfoResponse {
 
 // ==================== UPDATE BIRTH INFO ====================
 export interface UpdateBirthInfoRequest {
-    birthLocation?: string;
+    birthLocation: string;
 }
 
 export interface UpdateBirthInfoResponse {
@@ -75,7 +75,7 @@ export interface UpdateBirthInfoResponse {
 
 // ==================== UPLOAD AVATAR ====================
 export interface UploadAvatarRequest {
-    avatar: string | File; // Support both base64 string and File object
+    avatar: string; // base64 string
 }
 
 export interface UploadAvatarResponse {

@@ -147,11 +147,9 @@ class PersonService {
                 formData,
                 'response-area'
             );
-            console.log('[UploadAvatar] API response:', result);
             if (result.error) {
                 throw new Error(result.error.message);
             }
-            console.log('[UploadAvatar] Upload successful:', result.data.data);
             return result.data.data;
         } catch (error: any) {
             console.error('[UploadAvatar] Error:', error);

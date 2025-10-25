@@ -7,11 +7,8 @@ class UserService {
     try {
       const result = await makeRequest(API_ENDPOINTS.USER.PROFILE, 'GET', null, 'response-area');
       if (result.error) {
-        // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
         throw new Error(result.error.message);
       }
-      // Trường hợp thành công: Lấy thông báo thành công từ makeRequest
-      console.log(result.success);
       return result.data;
     } catch (error: any) {
       throw error;
@@ -22,11 +19,8 @@ class UserService {
     try {
       const result = await makeRequest(API_ENDPOINTS.USER.PROFILE, 'PUT', data, 'response-area');
       if (result.error) {
-        // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
         throw new Error(result.error.message);
       }
-      // Trường hợp thành công: Lấy thông báo thành công từ makeRequest
-      console.log(result.success);
       return result.data;
     } catch (error: any) {
       throw error;
@@ -40,11 +34,8 @@ class UserService {
     try {
       const result = await makeRequest(API_ENDPOINTS.USER.CHANGE_PASSWORD, 'PUT', data, 'response-area');
       if (result.error) {
-        // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
         throw new Error(result.error.message);
       }
-      // Trường hợp thành công: Lấy thông báo thành công từ makeRequest
-      console.log(result.success);
       return result.data;
     } catch (error: any) {
       throw error;
@@ -57,11 +48,8 @@ class UserService {
       formData.append("avatar", file);
       const result = await makeRequest(API_ENDPOINTS.USER.UPLOAD_AVATAR, 'POST', formData, 'response-area');
       if (result.error) {
-        // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
         throw new Error(result.error.message);
       }
-      // Trường hợp thành công: Lấy thông báo thành công từ makeRequest
-      console.log(result.success);
       return result.data;
     } catch (error: any) {
       throw error;
@@ -72,11 +60,8 @@ class UserService {
     try {
       const result = await makeRequest(API_ENDPOINTS.USER.DELETE_ACCOUNT, 'DELETE', null, 'response-area');
       if (result.error) {
-        // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
         throw new Error(result.error.message);
       }
-      // Trường hợp thành công: Lấy thông báo thành công từ makeRequest
-      console.log(result.success);
       return result.data;
     } catch (error: any) {
       throw error;
@@ -87,11 +72,8 @@ class UserService {
     try {
       const result = await makeRequest(`${API_ENDPOINTS.USER.BY_ID}/${id}`, 'GET', null, 'response-area');
       if (result.error) {
-        // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
         throw new Error(result.error.message);
       }
-      // Trường hợp thành công: Lấy thông báo thành công từ makeRequest
-      console.log(result.success);
       return result.data;
     } catch (error: any) {
       throw error;
@@ -102,11 +84,8 @@ class UserService {
     try {
       const result = await makeRequest(API_ENDPOINTS.USER.SEARCH, 'GET', null, 'response-area', { q: query });
       if (result.error) {
-        // Trường hợp thất bại: Lấy thông báo lỗi từ makeRequest
         throw new Error(result.error.message);
       }
-      // Trường hợp thành công: Lấy thông báo thành công từ makeRequest
-      console.log(result.success);
       return result.data;
     } catch (error: any) {
       throw error;

@@ -232,9 +232,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
       onDelete();
 
       // Refresh tree if callback provided - QUAN TRỌNG: phải reload tree để cập nhật hasTreeData
-      if (onRefresh) {
-        await onRefresh();
-      }
+   
 
       onClose();
     } catch (error: any) {

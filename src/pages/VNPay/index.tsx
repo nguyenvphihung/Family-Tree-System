@@ -70,20 +70,26 @@ const VNPayPage = () => {
 
         setIsCreating(true);
         try {
+            console.log('💳 Creating payment:', { fundId, amount: amountNum, content });
             const response = await vnpayService.createPayment({
                 fundId,
                 amount: amountNum,
                 content,
             });
+            console.log('📦 Create payment response:', response);
 
             if (response.data?.paymentUrl) {
+                console.log('🔗 Redirecting to payment URL:', response.data.paymentUrl);
+                console.log('⚠️ NOTE: Transaction will only be saved AFTER completing payment on VNPay');
                 toast({
-                    title: 'Thành công',
-                    description: 'Đang chuyển đến trang thanh toán...',
+                    title: 'Tạo yêu cầu thanh toán thành công',
+                    description: 'Đang chuyển đến VNPay. Vui lòng hoàn tất thanh toán để giao dịch được lưu.',
                 });
                 // Redirect to VNPay payment page
                 window.location.href = response.data.paymentUrl;
             } else {
+                console.log('✅ Payment created successfully (no redirect)');
+                console.log('⚠️ WARNING: No paymentUrl in response - transaction may not be saved');
                 toast({
                     title: 'Thành công',
                     description: 'Tạo thanh toán thành công!',
@@ -94,7 +100,8 @@ const VNPayPage = () => {
                 setContent('');
             }
         } catch (error: any) {
-            console.error('Create payment error:', error);
+            console.error('❌ Create payment error:', error);
+            console.error('Error response:', error.response);
             toast({
                 title: 'Lỗi tạo thanh toán',
                 description: error.response?.data?.message || 'Không thể tạo thanh toán',
@@ -118,22 +125,32 @@ const VNPayPage = () => {
 
         setIsLoadingTransactions(true);
         try {
+            console.log('🔍 Fetching transactions for fundId:', selectedFundId);
             const response = await vnpayService.getFundTransactions(selectedFundId);
+            console.log('📦 Get transactions response:', response);
+
             setTransactions(response.data || []);
 
             if (!response.data || response.data.length === 0) {
+                console.warn('⚠️ No transactions found for fundId:', selectedFundId);
+                console.warn('💡 Possible reasons:');
+                console.warn('   1. Fund ID không tồn tại trong hệ thống');
+                console.warn('   2. Chưa có giao dịch nào được hoàn tất cho Fund này');
+                console.warn('   3. Giao dịch đang chờ xử lý (chưa thanh toán trên VNPay)');
                 toast({
-                    title: 'Thông báo',
-                    description: 'Không có giao dịch nào',
+                    title: 'Không có giao dịch',
+                    description: 'Chưa có giao dịch nào được hoàn tất cho Fund ID này. Vui lòng hoàn tất thanh toán trên VNPay trước.',
                 });
             } else {
+                console.log('✅ Found transactions:', response.data.length);
                 toast({
                     title: 'Thành công',
                     description: `Tìm thấy ${response.data.length} giao dịch`,
                 });
             }
         } catch (error: any) {
-            console.error('Get transactions error:', error);
+            console.error('❌ Get transactions error:', error);
+            console.error('Error response:', error.response);
             toast({
                 title: 'Lỗi tải giao dịch',
                 description: error.response?.data?.message || 'Không thể tải danh sách giao dịch',
@@ -253,9 +270,14 @@ const VNPayPage = () => {
                                     </div>
 
                                     <Alert>
-                                        <AlertDescription>
-                                            <strong>Lưu ý:</strong> Sau khi nhấn "Tạo thanh toán", bạn sẽ được
-                                            chuyển đến trang thanh toán của VNPay để hoàn tất giao dịch.
+                                        <AlertDescription className="space-y-2">
+                                            <p><strong>⚠️ Quan trọng:</strong></p>
+                                            <ol className="list-decimal list-inside space-y-1 text-sm">
+                                                <li>Nhấn "Tạo thanh toán" để tạo yêu cầu thanh toán</li>
+                                                <li>Bạn sẽ được chuyển đến trang VNPay</li>
+                                                <li>Hoàn tất thanh toán trên VNPay (quét QR/nhập thẻ)</li>
+                                                <li><strong>CHỈ SAU KHI thanh toán thành công</strong>, giao dịch mới xuất hiện trong lịch sử</li>
+                                            </ol>
                                         </AlertDescription>
                                     </Alert>
 
@@ -286,7 +308,8 @@ const VNPayPage = () => {
                                     Lịch sử giao dịch
                                 </CardTitle>
                                 <CardDescription>
-                                    Xem danh sách giao dịch theo Fund ID
+                                    Xem danh sách giao dịch <strong>ĐÃ HOÀN TẤT</strong> theo Fund ID.
+                                    Chỉ các giao dịch đã thanh toán thành công trên VNPay mới hiển thị ở đây.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
@@ -356,10 +379,22 @@ const VNPayPage = () => {
                                     </div>
                                 ) : (
                                     <Alert>
-                                        <AlertDescription className="text-center py-8">
-                                            {isLoadingTransactions
-                                                ? 'Đang tải dữ liệu...'
-                                                : 'Chưa có giao dịch nào. Nhập Fund ID và nhấn "Tìm kiếm" để xem giao dịch.'}
+                                        <AlertDescription className="text-center py-8 space-y-3">
+                                            {isLoadingTransactions ? (
+                                                'Đang tải dữ liệu...'
+                                            ) : (
+                                                <div className="space-y-2">
+                                                    <p className="font-medium">Chưa có giao dịch nào được tìm thấy</p>
+                                                    <div className="text-sm text-muted-foreground text-left max-w-md mx-auto">
+                                                        <p className="font-semibold mb-1">Có thể do:</p>
+                                                        <ul className="list-disc list-inside space-y-1">
+                                                            <li>Fund ID chưa có trong hệ thống</li>
+                                                            <li>Bạn mới tạo payment nhưng chưa thanh toán trên VNPay</li>
+                                                            <li>Giao dịch đang được xử lý (thử lại sau vài phút)</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </AlertDescription>
                                     </Alert>
                                 )}
