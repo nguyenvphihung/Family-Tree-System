@@ -244,3 +244,37 @@ export const useFamilyTreeStore = create<FamilyTreeStore>()(
     }),
   ),
 );
+
+// ==================== CURRENT TREE STORE (persist) ====================
+interface CurrentTreeInfo {
+  id: string;
+  name: string;
+  fundId?: string;
+}
+
+interface CurrentTreeState {
+  currentTree: CurrentTreeInfo | null;
+}
+
+interface CurrentTreeStore extends CurrentTreeState {
+  setCurrentTree: (tree: CurrentTreeInfo | null) => void;
+  setFundId: (fundId: string) => void;
+}
+
+export const useCurrentTreeStore = create<CurrentTreeStore>()(
+  devtools(
+    persist(
+      (set, get) => ({
+        currentTree: null,
+        setCurrentTree: (tree: CurrentTreeInfo | null) => set({ currentTree: tree }),
+        setFundId: (fundId: string) => set((state) => ({
+          currentTree: state.currentTree ? { ...state.currentTree, fundId } : { id: '', name: '', fundId }
+        })),
+      }),
+      {
+        name: 'current-tree-storage',
+        partialize: (state) => ({ currentTree: state.currentTree }),
+      }
+    )
+  )
+);

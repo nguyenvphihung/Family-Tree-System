@@ -1,73 +1,51 @@
-import axiosInstance from '@/config/axios';
 import { API_ENDPOINTS } from '@/config/apiEndpoints';
+import { makeRequest } from '@/components/utils';
 import type {
     CreatePaymentRequest,
     CreatePaymentResponse,
     GetFundTransactionsResponse,
-    PaymentCallbackParams,
+    FundTransaction,
+    VnpayCallbackParams,
     PaymentCallbackResponse,
 } from '@/types/vnpay';
 
-/**
- * VNPay Service
- * Handles all VNPay related API calls
- */
-const vnpayService = {
-    /**
-     * Create a new payment
-     * POST /vnpay/create-payment
-     */
-    createPayment: async (
-        paymentData: CreatePaymentRequest
-    ): Promise<CreatePaymentResponse> => {
-        try {
-            const response = await axiosInstance.post<CreatePaymentResponse>(
-                API_ENDPOINTS.VNPAY.CREATE_PAYMENT,
-                paymentData
-            );
-            return response.data;
-        } catch (error: any) {
-            console.error('Error creating payment:', error);
-            throw error;
+class VNPayService {
+    // POST /vnpay/create-payment
+    async createPayment(payload: CreatePaymentRequest): Promise<{ data: CreatePaymentResponse }> {
+        const result = await makeRequest(API_ENDPOINTS.VNPAY.CREATE_PAYMENT, 'POST', payload, null);
+        if ((result as any).error) {
+            throw new Error((result as any).error.message || 'Không thể tạo thanh toán');
         }
-    },
+        const envelope = (result as { data: CreatePaymentResponse }).data;
+        const normalized: CreatePaymentResponse = {
+            ...envelope,
+            paymentUrl: envelope?.paymentUrl || envelope?.data?.paymentUrl,
+        };
+        return { data: normalized };
+    }
 
-    /**
-     * Get fund transactions by fundId
-     * GET /vnpay/{fundId}
-     */
-    getFundTransactions: async (
-        fundId: string
-    ): Promise<GetFundTransactionsResponse> => {
-        try {
-            const response = await axiosInstance.get<GetFundTransactionsResponse>(
-                API_ENDPOINTS.VNPAY.GET_FUND_TRANSACTIONS(fundId)
-            );
-            return response.data;
-        } catch (error: any) {
-            console.error('Error getting fund transactions:', error);
-            throw error;
+    // GET /vnpay/{fundId}
+    async getFundTransactions(fundId: string): Promise<{ data: FundTransaction[] }> {
+        const result = await makeRequest(API_ENDPOINTS.VNPAY.GET_FUND_TRANSACTIONS(fundId), 'GET', null, null);
+        if ((result as any).error) {
+            throw new Error((result as any).error.message || 'Không thể tải danh sách giao dịch');
         }
-    },
+        // Server có dạng envelope { code, status, message, data: FundTransaction[] }
+        const envelope = (result as { data: GetFundTransactionsResponse }).data;
+        return { data: envelope?.data || [] };
+    }
 
-    /**
-     * Handle payment callback from VNPay
-     * GET /vnpay/payment-callback
-     */
-    handlePaymentCallback: async (
-        params: PaymentCallbackParams
-    ): Promise<PaymentCallbackResponse> => {
-        try {
-            const response = await axiosInstance.get<PaymentCallbackResponse>(
-                API_ENDPOINTS.VNPAY.PAYMENT_CALLBACK,
-                { params }
-            );
-            return response.data;
-        } catch (error: any) {
-            console.error('Error handling payment callback:', error);
-            throw error;
+    // GET /vnpay/payment-callback?{params}
+    async handlePaymentCallback(params: VnpayCallbackParams): Promise<{ data: PaymentCallbackResponse }> {
+        const result = await makeRequest(API_ENDPOINTS.VNPAY.PAYMENT_CALLBACK, 'GET', null, null, params);
+        if ((result as any).error) {
+            throw new Error((result as any).error.message || 'Không thể xử lý callback');
         }
-    },
-};
+        return result as { data: PaymentCallbackResponse };
+    }
+}
 
+export const vnpayService = new VNPayService();
 export default vnpayService;
+
+

@@ -33,7 +33,6 @@ class AuthService {
     });
   }
 
-  // xóa token
   clearTokens(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.IS_AUTHENTICATED_KEY);
@@ -303,6 +302,7 @@ class AuthService {
     }
   }
 
+  
 
   // Method để debug localStorage
   debugLocalStorage(): void {

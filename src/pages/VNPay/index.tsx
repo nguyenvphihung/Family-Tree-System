@@ -18,7 +18,13 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { vnpayService } from '@/services';
-import type { FundTransaction } from '@/types/vnpay';
+import { useCurrentTreeStore } from '@/store';
+type FundTransaction = {
+    fundTransactionId: string;
+    amount: number;
+    content: string;
+    createdAt: string;
+};
 import {
     CreditCard,
     Clock,
@@ -33,6 +39,7 @@ import { useToast } from '@/components/ui/use-toast';
 const VNPayPage = () => {
     const navigate = useNavigate();
     const { toast } = useToast();
+    const currentTree = useCurrentTreeStore((s) => s.currentTree);
 
     // Form state
     const [fundId, setFundId] = useState('');
@@ -45,11 +52,78 @@ const VNPayPage = () => {
     const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
     const [selectedFundId, setSelectedFundId] = useState('');
 
+    // Format amount input with thousand separators (.)
+    const formatAmountInput = (raw: string) => {
+        const digitsOnly = raw.replace(/\D/g, '');
+        if (!digitsOnly) return '';
+        return digitsOnly.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    };
+
+    // Quick amount options (giống HTML)
+    const quickAmounts = [50000, 100000, 200000, 500000, 1000000, 2000000];
+
+    // Normalize formatted amount -> number value
+    const normalizeAmountToNumber = (formatted: string): number => {
+        const digitsOnly = (formatted || '').replace(/\D/g, '');
+        if (!digitsOnly) return NaN;
+        return parseInt(digitsOnly, 10);
+    };
+
+    // Read Vietnamese number (simple, up to billions)
+    const readVietnameseNumber = (value: number): string => {
+        if (!isFinite(value) || value < 0) return '';
+        if (value === 0) return 'không đồng';
+        const dv = ['', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
+        const readHundreds = (n: number, full: boolean): string => {
+            const tr = Math.floor(n / 100), ch = Math.floor((n % 100) / 10), dvn = n % 10;
+            let str = '';
+            if (full || tr > 0) {
+                str += dv[tr] + ' trăm';
+                if (ch === 0 && dvn > 0) str += ' lẻ';
+            }
+            if (ch > 1) {
+                str += ' ' + dv[ch] + ' mươi';
+                if (dvn === 1) str += ' mốt';
+                else if (dvn === 4) str += ' tư';
+                else if (dvn === 5) str += ' lăm';
+                else if (dvn > 0) str += ' ' + dv[dvn];
+            } else if (ch === 1) {
+                str += ' mười';
+                if (dvn === 5) str += ' lăm';
+                else if (dvn > 0) str += ' ' + dv[dvn];
+            } else if (dvn > 0 && (full || tr > 0)) {
+                str += ' ' + dv[dvn];
+            } else if (dvn > 0) {
+                str += dv[dvn];
+            }
+            return str.trim();
+        };
+        const units = ['', ' nghìn', ' triệu', ' tỷ'];
+        let i = 0, str = '';
+        while (value > 0 && i < units.length) {
+            const block = value % 1000;
+            if (block > 0) {
+                const blockStr = readHundreds(block, str !== '');
+                str = blockStr + units[i] + (str ? ' ' + str : '');
+            }
+            value = Math.floor(value / 1000);
+            i++;
+        }
+        return (str + ' đồng').replace(/\s+/g, ' ').trim();
+    };
+
+    useEffect(() => {
+        if (currentTree?.fundId) {
+            setFundId(currentTree.fundId);
+            setSelectedFundId(currentTree.fundId);
+        }
+    }, [currentTree?.fundId]);
+
     // Create payment
     const handleCreatePayment = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!fundId || !amount || !content) {
+        if (!fundId || !amount) {
             toast({
                 title: 'Lỗi',
                 description: 'Vui lòng điền đầy đủ thông tin',
@@ -58,11 +132,11 @@ const VNPayPage = () => {
             return;
         }
 
-        const amountNum = parseFloat(amount);
-        if (isNaN(amountNum) || amountNum < 5000) {
+        const amountNum = normalizeAmountToNumber(amount);
+        if (isNaN(amountNum) || amountNum < 10000 || amountNum > 5000000) {
             toast({
                 title: 'Lỗi',
-                description: 'Số tiền phải lớn hơn hoặc bằng 5,000 VNĐ',
+                description: 'Số tiền phải từ 10,000 VNĐ đến 5,000,000 VNĐ',
                 variant: 'destructive',
             });
             return;
@@ -239,22 +313,39 @@ const VNPayPage = () => {
                                         </Label>
                                         <Input
                                             id="amount"
-                                            type="number"
-                                            placeholder="5000000"
+                                            type="text"
+                                            inputMode="numeric"
+                                            placeholder="1.000.000"
                                             value={amount}
-                                            onChange={(e) => setAmount(e.target.value)}
-                                            min="5000"
-                                            step="1000"
+                                            onChange={(e) => setAmount(formatAmountInput(e.target.value))}
                                             required
                                         />
-                                        <p className="text-sm text-muted-foreground">
-                                            Số tiền tối thiểu: 5,000 VNĐ
-                                        </p>
+                                        {/* Quick amount options giống HTML */}
+                                        <div className="flex gap-2 mb-2">
+                                            {quickAmounts.map((amt) => (
+                                                <Button
+                                                    key={amt}
+                                                    type="button"
+                                                    variant={normalizeAmountToNumber(amount) === amt ? "default" : "outline"}
+                                                    onClick={() => setAmount(formatAmountInput(amt.toString()))}
+                                                >
+                                                    {amt.toLocaleString()}đ
+                                                </Button>
+                                            ))}
+                                        </div>
+                                        <div className="text-sm text-muted-foreground space-y-1">
+                                            <p>Số tiền phải từ 10,000 VNĐ đến 5,000,000 VNĐ</p>
+                                            {amount && (
+                                                <p>
+                                                    Bạn góp <span className="font-semibold">{readVietnameseNumber(normalizeAmountToNumber(amount))}</span>
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor="content">
-                                            Nội dung <span className="text-red-500">*</span>
+                                            Nội dung (Tùy chọn)
                                         </Label>
                                         <Textarea
                                             id="content"
@@ -262,7 +353,6 @@ const VNPayPage = () => {
                                             value={content}
                                             onChange={(e) => setContent(e.target.value)}
                                             rows={3}
-                                            required
                                         />
                                         <p className="text-sm text-muted-foreground">
                                             Mô tả chi tiết về giao dịch
@@ -285,7 +375,7 @@ const VNPayPage = () => {
                                         {isCreating ? (
                                             <>
                                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                Đang xử lý...
+                                                Đang tạo link thanh toán...
                                             </>
                                         ) : (
                                             <>
@@ -294,6 +384,15 @@ const VNPayPage = () => {
                                             </>
                                         )}
                                     </Button>
+                                    {/* Loading overlay giống HTML */}
+                                    {isCreating && (
+                                        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+                                            <div className="bg-white rounded-lg p-8 shadow-lg flex flex-col items-center">
+                                                <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full mb-4"></div>
+                                                <p className="text-lg font-semibold text-blue-600">Đang tạo link thanh toán...</p>
+                                            </div>
+                                        </div>
+                                    )}
                                 </form>
                             </CardContent>
                         </Card>
@@ -452,5 +551,6 @@ const VNPayPage = () => {
         </DashboardLayout>
     );
 };
+
 
 export default VNPayPage;

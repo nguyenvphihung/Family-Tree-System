@@ -1,9 +1,6 @@
 import { api } from '@/config/axios';
 
-// Utility function để hiển thị thông báo lỗi từ API calls
-// Sử dụng axios để thực hiện API calls
 
-// Biến global để lưu timeout ID để tránh trùng lặp
 let currentTimeoutId: NodeJS.Timeout | null = null;
 
 export async function makeRequest(endpoint: string, method: string, data: any, responseElementId: string | null, params?: any) {
@@ -62,8 +59,7 @@ export async function makeRequest(endpoint: string, method: string, data: any, r
         // Custom message CHO NGƯỜI DÙNG - hiển thị trên UI
         let userMessage = 'Cập nhật thành công';
 
-        // ==================== AUTH APIs ====================
-        // Đăng nhập
+     
         if (endpoint.includes('/auth/login') && method === 'POST') {
             userMessage = 'Đăng nhập thành công!';
         }
@@ -76,24 +72,10 @@ export async function makeRequest(endpoint: string, method: string, data: any, r
             userMessage = 'Đăng xuất thành công!';
         }
 
-        // ==================== USER APIs ====================
-        // Cập nhật profile
-        else if (endpoint.includes('/users/profile') && method === 'PUT') {
-            userMessage = 'Cập nhật thông tin cá nhân thành công!';
-        }
-        // Đổi mật khẩu
-        else if (endpoint.includes('/users/change-password') && method === 'PUT') {
-            userMessage = 'Đổi mật khẩu thành công!';
-        }
-        // Upload avatar user
-        else if (endpoint.includes('/users/avatar') && method === 'POST') {
-            userMessage = 'Cập nhật ảnh đại diện thành công!';
-        }
-        // Xóa tài khoản
-        else if (endpoint.includes('/users/account') && method === 'DELETE') {
-            userMessage = 'Xóa tài khoản thành công!';
-        }
-
+      
+      
+      
+    
         // ==================== TREE APIs ====================
         // Tạo cây mới
         else if (endpoint.includes('/trees') && !endpoint.includes('/trees/') && method === 'POST') {
