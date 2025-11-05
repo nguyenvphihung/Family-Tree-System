@@ -113,6 +113,32 @@ npm run build
 # Upload thư mục dist lên Netlify
 ```
 
-## 📝 License
+## � Notification System (NEW!)
+
+Dự án đã được cập nhật với hệ thống thông báo hiện đại sử dụng **React Toastify**!
+
+### ✨ Tính năng mới:
+- ✅ **Auto Toast Display:** Tự động hiển thị thông báo từ server
+- ✅ **Axios Interceptors:** Xử lý tập trung cho mọi API call
+- ✅ **Smart Error Handling:** Hiển thị đúng loại toast theo status code
+- ✅ **Clean Code:** Giảm 81% code trong makeRequest (348 → 65 dòng)
+- ✅ **Professional UI:** Toast đẹp với animation và progress bar
+
+### 📚 Tài liệu:
+- [`TOAST_SUMMARY.md`](./TOAST_SUMMARY.md) - Tóm tắt ngắn gọn
+- [`CHANGELOG_TOAST_NOTIFICATION.md`](./CHANGELOG_TOAST_NOTIFICATION.md) - Changelog & Quick Start
+- [`TOAST_NOTIFICATION_GUIDE.md`](./TOAST_NOTIFICATION_GUIDE.md) - Hướng dẫn chi tiết
+- [`MIGRATION_EXAMPLE.md`](./MIGRATION_EXAMPLE.md) - Ví dụ migration
+
+### 🎯 Cách hoạt động:
+```typescript
+// Toast tự động hiển thị với message từ server!
+const response = await api.post('/trees', { name: 'Gia phả' });
+// ✅ Hiển thị: "Tạo cây gia phả thành công" (từ server)
+```
+
+---
+
+## �📝 License
 
 MIT License

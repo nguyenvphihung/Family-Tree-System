@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import AppRouter from "./routes";
 import { Toaster } from "./components/ui/toaster";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const [currentTheme, setCurrentTheme] = useState('family-tree');
@@ -13,7 +15,7 @@ function App() {
     }
   }, []);
 
- 
+
 
   // Apply theme to body
   useEffect(() => {
@@ -39,6 +41,19 @@ function App() {
     <div className={`min-h-screen ${currentTheme === 'gradient-animated' ? 'bg-gradient-animated' : `bg-${currentTheme}`}`}>
       <AppRouter />
       <Toaster />
+      <ToastContainer
+        position="top-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        style={{ zIndex: 999999 }}
+      />
     </div>
   );
 }
