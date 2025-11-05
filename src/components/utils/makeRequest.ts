@@ -1,4 +1,5 @@
 import { api } from '@/config/axios';
+import { ValidationError } from '@/utils/validation';
 
 /**
  * Make HTTP request using axios
@@ -65,6 +66,27 @@ export async function makeRequest(
             data: response.data
         };
     } catch (error: any) {
+        // Handle validation errors
+        if (error instanceof ValidationError) {
+            if (import.meta.env.DEV) {
+                console.error('❌ Validation Error:', {
+                    endpoint,
+                    method,
+                    errors: error.errors,
+                    timestamp: new Date().toISOString()
+                });
+            }
+            return {
+                success: false,
+                error: {
+                    message: error.message,
+                    errors: error.errors,
+                    status: 400,
+                    type: 'validation'
+                }
+            };
+        }
+
         // Log error trong development mode
         if (import.meta.env.DEV) {
             console.error('❌ API Error:', {
@@ -81,7 +103,8 @@ export async function makeRequest(
             success: false,
             error: {
                 message: error.response?.data?.message || error.message,
-                status: error.response?.status
+                status: error.response?.status,
+                type: 'api'
             }
         };
     }

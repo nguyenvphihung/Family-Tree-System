@@ -9,6 +9,7 @@ import {
     UpdateTreeResponse,
     DeleteTreeResponse,
 } from '../types/tree';
+import { validateTreeName, throwIfInvalid, validators } from '../utils/validation';
 
 class TreeService {
     // GET /trees - Lấy tất cả cây của người dùng hiện tại
@@ -40,6 +41,10 @@ class TreeService {
     // POST /trees - Tạo mới 1 cây
     async createTree(data: CreateTreeRequest): Promise<Tree> {
         try {
+            // Validate tree name
+            const validation = validateTreeName(data.name);
+            throwIfInvalid(validation);
+
             const result = await makeRequest(API_ENDPOINTS.TREES.CREATE_TREE, 'POST', data, 'response-area');
             if (result.error) {
                 throw new Error(result.error.message);
@@ -53,6 +58,14 @@ class TreeService {
     // PUT /trees/{treeId} - Sửa thông tin cây
     async updateTree(treeId: string, name: string): Promise<Tree> {
         try {
+            // Validate treeId
+            const treeIdError = validators.required(treeId, 'ID cây gia phả');
+            if (treeIdError) throw new Error(treeIdError);
+
+            // Validate tree name
+            const validation = validateTreeName(name);
+            throwIfInvalid(validation);
+
             const data: UpdateTreeRequest = { treeId, name };
             const result = await makeRequest(API_ENDPOINTS.TREES.UPDATE_TREE(treeId), 'PUT', data, 'response-area');
             if (result.error) {
@@ -67,6 +80,10 @@ class TreeService {
     // DELETE /trees/{treeId} - Xóa cây
     async deleteTree(treeId: string): Promise<string> {
         try {
+            // Validate treeId
+            const treeIdError = validators.required(treeId, 'ID cây gia phả');
+            if (treeIdError) throw new Error(treeIdError);
+
             // Hiển thị toast notification khi xóa thành công
             const result = await makeRequest(API_ENDPOINTS.TREES.DELETE_TREE(treeId), 'DELETE', null, 'response-area');
             if (result.error) {

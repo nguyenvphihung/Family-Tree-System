@@ -9,11 +9,16 @@ import {
     UploadImageResponse,
     DeleteImageResponse,
 } from '../types/image';
+import { validateImageUpload, throwIfInvalid, validators } from '../utils/validation';
 
 class ImageService {
     // GET /images/{imageId} - Lấy ảnh theo imageId
     async getImage(imageId: string): Promise<Image> {
         try {
+            // Validate imageId
+            const imageIdError = validators.required(imageId, 'ID ảnh');
+            if (imageIdError) throw new Error(imageIdError);
+
             const result = await makeRequest(API_ENDPOINTS.IMAGES.GET_IMAGE(imageId), 'GET', null, null);
             if (result.error) {
                 throw new Error(result.error.message);
@@ -28,6 +33,11 @@ class ImageService {
     async getImagesByAlbum(albumId: string): Promise<Image[]> {
         try {
             console.log('[ImageService] Getting images for album:', albumId);
+
+            // Validate albumId
+            const albumIdError = validators.required(albumId, 'ID album');
+            if (albumIdError) throw new Error(albumIdError);
+
             const result = await makeRequest(API_ENDPOINTS.IMAGES.GET_IMAGES_BY_ALBUM(albumId), 'GET', null, null);
             if (result.error) {
                 console.error('[ImageService] Error getting images:', result.error);
@@ -52,12 +62,22 @@ class ImageService {
                 fileLength: typeof file === 'string' ? file.length : (file as File).size
             });
 
-            const endpoint = `${API_ENDPOINTS.IMAGES.UPLOAD_IMAGE}?albumId=${encodeURIComponent(albumId)}`;
+            // Validate albumId
+            const albumIdError = validators.required(albumId, 'ID album');
+            if (albumIdError) throw new Error(albumIdError);
 
-            if (!file) {
-                throw new Error('No file provided');
+            // Validate file
+            const fileError = validators.required(file, 'File ảnh');
+            if (fileError) throw new Error(fileError);
+
+            // Validate image file if it's a File object
+            if (typeof file !== 'string') {
+                const fileObj = file as File;
+                const validation = validateImageUpload(fileObj);
+                throwIfInvalid(validation);
             }
-            
+
+            const endpoint = `${API_ENDPOINTS.IMAGES.UPLOAD_IMAGE}?albumId=${encodeURIComponent(albumId)}`;
 
             // Create FormData for multipart upload (like HTML test)
             const formData = new FormData();
@@ -100,6 +120,10 @@ class ImageService {
     // DELETE /images/{imageId} - Xóa ảnh
     async deleteImage(imageId: string): Promise<string> {
         try {
+            // Validate imageId
+            const imageIdError = validators.required(imageId, 'ID ảnh');
+            if (imageIdError) throw new Error(imageIdError);
+
             const result = await makeRequest(API_ENDPOINTS.IMAGES.DELETE_IMAGE(imageId), 'DELETE', null, 'response-area');
             if (result.error) {
                 throw new Error(result.error.message);

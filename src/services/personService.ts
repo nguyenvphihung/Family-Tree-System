@@ -7,6 +7,14 @@ import {
     UpdateBirthInfoRequest,
     UploadAvatarRequest,
 } from '../types/person';
+import {
+    validatePersonInfo,
+    validateBirthInfo,
+    validateDeathInfo,
+    validateImageUpload,
+    throwIfInvalid,
+    validators
+} from '../utils/validation';
 
 class PersonService {
     // GET /persons?personId={personId} - Lấy thông tin 1 người
@@ -33,6 +41,18 @@ class PersonService {
     // PUT /persons/{personId} - Cập nhật toàn bộ thông tin 1 người
     async updatePerson(personId: string, data: UpdatePersonRequest): Promise<PersonInfo> {
         try {
+            // Validate personId
+            const personIdError = validators.required(personId, 'ID người dùng');
+            if (personIdError) throw new Error(personIdError);
+
+            // Validate person info
+            const validation = validatePersonInfo({
+                fullName: data.name,
+                gender: data.gender,
+                dateOfBirth: data.birthday
+            });
+            throwIfInvalid(validation);
+
             const result = await makeRequest(
                 API_ENDPOINTS.PERSONS.UPDATE_PERSON(personId),
                 'PUT',
@@ -69,6 +89,17 @@ class PersonService {
     // PATCH /persons/{personId}/death-info - Cập nhật thông tin người mất
     async updateDeathInfo(personId: string, data: UpdateDeathInfoRequest): Promise<PersonInfo> {
         try {
+            // Validate personId
+            const personIdError = validators.required(personId, 'ID người dùng');
+            if (personIdError) throw new Error(personIdError);
+
+            // Validate death info
+            const validation = validateDeathInfo({
+                dateOfDeath: data.deathDate,
+                placeOfDeath: data.deathPlace
+            });
+            throwIfInvalid(validation);
+
             const result = await makeRequest(
                 API_ENDPOINTS.PERSONS.UPDATE_DEATH_INFO(personId),
                 'PATCH',
@@ -88,6 +119,17 @@ class PersonService {
     async updateBirthInfo(personId: string, data: UpdateBirthInfoRequest): Promise<PersonInfo> {
         try {
             console.log('[UpdateBirthInfo] Request data:', { personId, data });
+
+            // Validate personId
+            const personIdError = validators.required(personId, 'ID người dùng');
+            if (personIdError) throw new Error(personIdError);
+
+            // Validate birth location
+            if (data.birthLocation) {
+                const locationError = validators.maxLength(data.birthLocation, 200);
+                if (locationError) throw new Error(locationError);
+            }
+
             const result = await makeRequest(
                 API_ENDPOINTS.PERSONS.UPDATE_BIRTH_INFO(personId),
                 'PATCH',
@@ -113,6 +155,21 @@ class PersonService {
                 avatarType: typeof avatar,
                 avatarLength: typeof avatar === 'string' ? avatar.length : (avatar as File).size
             });
+
+            // Validate personId
+            const personIdError = validators.required(personId, 'ID người dùng');
+            if (personIdError) throw new Error(personIdError);
+
+            // Validate avatar
+            const avatarError = validators.required(avatar, 'Avatar');
+            if (avatarError) throw new Error(avatarError);
+
+            // Validate avatar if it's a File object
+            if (typeof avatar !== 'string') {
+                const avatarFile = avatar as File;
+                const validation = validateImageUpload(avatarFile);
+                throwIfInvalid(validation);
+            }
 
             // Create FormData for multipart upload (like image upload)
             const formData = new FormData();

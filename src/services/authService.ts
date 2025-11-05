@@ -6,6 +6,12 @@ import {
   LoginResponse
 } from "../types/auth";
 import { makeRequest } from "../components/utils";
+import {
+  validateLoginCredentials,
+  validateRegisterCredentials,
+  throwIfInvalid,
+  ValidationError
+} from "../utils/validation";
 
 class AuthService {
   private readonly TOKEN_KEY = 'auth_token';
@@ -66,6 +72,10 @@ class AuthService {
     try {
       console.log('Gọi API login với credentials:', { phone: credentials.phone });
 
+      // Validate credentials before making API call
+      const validation = validateLoginCredentials(credentials.phone, credentials.password);
+      throwIfInvalid(validation);
+
       const result = await makeRequest(API_ENDPOINTS.AUTH.LOGIN, 'POST', credentials, null);
 
       console.log('Raw result từ makeRequest:', result);
@@ -86,6 +96,15 @@ class AuthService {
   // API Register
   async registerAPI(credentials: RegisterCredentials): Promise<RegisterResponse> {
     try {
+      // Validate credentials before making API call
+      const validation = validateRegisterCredentials(
+        credentials.phone,
+        credentials.password,
+        credentials.confirmPassword,
+        credentials.name
+      );
+      throwIfInvalid(validation);
+
       const result = await makeRequest(API_ENDPOINTS.AUTH.REGISTER, 'POST', credentials, null);
       if (result.error) {
         throw new Error(result.error.message);
@@ -302,7 +321,7 @@ class AuthService {
     }
   }
 
-  
+
 
   // Method để debug localStorage
   debugLocalStorage(): void {
