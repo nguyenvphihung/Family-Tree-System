@@ -1,5 +1,6 @@
 import { api } from '@/config/axios';
 import { ValidationError } from '@/utils/validation';
+import { toast } from 'react-toastify';
 
 /**
  * Make HTTP request using axios
@@ -76,6 +77,17 @@ export async function makeRequest(
                     timestamp: new Date().toISOString()
                 });
             }
+
+            // Hiển thị toast cho validation errors
+            toast.error(error.message, {
+                position: "top-center",
+                autoClose: 4000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
+
             return {
                 success: false,
                 error: {

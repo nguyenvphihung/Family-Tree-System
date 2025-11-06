@@ -345,7 +345,23 @@ export function throwIfInvalid(result: ValidationResult): void {
     }
 }
 
-// ========================
+/**
+ * Show validation error toast and throw error if validation fails
+ */
+export function validateAndShowToast(result: ValidationResult, toast: any): void {
+    if (!result.isValid) {
+        const errorMessage = result.errors[0] || 'Dữ liệu không hợp lệ';
+        toast.error(errorMessage, {
+            position: "top-center",
+            autoClose: 4000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+        });
+        throw new ValidationError(errorMessage, result.errors);
+    }
+}// ========================
 // SPECIFIC VALIDATORS FOR API
 // ========================
 

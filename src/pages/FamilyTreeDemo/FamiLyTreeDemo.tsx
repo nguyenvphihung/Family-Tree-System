@@ -11,6 +11,7 @@ import EditTreeNameModal from "../../components/family-tree/EditTreeNameModal";
 
 import { useAuth } from "../../components/hooks/useAuth";
 import { imageService, treeService, personService, relationService, albumService } from "@/services";
+import { toast } from "react-toastify";
 
 const FamilyTreeDemo: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -180,22 +181,31 @@ const FamilyTreeDemo: React.FC = () => {
   };
 
   // FE-only refresh action for Photo Manager header Refresh button
+  // This function calls GET APIs (getUserAlbums, getImagesByAlbum)
+  // GET APIs don't trigger success toast from axios interceptor, so we show toast manually
   const handlePhotoManagerRefresh = async () => {
-    // Hiển thị toast trước, đảm bảo nổi trên modal
-    showLocalToast('Tải lại danh sách album thành công', 'success');
-    // Chờ 3s cho toast hiển thị, sau đó mới reload dữ liệu trong modal
-    setTimeout(async () => {
-      try {
-        if (user?.id) {
-          await loadUserAlbums(user.id);
-          if (selectedAlbum?.id) {
-            await loadAlbumImages(selectedAlbum.id);
-          }
+    try {
+      // Load data from APIs
+      if (user?.id) {
+        await loadUserAlbums(user.id);
+        if (selectedAlbum?.id) {
+          await loadAlbumImages(selectedAlbum.id);
         }
-      } catch (_) {
-        // Bỏ qua lỗi để không phá UX của nút Refresh FE-only
       }
-    }, 3000);
+
+      // Show success toast manually (GET APIs don't trigger axios interceptor success toast)
+      toast.success('Tải lại thành công', {
+        position: 'top-center',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } catch (error) {
+      // Error toast is already shown by axios interceptor, no need to show again
+      console.error('Error refreshing photo manager:', error);
+    }
   };
 
   // Close more menu when clicking outside
@@ -212,21 +222,27 @@ const FamilyTreeDemo: React.FC = () => {
     };
   }, [showMoreMenu]);
 
-  // Local toast for FE-only actions (not from API)
+  // Local toast for FE-only actions (not from API) using react-toastify
   const showLocalToast = (message: string, type: 'success' | 'error' = 'success') => {
-    const responseArea = document.getElementById('response-area');
-    if (!responseArea) return;
-    const isSuccess = type === 'success';
-    responseArea.textContent = message;
-    responseArea.className = `fixed top-20 left-1/2 transform -translate-x-1/2 z-[99999] ${isSuccess ? 'bg-green-50 border border-green-300 text-green-800' : 'bg-red-50 border border-red-300 text-red-800'
-      } rounded-lg p-3 shadow-lg max-w-sm text-center text-sm font-medium`;
-    responseArea.style.display = 'block';
-    responseArea.style.zIndex = '99999';
-    setTimeout(() => {
-      responseArea.style.display = 'none';
-      responseArea.textContent = '';
-      responseArea.className = 'response-area';
-    }, 3000);
+    if (type === 'success') {
+      toast.success(message, {
+        position: 'top-center',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } else {
+      toast.error(message, {
+        position: 'top-center',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
   };
 
   // Function để load dữ liệu cây gia đình cho tree cụ thể
@@ -470,14 +486,8 @@ const FamilyTreeDemo: React.FC = () => {
       });
       await loadUserAlbums(user.id);
     } catch (error: any) {
-
-      let msg = 'Album đã tồn tại';
-      // if (typeof error === 'string') msg = error;
-      // else if (error && typeof error.message === 'string' && error.message.trim() !== '') {
-      //   // Làm sạch thông điệp không mong muốn
-      //   msg = error.message.replace(/\(HTTP \d+\)/gi, '').trim();
-      // }
-      showLocalToast(msg, 'error');
+      // Toast notification is handled by axios interceptor
+      console.error('Error creating album:', error);
     } finally {
       setLoading(false);
     }
@@ -512,11 +522,10 @@ const FamilyTreeDemo: React.FC = () => {
       if (selectedAlbum?.id === albumId) {
         setSelectedAlbum(null);
         setAlbumImages([]);
-
       }
-      // Hiển thị thông báo xóa thành công màu đỏ theo yêu cầu
-      showLocalToast('Xoá album thành công', 'error');
+      // Toast notification is handled by axios interceptor
     } catch (error: any) {
+      // Toast notification is handled by axios interceptor
       console.error('Error deleting album:', error);
       setError(error.message || 'Failed to delete album');
     } finally {
@@ -553,9 +562,10 @@ const FamilyTreeDemo: React.FC = () => {
         showLocalToast('Tìm album thành công', 'success');
         return;
       }
-      showLocalToast('Không tìm thấy album', 'error');
+      // Not found - no need to show toast, axios interceptor will handle it
     } catch (_) {
-      showLocalToast('Không tìm thấy album', 'error');
+      // Toast notification is handled by axios interceptor
+      console.error('Album not found');
     } finally {
       setLoading(false);
     }
@@ -606,12 +616,10 @@ const FamilyTreeDemo: React.FC = () => {
         await loadAlbumImages(imageData.albumId);
       }
 
-      // Show success notification
-      showLocalToast('Upload ảnh thành công', 'success');
-
+      // Toast notification is handled by axios interceptor
     } catch (error) {
+      // Toast notification is handled by axios interceptor
       console.error('[Upload Handler] Upload failed:', error);
-      showLocalToast('Upload ảnh thất bại', 'error');
     }
   };
   // Delete image
@@ -1944,7 +1952,7 @@ const FamilyTreeDemo: React.FC = () => {
                   hasFile: !!file,
                   hasAlbum: !!selectedAlbum
                 });
-                alert('Vui lòng chọn file và album');
+                showLocalToast('Vui lòng chọn file và album', 'error');
               }
             }}>
               <div className="mb-4">
@@ -2132,9 +2140,6 @@ const FamilyTreeDemo: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Response Area for notifications */}
-      <div id="response-area" style={{ display: 'none' }} className="response-area"></div>
 
     </div>
   );

@@ -11,7 +11,8 @@ import {
     DeleteAlbumResponse,
 
 } from '../types/album';
-import { validateAlbumName, throwIfInvalid, validators } from '../utils/validation';
+import { validateAlbumName, validators, ValidationError, validateAndShowToast } from '../utils/validation';
+import { toast } from 'react-toastify';
 
 class AlbumService {
     // GET /albums/{albumId} - Tìm album bằng Id
@@ -19,7 +20,13 @@ class AlbumService {
         try {
             // Validate albumId
             const albumIdError = validators.required(albumId, 'ID album');
-            if (albumIdError) throw new Error(albumIdError);
+            if (albumIdError) {
+                toast.error(albumIdError, {
+                    position: "top-center",
+                    autoClose: 4000,
+                });
+                throw new Error(albumIdError);
+            }
 
             const result = await makeRequest(API_ENDPOINTS.ALBUMS.GET_ALBUM_BY_ID(albumId), 'GET', null, null);
             if (result.error) {
@@ -36,7 +43,13 @@ class AlbumService {
         try {
             // Validate userId
             const userIdError = validators.required(userId, 'ID người dùng');
-            if (userIdError) throw new Error(userIdError);
+            if (userIdError) {
+                toast.error(userIdError, {
+                    position: "top-center",
+                    autoClose: 4000,
+                });
+                throw new Error(userIdError);
+            }
 
             const result = await makeRequest(API_ENDPOINTS.ALBUMS.GET_USER_ALBUMS, 'GET', null, null, { userId });
             if (result.error) {
@@ -53,7 +66,7 @@ class AlbumService {
         try {
             // Validate album name
             const validation = validateAlbumName(data.name);
-            throwIfInvalid(validation);
+            validateAndShowToast(validation, toast);
 
             const result = await makeRequest(API_ENDPOINTS.ALBUMS.CREATE_ALBUM, 'POST', data, 'response-area');
             if (result.error) {
@@ -70,11 +83,17 @@ class AlbumService {
         try {
             // Validate albumId
             const albumIdError = validators.required(albumId, 'ID album');
-            if (albumIdError) throw new Error(albumIdError);
+            if (albumIdError) {
+                toast.error(albumIdError, {
+                    position: "top-center",
+                    autoClose: 4000,
+                });
+                throw new Error(albumIdError);
+            }
 
             // Validate album name
             const validation = validateAlbumName(name);
-            throwIfInvalid(validation);
+            validateAndShowToast(validation, toast);
 
             const data: UpdateAlbumRequest = { albumId, name };
             const result = await makeRequest(API_ENDPOINTS.ALBUMS.UPDATE_ALBUM(albumId), 'PUT', data, 'response-area');
@@ -92,7 +111,13 @@ class AlbumService {
         try {
             // Validate albumId
             const albumIdError = validators.required(albumId, 'ID album');
-            if (albumIdError) throw new Error(albumIdError);
+            if (albumIdError) {
+                toast.error(albumIdError, {
+                    position: "top-center",
+                    autoClose: 4000,
+                });
+                throw new Error(albumIdError);
+            }
 
             const result = await makeRequest(API_ENDPOINTS.ALBUMS.DELETE_ALBUM(albumId), 'DELETE', null, null);
             if (result.error) {
