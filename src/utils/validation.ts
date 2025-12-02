@@ -174,9 +174,7 @@ export const validators = {
         if (!value) return null;
         const date = new Date(value);
         const now = new Date();
-        if (date > now) {
-            return VALIDATION_MESSAGES.FUTURE_DATE_NOT_ALLOWED;
-        }
+
         return null;
     },
 
@@ -275,7 +273,7 @@ export const validators = {
      */
     gender: (value: string): string | null => {
         if (!value) return null;
-        const validGenders = ['MALE', 'FEMALE', 'OTHER'];
+        const validGenders = ['M', 'F', 'U'];
         if (!validGenders.includes(value.toUpperCase())) {
             return VALIDATION_MESSAGES.INVALID_GENDER;
         }
