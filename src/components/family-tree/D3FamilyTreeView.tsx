@@ -914,13 +914,19 @@ const D3FamilyTreeView: React.FC<D3FamilyTreeViewProps> = ({
       .attr("y", -nodeHeight / 2)
       .attr("rx", 8)
       .attr("ry", 8)
-      .attr("fill", "#fff")
-      .attr("stroke", (d: any) => {
-        // Kiểm tra nếu người đó đã mất (có deathPlace, gravePlace hoặc deathDate)
+      .attr("fill", (d: any) => {
+        // Nếu người đó đã mất (có deathPlace, gravePlace hoặc deathDate) thì nền xám
         if (d.deathPlace || d.gravePlace || d.deathDate) {
-          return "#9CA3AF"; // màu xám nhạt cho người đã mất
+          return "#D1D5DB"; // nền xám nhạt
         }
-        // Màu theo giới tính cho người còn sống
+        // Nền trắng cho người còn sống
+        return "#fff";
+      })
+      .attr("stroke", (d: any) => {
+        // Màu viền theo giới tính cho người còn sống
+        if (d.deathPlace || d.gravePlace || d.deathDate) {
+          return "#9CA3AF"; // viền xám cho người đã mất
+        }
         return d.gender === "M" ? "#5BD1D7" : d.gender === "F" ? "#F59794" : "#333";
       })
       .attr("stroke-width", 2)

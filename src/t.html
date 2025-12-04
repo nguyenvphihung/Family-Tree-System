@@ -1,0 +1,2564 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặc Tả Database - Hệ Thống Quản Lý Gia Phả</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .document {
+            background: white;
+            padding: 40px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a472a;
+            font-size: 24pt;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        h2 {
+            color: #1a472a;
+            font-size: 16pt;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #1a472a;
+            padding-bottom: 5px;
+        }
+
+        h3 {
+            color: #2d5016;
+            font-size: 14pt;
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 11pt;
+            page-break-inside: avoid;
+        }
+
+        th {
+            background-color: #1a472a;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        td {
+            border: 1px solid #ddd;
+            padding: 10px 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .table-info {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-left: 4px solid #1a472a;
+            margin: 15px 0;
+        }
+
+        .note {
+            background-color: #fff3cd;
+            padding: 10px;
+            border-left: 4px solid #ffc107;
+            margin: 10px 0;
+            font-style: italic;
+        }
+
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background: #1a472a;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .print-btn:hover {
+            background: #2d5016;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+
+            .document {
+                box-shadow: none;
+                padding: 0;
+            }
+
+            .print-btn {
+                display: none;
+            }
+
+            table {
+                page-break-inside: auto;
+            }
+
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+        }
+
+        .intro {
+            text-align: justify;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <button class="print-btn" onclick="window.print()">📄 In tài liệu</button>
+
+    <div class="document">
+        <h1>ĐẶC TẢ CƠ SỞ DỮ LIỆU</h1>
+        <h1 style="font-size: 18pt;">HỆ THỐNG QUẢN LÝ GIA PHẢ TÍCH HỢP AI</h1>
+
+        <div class="intro">
+            <p><strong>Mục đích:</strong> Tài liệu này mô tả chi tiết cấu trúc cơ sở dữ liệu cho hệ thống quản lý gia
+                phả có tích hợp AI nhận diện và phân loại ảnh theo khuôn mặt.</p>
+            <p><strong>Phiên bản:</strong> 1.0</p>
+            <p><strong>Ngày tạo:</strong> 04/12/2024</p>
+        </div>
+
+        <h2>I. TỔNG QUAN HỆ THỐNG</h2>
+
+        <h3>1.1. Các Chức Năng Chính</h3>
+        <ul>
+            <li>Quản lý thông tin gia phả và cây gia đình</li>
+            <li>Quản lý thành viên gia đình (sinh, tử, hôn nhân)</li>
+            <li>Quản lý album ảnh và phân loại ảnh thông minh bằng AI</li>
+            <li>Quản lý sự kiện gia đình</li>
+            <li>Tạo và quản lý trò chơi tương tác</li>
+            <li>Xem bản đồ mộ phần</li>
+            <li>Quản lý tài liệu, tiểu sử</li>
+            <li>Quản lý quỹ gia đình</li>
+            <li>Hệ thống phân quyền người dùng</li>
+        </ul>
+
+        <div class="note">
+            <strong>Lưu ý:</strong> Tất cả các bảng sử dụng UUID làm khóa chính để đảm bảo tính duy nhất và bảo mật.
+        </div>
+
+        <h2>II. CHI TIẾT CÁC BẢNG</h2>
+
+        <!-- BẢNG USERS -->
+        <h3>2.1. Bảng USERS - Quản lý người dùng</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Lưu trữ thông tin tài khoản người dùng đăng nhập vào hệ thống<br>
+            <strong>Chức năng liên quan:</strong> Đăng nhập, Đăng ký, Quản lý tài khoản
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã định danh người dùng</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>role_id</td>
+                    <td>Mã vai trò/quyền hạn</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → roles(id)</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>Họ và tên người dùng</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>email</td>
+                    <td>Email đăng nhập</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NOT NULL</td>
+                    <td>UNIQUE, INDEX</td>
+                </tr>
+                <tr>
+                    <td>phone</td>
+                    <td>Số điện thoại</td>
+                    <td>VARCHAR(20)</td>
+                    <td>NULL</td>
+                    <td>UNIQUE khi không NULL</td>
+                </tr>
+                <tr>
+                    <td>password</td>
+                    <td>Mật khẩu đã mã hóa</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NOT NULL</td>
+                    <td>Sử dụng bcrypt/argon2</td>
+                </tr>
+                <tr>
+                    <td>avatar_url</td>
+                    <td>Link ảnh đại diện</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>is_active</td>
+                    <td>Trạng thái kích hoạt</td>
+                    <td>BOOLEAN</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT TRUE</td>
+                </tr>
+                <tr>
+                    <td>last_login</td>
+                    <td>Lần đăng nhập cuối</td>
+                    <td>TIMESTAMP</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày tạo tài khoản</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT CURRENT_TIMESTAMP</td>
+                </tr>
+                <tr>
+                    <td>updated_at</td>
+                    <td>Ngày cập nhật cuối</td>
+                    <td>TIMESTAMP</td>
+                    <td>NULL</td>
+                    <td>AUTO UPDATE</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG ROLES -->
+        <h3>2.2. Bảng ROLES - Vai trò người dùng</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Định nghĩa các vai trò và quyền hạn trong hệ thống<br>
+            <strong>Chức năng liên quan:</strong> Quản lý tài khoản (Admin)
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã vai trò</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>Tên vai trò</td>
+                    <td>VARCHAR(100)</td>
+                    <td>NOT NULL</td>
+                    <td>UNIQUE (VD: Admin, User, Guest)</td>
+                </tr>
+                <tr>
+                    <td>description</td>
+                    <td>Mô tả vai trò</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày tạo</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT CURRENT_TIMESTAMP</td>
+                </tr>
+                <tr>
+                    <td>updated_at</td>
+                    <td>Ngày cập nhật</td>
+                    <td>TIMESTAMP</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG PERMISSIONS -->
+        <h3>2.3. Bảng PERMISSIONS - Quyền hạn</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Danh sách các quyền trong hệ thống
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã quyền</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>Tên quyền</td>
+                    <td>VARCHAR(100)</td>
+                    <td>NOT NULL</td>
+                    <td>UNIQUE (VD: create_tree, edit_person)</td>
+                </tr>
+                <tr>
+                    <td>description</td>
+                    <td>Mô tả quyền</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>is_active</td>
+                    <td>Trạng thái kích hoạt</td>
+                    <td>BOOLEAN</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT TRUE</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày tạo</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>updated_at</td>
+                    <td>Ngày cập nhật</td>
+                    <td>TIMESTAMP</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG ROLE_PERMISSIONS -->
+        <h3>2.4. Bảng ROLE_PERMISSIONS - Phân quyền</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Bảng trung gian liên kết vai trò và quyền hạn
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>role_id</td>
+                    <td>Mã vai trò</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY, FK → roles(id)</td>
+                </tr>
+                <tr>
+                    <td>permission_id</td>
+                    <td>Mã quyền</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY, FK → permissions(id)</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày gán quyền</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>updated_at</td>
+                    <td>Ngày cập nhật</td>
+                    <td>TIMESTAMP</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG TREES -->
+        <h3>2.5. Bảng TREES - Cây gia phả</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Lưu trữ thông tin các cây gia phả<br>
+            <strong>Chức năng liên quan:</strong> Xem cây gia phả
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã cây gia phả</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>user_id</td>
+                    <td>Người tạo/quản lý</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → users(id)</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>Tên gia phả</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NOT NULL</td>
+                    <td>VD: "Dòng họ Nguyễn"</td>
+                </tr>
+                <tr>
+                    <td>description</td>
+                    <td>Mô tả, nguồn gốc</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>origin_place</td>
+                    <td>Quê quán gốc</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>founding_date</td>
+                    <td>Ngày khai sinh dòng họ</td>
+                    <td>DATE</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>is_public</td>
+                    <td>Công khai hay riêng tư</td>
+                    <td>BOOLEAN</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT FALSE</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày tạo</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>updated_at</td>
+                    <td>Ngày cập nhật</td>
+                    <td>TIMESTAMP</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG PERSONS -->
+        <h3>2.6. Bảng PERSONS - Thành viên gia đình</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Lưu trữ thông tin chi tiết từng thành viên trong gia phả<br>
+            <strong>Chức năng liên quan:</strong> Xem cây gia phả, Quản lý thành viên
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã thành viên</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>tree_id</td>
+                    <td>Thuộc cây gia phả nào</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → trees(id)</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>Họ và tên</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>gender</td>
+                    <td>Giới tính</td>
+                    <td>VARCHAR(20)</td>
+                    <td>NOT NULL</td>
+                    <td>ENUM: 'male', 'female', 'other'</td>
+                </tr>
+                <tr>
+                    <td>birthday</td>
+                    <td>Ngày sinh</td>
+                    <td>DATE</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>birth_place</td>
+                    <td>Nơi sinh</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>death_date</td>
+                    <td>Ngày mất</td>
+                    <td>DATE</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>death_place</td>
+                    <td>Nơi mất</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>grave_location</td>
+                    <td>Vị trí mộ (tọa độ)</td>
+                    <td>POINT/GEOGRAPHY</td>
+                    <td>NULL</td>
+                    <td>Lưu latitude, longitude</td>
+                </tr>
+                <tr>
+                    <td>grave_place</td>
+                    <td>Địa điểm mộ (text)</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td>Dùng cho bản đồ mộ phần</td>
+                </tr>
+                <tr>
+                    <td>grave_address</td>
+                    <td>Địa chỉ nghĩa trang</td>
+                    <td>VARCHAR(500)</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>generation</td>
+                    <td>Thế hệ thứ mấy</td>
+                    <td>INTEGER</td>
+                    <td>NULL</td>
+                    <td>Đời thứ trong gia phả</td>
+                </tr>
+                <tr>
+                    <td>avatar_url</td>
+                    <td>Ảnh đại diện</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>occupation</td>
+                    <td>Nghề nghiệp</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>education</td>
+                    <td>Trình độ học vấn</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>is_alive</td>
+                    <td>Còn sống hay không</td>
+                    <td>BOOLEAN</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT TRUE</td>
+                </tr>
+                <tr>
+                    <td>face_encoding</td>
+                    <td>Dữ liệu nhận diện khuôn mặt AI</td>
+                    <td>BYTEA/BLOB</td>
+                    <td>NULL</td>
+                    <td>Lưu vector embedding từ AI</td>
+                </tr>
+                <tr>
+                    <td>notes</td>
+                    <td>Ghi chú thêm</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày tạo</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>updated_at</td>
+                    <td>Ngày cập nhật</td>
+                    <td>TIMESTAMP</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG CHILDREN -->
+        <h3>2.7. Bảng CHILDREN - Quan hệ cha mẹ - con</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Lưu trữ mối quan hệ huyết thống giữa cha mẹ và con cái
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã quan hệ</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>parent1_id</td>
+                    <td>Cha/Mẹ thứ nhất</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → persons(id)</td>
+                </tr>
+                <tr>
+                    <td>parent2_id</td>
+                    <td>Cha/Mẹ thứ hai</td>
+                    <td>UUID</td>
+                    <td>NULL</td>
+                    <td>FOREIGN KEY → persons(id)</td>
+                </tr>
+                <tr>
+                    <td>child_id</td>
+                    <td>Con cái</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → persons(id)</td>
+                </tr>
+                <tr>
+                    <td>relation_type</td>
+                    <td>Loại quan hệ</td>
+                    <td>VARCHAR(50)</td>
+                    <td>NOT NULL</td>
+                    <td>ENUM: 'biological', 'adopted', 'step'</td>
+                </tr>
+                <tr>
+                    <td>children_type</td>
+                    <td>Con thứ mấy</td>
+                    <td>VARCHAR(50)</td>
+                    <td>NULL</td>
+                    <td>VD: 'eldest', 'youngest', 'middle'</td>
+                </tr>
+                <tr>
+                    <td>adoption_date</td>
+                    <td>Ngày nhận nuôi</td>
+                    <td>DATE</td>
+                    <td>NULL</td>
+                    <td>Nếu là con nuôi</td>
+                </tr>
+                <tr>
+                    <td>notes</td>
+                    <td>Ghi chú</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày tạo</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG SPOUSES -->
+        <h3>2.8. Bảng SPOUSES - Quan hệ hôn nhân</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Lưu trữ thông tin hôn nhân giữa các thành viên
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã quan hệ hôn nhân</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>person1_id</td>
+                    <td>Người thứ nhất</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → persons(id)</td>
+                </tr>
+                <tr>
+                    <td>person2_id</td>
+                    <td>Người thứ hai</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → persons(id)</td>
+                </tr>
+                <tr>
+                    <td>marriage_date</td>
+                    <td>Ngày kết hôn</td>
+                    <td>DATE</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>marriage_place</td>
+                    <td>Nơi kết hôn</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>divorce_date</td>
+                    <td>Ngày ly hôn</td>
+                    <td>DATE</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>is_current</td>
+                    <td>Còn hôn nhân không</td>
+                    <td>BOOLEAN</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT TRUE</td>
+                </tr>
+                <tr>
+                    <td>notes</td>
+                    <td>Ghi chú</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày tạo</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG ALBUMS -->
+        <h3>2.9. Bảng ALBUMS - Album ảnh</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Quản lý các album ảnh của người dùng<br>
+            <strong>Chức năng liên quan:</strong> Quản lý ảnh
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã album</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>user_id</td>
+                    <td>Người tạo album</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → users(id)</td>
+                </tr>
+                <tr>
+                    <td>tree_id</td>
+                    <td>Thuộc cây gia phả</td>
+                    <td>UUID</td>
+                    <td>NULL</td>
+                    <td>FOREIGN KEY → trees(id)</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>Tên album</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>description</td>
+                    <td>Mô tả album</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>thumbnail_url</td>
+                    <td>Ảnh đại diện album</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>is_public</td>
+                    <td>Công khai hay riêng tư</td>
+                    <td>BOOLEAN</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT FALSE</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày tạo</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>updated_at</td>
+                    <td>Ngày cập nhật</td>
+                    <td>TIMESTAMP</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG IMAGES -->
+        <h3>2.10. Bảng IMAGES - Hình ảnh</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Lưu trữ thông tin các hình ảnh trong album<br>
+            <strong>Chức năng liên quan:</strong> Quản lý ảnh, Phân loại ảnh theo khuôn mặt (AI)
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã hình ảnh</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>album_id</td>
+                    <td>Thuộc album nào</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → albums(id)</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>Tên hình ảnh</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>url</td>
+                    <td>Đường dẫn ảnh</td>
+                    <td>TEXT</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>thumbnail_url</td>
+                    <td>Ảnh thumbnail</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td>Ảnh thu nhỏ để tải nhanh</td>
+                </tr>
+                <tr>
+                    <td>description</td>
+                    <td>Mô tả ảnh</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>type</td>
+                    <td>Loại file</td>
+                    <td>VARCHAR(50)</td>
+                    <td>NULL</td>
+                    <td>jpg, png, gif...</td>
+                </tr>
+                <tr>
+                    <td>file_size</td>
+                    <td>Kích thước file (bytes)</td>
+                    <td>BIGINT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>width</td>
+                    <td>Chiều rộng (px)</td>
+                    <td>INTEGER</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>height</td>
+                    <td>Chiều cao (px)</td>
+                    <td>INTEGER</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>taken_date</td>
+                    <td>Ngày chụp ảnh</td>
+                    <td>TIMESTAMP</td>
+                    <td>NULL</td>
+                    <td>Lấy từ EXIF data</td>
+                </tr>
+                <tr>
+                    <td>is_classified</td>
+                    <td>Đã phân loại AI chưa</td>
+                    <td>BOOLEAN</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT FALSE</td>
+                </tr>
+                <tr>
+                    <td>classification_status</td>
+                    <td>Trạng thái phân loại</td>
+                    <td>VARCHAR(50)</td>
+                    <td>NULL</td>
+                    <td>ENUM: 'pending', 'processing', 'completed', 'failed'</td>
+                </tr>
+                <tr>
+                    <td>number_faces</td>
+                    <td>Số khuôn mặt phát hiện</td>
+                    <td>INTEGER</td>
+                    <td>NULL</td>
+                    <td>Đếm số người trong ảnh</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày tải lên</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>updated_at</td>
+                    <td>Ngày cập nhật</td>
+                    <td>TIMESTAMP</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG FACE_DETECTIONS -->
+        <h3>2.11. Bảng FACE_DETECTIONS - Phát hiện khuôn mặt</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Lưu trữ thông tin các khuôn mặt được AI phát hiện trong ảnh<br>
+            <strong>Chức năng liên quan:</strong> Phân loại ảnh theo khuôn mặt (AI)
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã phát hiện</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>image_id</td>
+                    <td>Thuộc ảnh nào</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → images(id)</td>
+                </tr>
+                <tr>
+                    <td>person_id</td>
+                    <td>Người được nhận diện</td>
+                    <td>UUID</td>
+                    <td>NULL</td>
+                    <td>FOREIGN KEY → persons(id), NULL nếu chưa xác định</td>
+                </tr>
+                <tr>
+                    <td>face_encoding</td>
+                    <td>Vector nhận diện khuôn mặt</td>
+                    <td>BYTEA/BLOB</td>
+                    <td>NOT NULL</td>
+                    <td>Dữ liệu embedding 128-512 chiều</td>
+                </tr>
+                <tr>
+                    <td>bounding_box</td>
+                    <td>Tọa độ khung hình khuôn mặt</td>
+                    <td>JSON</td>
+                    <td>NULL</td>
+                    <td>{x, y, width, height}</td>
+                </tr>
+                <tr>
+                    <td>confidence_score</td>
+                    <td>Độ tin cậy nhận diện</td>
+                    <td>DECIMAL(5,4)</td>
+                    <td>NULL</td>
+                    <td>Giá trị 0.0 - 1.0</td>
+                </tr>
+                <tr>
+                    <td>is_verified</td>
+                    <td>Đã xác nhận thủ công</td>
+                    <td>BOOLEAN</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT FALSE</td>
+                </tr>
+                <tr>
+                    <td>verified_by</td>
+                    <td>Người xác nhận</td>
+                    <td>UUID</td>
+                    <td>NULL</td>
+                    <td>FOREIGN KEY → users(id)</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày phát hiện</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG EVENT_TYPES -->
+        <h3>2.12. Bảng EVENT_TYPES - Loại sự kiện</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Danh mục các loại sự kiện trong gia đình
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã loại sự kiện</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>Tên loại sự kiện</td>
+                    <td>VARCHAR(100)</td>
+                    <td>NOT NULL</td>
+                    <td>UNIQUE (VD: Sinh nhật, Cưới, Tang...)</td>
+                </tr>
+                <tr>
+                    <td>description</td>
+                    <td>Mô tả</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>icon</td>
+                    <td>Icon đại diện</td>
+                    <td>VARCHAR(100)</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>color</td>
+                    <td>Màu hiển thị</td>
+                    <td>VARCHAR(20)</td>
+                    <td>NULL</td>
+                    <td>Hex color code</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày tạo</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG EVENTS -->
+        <h3>2.13. Bảng EVENTS - Sự kiện</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Lưu trữ các sự kiện trong gia đình<br>
+            <strong>Chức năng liên quan:</strong> Quản lý sự kiện
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã sự kiện</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>user_id</td>
+                    <td>Người tạo sự kiện</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → users(id)</td>
+                </tr>
+                <tr>
+                    <td>event_type_id</td>
+                    <td>Loại sự kiện</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → event_types(id)</td>
+                </tr>
+                <tr>
+                    <td>tree_id</td>
+                    <td>Thuộc cây gia phả</td>
+                    <td>UUID</td>
+                    <td>NULL</td>
+                    <td>FOREIGN KEY → trees(id)</td>
+                </tr>
+                <tr>
+                    <td>title</td>
+                    <td>Tiêu đề sự kiện</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>description</td>
+                    <td>Mô tả chi tiết</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>event_date</td>
+                    <td>Ngày diễn ra</td>
+                    <td>DATE</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>event_time</td>
+                    <td>Giờ diễn ra</td>
+                    <td>TIME</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>location</td>
+                    <td>Địa điểm</td>
+                    <td>VARCHAR(500)</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>location_coordinates</td>
+                    <td>Tọa độ địa điểm</td>
+                    <td>POINT/GEOGRAPHY</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>is_recurring</td>
+                    <td>Sự kiện lặp lại</td>
+                    <td>BOOLEAN</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT FALSE (VD: Giỗ hàng năm)</td>
+                </tr>
+                <tr>
+                    <td>recurring_pattern</td>
+                    <td>Mẫu lặp lại</td>
+                    <td>VARCHAR(100)</td>
+                    <td>NULL</td>
+                    <td>ENUM: 'yearly', 'monthly', 'weekly'</td>
+                </tr>
+                <tr>
+                    <td>reminder_days</td>
+                    <td>Nhắc trước bao nhiêu ngày</td>
+                    <td>INTEGER</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>is_public</td>
+                    <td>Công khai hay riêng tư</td>
+                    <td>BOOLEAN</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT FALSE</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày tạo</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>updated_at</td>
+                    <td>Ngày cập nhật</td>
+                    <td>TIMESTAMP</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG PERSON_EVENTS -->
+        <h3>2.14. Bảng PERSON_EVENTS - Liên kết người và sự kiện</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Bảng trung gian liên kết thành viên với sự kiện
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã liên kết</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>person_id</td>
+                    <td>Thành viên tham gia</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → persons(id)</td>
+                </tr>
+                <tr>
+                    <td>event_id</td>
+                    <td>Sự kiện</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → events(id)</td>
+                </tr>
+                <tr>
+                    <td>role</td>
+                    <td>Vai trò trong sự kiện</td>
+                    <td>VARCHAR(100)</td>
+                    <td>NULL</td>
+                    <td>VD: 'host', 'guest', 'organizer'</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày tạo</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>updated_at</td>
+                    <td>Ngày cập nhật</td>
+                    <td>TIMESTAMP</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG FILE_TYPES -->
+        <h3>2.15. Bảng FILE_TYPES - Loại tài liệu</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Danh mục các loại file tài liệu được phép tải lên
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã loại file</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>extension</td>
+                    <td>Đuôi file</td>
+                    <td>VARCHAR(10)</td>
+                    <td>NOT NULL</td>
+                    <td>UNIQUE (VD: pdf, docx, txt)</td>
+                </tr>
+                <tr>
+                    <td>mime_type</td>
+                    <td>MIME type</td>
+                    <td>VARCHAR(100)</td>
+                    <td>NULL</td>
+                    <td>VD: application/pdf</td>
+                </tr>
+                <tr>
+                    <td>description</td>
+                    <td>Mô tả loại file</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>is_active</td>
+                    <td>Cho phép tải lên</td>
+                    <td>BOOLEAN</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT TRUE</td>
+                </tr>
+                <tr>
+                    <td>max_size</td>
+                    <td>Kích thước tối đa (MB)</td>
+                    <td>INTEGER</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày tạo</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>updated_at</td>
+                    <td>Ngày cập nhật</td>
+                    <td>TIMESTAMP</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG BIOGRAPHIES -->
+        <h3>2.16. Bảng BIOGRAPHIES - Tiểu sử và tài liệu</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Lưu trữ tiểu sử và tài liệu của thành viên<br>
+            <strong>Chức năng liên quan:</strong> Quản lý tài liệu
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã tài liệu</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>person_id</td>
+                    <td>Thuộc về người nào</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → persons(id)</td>
+                </tr>
+                <tr>
+                    <td>file_type_id</td>
+                    <td>Loại file</td>
+                    <td>UUID</td>
+                    <td>NULL</td>
+                    <td>FOREIGN KEY → file_types(id)</td>
+                </tr>
+                <tr>
+                    <td>title</td>
+                    <td>Tiêu đề tài liệu</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>content</td>
+                    <td>Nội dung văn bản</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td>Tiểu sử dạng text</td>
+                </tr>
+                <tr>
+                    <td>file_url</td>
+                    <td>Đường dẫn file</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td>Nếu là file đính kèm</td>
+                </tr>
+                <tr>
+                    <td>file_name</td>
+                    <td>Tên file gốc</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>file_size</td>
+                    <td>Kích thước file (bytes)</td>
+                    <td>BIGINT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>description</td>
+                    <td>Mô tả tài liệu</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>notes</td>
+                    <td>Ghi chú</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>is_public</td>
+                    <td>Công khai</td>
+                    <td>BOOLEAN</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT FALSE</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày tạo</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>updated_at</td>
+                    <td>Ngày cập nhật</td>
+                    <td>TIMESTAMP</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG FUNDS -->
+        <h3>2.17. Bảng FUNDS - Quỹ gia đình</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Quản lý quỹ tài chính của gia đình
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã quỹ</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>user_id</td>
+                    <td>Người quản lý quỹ</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → users(id)</td>
+                </tr>
+                <tr>
+                    <td>tree_id</td>
+                    <td>Thuộc cây gia phả</td>
+                    <td>UUID</td>
+                    <td>NULL</td>
+                    <td>FOREIGN KEY → trees(id)</td>
+                </tr>
+                <tr>
+                    <td>name</td>
+                    <td>Tên quỹ</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NOT NULL</td>
+                    <td>VD: "Quỹ từ thiện", "Quỹ giỗ tổ"</td>
+                </tr>
+                <tr>
+                    <td>description</td>
+                    <td>Mô tả mục đích quỹ</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>balance</td>
+                    <td>Số dư hiện tại</td>
+                    <td>DECIMAL(15,2)</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT 0.00</td>
+                </tr>
+                <tr>
+                    <td>currency</td>
+                    <td>Đơn vị tiền tệ</td>
+                    <td>VARCHAR(10)</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT 'VND'</td>
+                </tr>
+                <tr>
+                    <td>is_active</td>
+                    <td>Quỹ còn hoạt động</td>
+                    <td>BOOLEAN</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT TRUE</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày tạo</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>updated_at</td>
+                    <td>Ngày cập nhật</td>
+                    <td>TIMESTAMP</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG FUND_TRANSACTIONS -->
+        <h3>2.18. Bảng FUND_TRANSACTIONS - Giao dịch quỹ</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Lưu trữ các giao dịch thu chi của quỹ
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã giao dịch</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>fund_id</td>
+                    <td>Thuộc quỹ nào</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → funds(id)</td>
+                </tr>
+                <tr>
+                    <td>user_id</td>
+                    <td>Người thực hiện</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → users(id)</td>
+                </tr>
+                <tr>
+                    <td>transaction_type</td>
+                    <td>Loại giao dịch</td>
+                    <td>VARCHAR(20)</td>
+                    <td>NOT NULL</td>
+                    <td>ENUM: 'income', 'expense'</td>
+                </tr>
+                <tr>
+                    <td>amount</td>
+                    <td>Số tiền</td>
+                    <td>DECIMAL(15,2)</td>
+                    <td>NOT NULL</td>
+                    <td>Số dương</td>
+                </tr>
+                <tr>
+                    <td>description</td>
+                    <td>Nội dung giao dịch</td>
+                    <td>TEXT</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>category</td>
+                    <td>Danh mục</td>
+                    <td>VARCHAR(100)</td>
+                    <td>NULL</td>
+                    <td>VD: "Quyên góp", "Chi phí giỗ"</td>
+                </tr>
+                <tr>
+                    <td>reference_number</td>
+                    <td>Mã tham chiếu</td>
+                    <td>VARCHAR(100)</td>
+                    <td>NULL</td>
+                    <td>Mã chuyển khoản, hóa đơn...</td>
+                </tr>
+                <tr>
+                    <td>transaction_date</td>
+                    <td>Ngày giao dịch</td>
+                    <td>DATE</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày tạo bản ghi</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG GAMES -->
+        <h3>2.19. Bảng GAMES - Trò chơi</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Quản lý các trò chơi tương tác trong hệ thống<br>
+            <strong>Chức năng liên quan:</strong> Tạo trò chơi
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã trò chơi</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>tree_id</td>
+                    <td>Thuộc cây gia phả</td>
+                    <td>UUID</td>
+                    <td>NULL</td>
+                    <td>FOREIGN KEY → trees(id)</td>
+                </tr>
+                <tr>
+                    <td>created_by</td>
+                    <td>Người tạo</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → users(id)</td>
+                </tr>
+                <tr>
+                    <td>game_type</td>
+                    <td>Loại trò chơi</td>
+                    <td>VARCHAR(50)</td>
+                    <td>NOT NULL</td>
+                    <td>ENUM: 'quiz', 'memory', 'puzzle', 'timeline'</td>
+                </tr>
+                <tr>
+                    <td>title</td>
+                    <td>Tên trò chơi</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>description</td>
+                    <td>Mô tả</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>difficulty_level</td>
+                    <td>Độ khó</td>
+                    <td>VARCHAR(20)</td>
+                    <td>NULL</td>
+                    <td>ENUM: 'easy', 'medium', 'hard'</td>
+                </tr>
+                <tr>
+                    <td>game_data</td>
+                    <td>Dữ liệu trò chơi</td>
+                    <td>JSON</td>
+                    <td>NULL</td>
+                    <td>Câu hỏi, đáp án, cấu hình...</td>
+                </tr>
+                <tr>
+                    <td>thumbnail_url</td>
+                    <td>Ảnh đại diện</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>is_active</td>
+                    <td>Đang hoạt động</td>
+                    <td>BOOLEAN</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT TRUE</td>
+                </tr>
+                <tr>
+                    <td>play_count</td>
+                    <td>Số lượt chơi</td>
+                    <td>INTEGER</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT 0</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày tạo</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>updated_at</td>
+                    <td>Ngày cập nhật</td>
+                    <td>TIMESTAMP</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG GAME_SCORES -->
+        <h3>2.20. Bảng GAME_SCORES - Điểm số trò chơi</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Lưu trữ kết quả và điểm số khi người dùng chơi game
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã điểm số</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>game_id</td>
+                    <td>Trò chơi</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → games(id)</td>
+                </tr>
+                <tr>
+                    <td>user_id</td>
+                    <td>Người chơi</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → users(id)</td>
+                </tr>
+                <tr>
+                    <td>score</td>
+                    <td>Điểm số đạt được</td>
+                    <td>INTEGER</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>max_score</td>
+                    <td>Điểm tối đa</td>
+                    <td>INTEGER</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>time_spent</td>
+                    <td>Thời gian chơi (giây)</td>
+                    <td>INTEGER</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>completion_rate</td>
+                    <td>Tỷ lệ hoàn thành (%)</td>
+                    <td>DECIMAL(5,2)</td>
+                    <td>NULL</td>
+                    <td>0.00 - 100.00</td>
+                </tr>
+                <tr>
+                    <td>game_result</td>
+                    <td>Chi tiết kết quả</td>
+                    <td>JSON</td>
+                    <td>NULL</td>
+                    <td>Câu trả lời, lỗi...</td>
+                </tr>
+                <tr>
+                    <td>played_at</td>
+                    <td>Thời gian chơi</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG NOTIFICATIONS -->
+        <h3>2.21. Bảng NOTIFICATIONS - Thông báo</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Lưu trữ thông báo gửi đến người dùng
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã thông báo</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>user_id</td>
+                    <td>Người nhận</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>FOREIGN KEY → users(id)</td>
+                </tr>
+                <tr>
+                    <td>type</td>
+                    <td>Loại thông báo</td>
+                    <td>VARCHAR(50)</td>
+                    <td>NOT NULL</td>
+                    <td>ENUM: 'event', 'image', 'comment', 'system'</td>
+                </tr>
+                <tr>
+                    <td>title</td>
+                    <td>Tiêu đề</td>
+                    <td>VARCHAR(255)</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>content</td>
+                    <td>Nội dung thông báo</td>
+                    <td>TEXT</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>reference_id</td>
+                    <td>ID đối tượng liên quan</td>
+                    <td>UUID</td>
+                    <td>NULL</td>
+                    <td>Link đến event, image...</td>
+                </tr>
+                <tr>
+                    <td>reference_type</td>
+                    <td>Loại đối tượng</td>
+                    <td>VARCHAR(50)</td>
+                    <td>NULL</td>
+                    <td>VD: 'event', 'image', 'person'</td>
+                </tr>
+                <tr>
+                    <td>is_read</td>
+                    <td>Đã đọc chưa</td>
+                    <td>BOOLEAN</td>
+                    <td>NOT NULL</td>
+                    <td>DEFAULT FALSE</td>
+                </tr>
+                <tr>
+                    <td>read_at</td>
+                    <td>Thời gian đọc</td>
+                    <td>TIMESTAMP</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Ngày tạo</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- BẢNG ACTIVITY_LOGS -->
+        <h3>2.22. Bảng ACTIVITY_LOGS - Nhật ký hoạt động</h3>
+        <div class="table-info">
+            <strong>Mô tả:</strong> Ghi lại các hoạt động quan trọng trong hệ thống
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Cột</th>
+                    <th>Giải Thích</th>
+                    <th>Kiểu Dữ Liệu</th>
+                    <th>NOT NULL/NULL</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>id</td>
+                    <td>Mã log</td>
+                    <td>UUID</td>
+                    <td>NOT NULL</td>
+                    <td>PRIMARY KEY</td>
+                </tr>
+                <tr>
+                    <td>user_id</td>
+                    <td>Người thực hiện</td>
+                    <td>UUID</td>
+                    <td>NULL</td>
+                    <td>FOREIGN KEY → users(id)</td>
+                </tr>
+                <tr>
+                    <td>action</td>
+                    <td>Hành động</td>
+                    <td>VARCHAR(100)</td>
+                    <td>NOT NULL</td>
+                    <td>VD: 'create', 'update', 'delete'</td>
+                </tr>
+                <tr>
+                    <td>entity_type</td>
+                    <td>Loại đối tượng</td>
+                    <td>VARCHAR(50)</td>
+                    <td>NOT NULL</td>
+                    <td>VD: 'person', 'tree', 'image'</td>
+                </tr>
+                <tr>
+                    <td>entity_id</td>
+                    <td>ID đối tượng</td>
+                    <td>UUID</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>description</td>
+                    <td>Mô tả hoạt động</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>ip_address</td>
+                    <td>Địa chỉ IP</td>
+                    <td>VARCHAR(45)</td>
+                    <td>NULL</td>
+                    <td>Hỗ trợ IPv6</td>
+                </tr>
+                <tr>
+                    <td>user_agent</td>
+                    <td>Thông tin trình duyệt</td>
+                    <td>TEXT</td>
+                    <td>NULL</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>old_values</td>
+                    <td>Giá trị cũ</td>
+                    <td>JSON</td>
+                    <td>NULL</td>
+                    <td>Trước khi thay đổi</td>
+                </tr>
+                <tr>
+                    <td>new_values</td>
+                    <td>Giá trị mới</td>
+                    <td>JSON</td>
+                    <td>NULL</td>
+                    <td>Sau khi thay đổi</td>
+                </tr>
+                <tr>
+                    <td>created_at</td>
+                    <td>Thời gian</td>
+                    <td>TIMESTAMP</td>
+                    <td>NOT NULL</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>III. QUAN HỆ GIỮA CÁC BẢNG</h2>
+
+        <h3>3.1. Sơ đồ quan hệ chính</h3>
+        <ul>
+            <li><strong>users</strong> (1) ←→ (N) <strong>trees</strong>: Một người dùng có thể quản lý nhiều cây gia
+                phả</li>
+            <li><strong>trees</strong> (1) ←→ (N) <strong>persons</strong>: Một cây có nhiều thành viên</li>
+            <li><strong>persons</strong> (1) ←→ (N) <strong>children</strong>: Quan hệ cha mẹ - con</li>
+            <li><strong>persons</strong> (1) ←→ (N) <strong>spouses</strong>: Quan hệ hôn nhân</li>
+            <li><strong>users</strong> (1) ←→ (N) <strong>albums</strong>: Người dùng tạo album</li>
+            <li><strong>albums</strong> (1) ←→ (N) <strong>images</strong>: Album chứa nhiều ảnh</li>
+            <li><strong>images</strong> (1) ←→ (N) <strong>face_detections</strong>: Một ảnh có nhiều khuôn mặt</li>
+            <li><strong>persons</strong> (1) ←→ (N) <strong>face_detections</strong>: Khuôn mặt thuộc về người nào</li>
+            <li><strong>users</strong> (1) ←→ (N) <strong>events</strong>: Người dùng tạo sự kiện</li>
+            <li><strong>events</strong> (N) ←→ (N) <strong>persons</strong> (qua <strong>person_events</strong>): Nhiều
+                người tham gia nhiều sự kiện</li>
+            <li><strong>persons</strong> (1) ←→ (N) <strong>biographies</strong>: Thành viên có nhiều tài liệu</li>
+            <li><strong>users</strong> (1) ←→ (1) <strong>funds</strong>: Người dùng quản lý quỹ</li>
+            <li><strong>funds</strong> (1) ←→ (N) <strong>fund_transactions</strong>: Quỹ có nhiều giao dịch</li>
+            <li><strong>users</strong> (1) ←→ (N) <strong>games</strong>: Người dùng tạo trò chơi</li>
+            <li><strong>games</strong> (1) ←→ (N) <strong>game_scores</strong>: Trò chơi có nhiều lượt chơi</li>
+            <li><strong>roles</strong> (1) ←→ (N) <strong>users</strong>: Phân quyền người dùng</li>
+            <li><strong>roles</strong> (N) ←→ (N) <strong>permissions</strong> (qua <strong>role_permissions</strong>)
+            </li>
+        </ul>
+
+        <h2>IV. CHỈ MỤC (INDEXES) KHUYẾN NGHỊ</h2>
+
+        <div class="table-info">
+            <strong>Lưu ý:</strong> Các index giúp tối ưu hiệu suất truy vấn
+        </div>
+
+        <h3>4.1. Index cho tìm kiếm nhanh</h3>
+        <ul>
+            <li><code>users(email)</code> - UNIQUE INDEX</li>
+            <li><code>users(phone)</code> - INDEX</li>
+            <li><code>persons(name)</code> - INDEX (Full-text search)</li>
+            <li><code>persons(tree_id, generation)</code> - COMPOSITE INDEX</li>
+            <li><code>images(album_id, created_at)</code> - COMPOSITE INDEX</li>
+            <li><code>face_detections(image_id)</code> - INDEX</li>
+            <li><code>face_detections(person_id)</code> - INDEX</li>
+            <li><code>events(event_date)</code> - INDEX</li>
+            <li><code>events(tree_id, event_date)</code> - COMPOSITE INDEX</li>
+            <li><code>biographies(person_id)</code> - INDEX</li>
+            <li><code>activity_logs(user_id, created_at)</code> - COMPOSITE INDEX</li>
+            <li><code>notifications(user_id, is_read)</code> - COMPOSITE INDEX</li>
+        </ul>
+
+        <h3>4.2. Index cho dữ liệu địa lý</h3>
+        <ul>
+            <li><code>persons(grave_location)</code> - SPATIAL INDEX (cho bản đồ mộ phần)</li>
+            <li><code>events(location_coordinates)</code> - SPATIAL INDEX</li>
+        </ul>
+
+        <h2>V. RÀNG BUỘC TOÀN VẸN DỮ LIỆU</h2>
+
+        <h3>5.1. Ràng buộc CHECK</h3>
+        <ul>
+            <li><code>persons.birthday &lt;= persons.death_date</code></li>
+            <li><code>spouses.marriage_date &lt;= spouses.divorce_date</code></li>
+            <li><code>funds.balance &gt;= 0</code></li>
+            <li><code>fund_transactions.amount &gt; 0</code></li>
+            <li><code>face_detections.confidence_score BETWEEN 0 AND 1</code></li>
+            <li><code>game_scores.completion_rate BETWEEN 0 AND 100</code></li>
+        </ul>
+
+        <h3>5.2. Ràng buộc UNIQUE</h3>
+        <ul>
+            <li><code>UNIQUE(parent1_id, parent2_id, child_id)</code> trong bảng <strong>children</strong></li>
+            <li><code>UNIQUE(person1_id, person2_id)</code> trong bảng <strong>spouses</strong></li>
+            <li><code>UNIQUE(role_id, permission_id)</code> trong bảng <strong>role_permissions</strong></li>
+        </ul>
+
+        <h3>5.3. ON DELETE CASCADE</h3>
+        <ul>
+            <li>Xóa <strong>tree</strong> → xóa tất cả <strong>persons</strong>, <strong>events</strong>,
+                <strong>albums</strong> liên quan</li>
+            <li>Xóa <strong>album</strong> → xóa tất cả <strong>images</strong> trong album</li>
+            <li>Xóa <strong>image</strong> → xóa tất cả <strong>face_detections</strong> trong ảnh</li>
+            <li>Xóa <strong>user</strong> → cần xem xét cẩn thận (có thể chuyển sang is_active = FALSE)</li>
+        </ul>
+
+        <h2>VI. BẢO MẬT VÀ QUYỀN RIÊNG TƯ</h2>
+
+        <h3>6.1. Mã hóa dữ liệu</h3>
+        <ul>
+            <li><strong>users.password</strong>: Mã hóa bằng bcrypt/argon2</li>
+            <li><strong>face_encoding</strong>: Lưu dưới dạng BLOB đã mã hóa</li>
+            <li>Các trường nhạy cảm khác: Xem xét mã hóa tại application level</li>
+        </ul>
+
+        <h3>6.2. Phân quyền truy cập</h3>
+        <ul>
+            <li>Sử dụng bảng <strong>roles</strong> và <strong>permissions</strong></li>
+            <li>Kiểm tra quyền trước khi thực hiện mọi thao tác</li>
+            <li>Log mọi hoạt động quan trọng vào <strong>activity_logs</strong></li>
+        </ul>
+
+        <h3>6.3. Privacy by Design</h3>
+        <ul>
+            <li>Trường <strong>is_public</strong> để kiểm soát hiển thị</li>
+            <li>Dữ liệu cá nhân chỉ hiển thị cho thành viên gia đình</li>
+            <li>Cho phép người dùng xóa dữ liệu cá nhân (GDPR compliance)</li>
+            <li>Face encoding phải được đồng ý trước khi lưu trữ</li>
+        </ul>
+
+        <h2>VII. TỐI ỪU HÓA HIỆU SUẤT</h2>
+
+        <h3>7.1. Caching Strategy</h3>
+        <ul>
+            <li>Cache dữ liệu cây gia phả (ít thay đổi)</li>
+            <li>Cache danh sách event_types, file_types, roles, permissions</li>
+            <li>Cache kết quả tìm kiếm khuôn mặt thường dùng</li>
+        </ul>
+
+        <h3>7.2. Partitioning</h3>
+        <ul>
+            <li><strong>images</strong>: Partition theo năm (created_at)</li>
+            <li><strong>activity_logs</strong>: Partition theo tháng</li>
+            <li><strong>notifications</strong>: Partition theo tháng và archive sau 6 tháng</li>
+        </ul>
+
+        <h3>7.3. Archiving</h3>
+        <ul>
+            <li>Chuyển activity_logs cũ hơn 1 năm sang bảng archive</li>
+            <li>Chuyển notifications đã đọc và cũ hơn 6 tháng sang archive</li>
+            <li>Nén và lưu trữ ảnh gốc, chỉ giữ thumbnail trong DB chính</li>
+        </ul>
+
+        <h2>VIII. TÍCH HỢP AI - CHI TIẾT KỸ THUẬT</h2>
+
+        <h3>8.1. Face Recognition Workflow</h3>
+        <div class="table-info">
+            <strong>Quy trình nhận diện khuôn mặt:</strong>
+        </div>
+        <ol>
+            <li><strong>Upload ảnh</strong> → Lưu vào bảng <code>images</code>, set <code>is_classified = FALSE</code>
+            </li>
+            <li><strong>AI Detection</strong> → Phát hiện khuôn mặt, tạo face_encoding (vector 128-512 chiều)</li>
+            <li><strong>Lưu detection</strong> → Thêm vào bảng <code>face_detections</code> với
+                <code>person_id = NULL</code></li>
+            <li><strong>AI Matching</strong> → So sánh với <code>persons.face_encoding</code> bằng cosine similarity
+            </li>
+            <li><strong>Auto-assign</strong> → Nếu confidence > 0.85, tự động gán <code>person_id</code></li>
+            <li><strong>Manual verify</strong> → Người dùng xác nhận, set <code>is_verified = TRUE</code></li>
+            <li><strong>Update image</strong> → Set <code>images.is_classified = TRUE</code>,
+                <code>number_faces = N</code></li>
+        </ol>
+
+        <h3>8.2. Face Encoding Storage</h3>
+        <ul>
+            <li><strong>Định dạng</strong>: Numpy array được serialize thành BYTEA/BLOB</li>
+            <li><strong>Kích thước</strong>: 128 hoặc 512 float32 → ~512-2048 bytes</li>
+            <li><strong>Thư viện gợi ý</strong>: face_recognition, dlib, InsightFace</li>
+            <li><strong>Distance metric</strong>: Cosine similarity hoặc Euclidean distance</li>
+        </ul>
+
+        <h3>8.3. Bảng hỗ trợ AI (Tùy chọn mở rộng)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Bảng</th>
+                    <th>Mục Đích</th>
+                    <th>Ghi Chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>ai_training_data</td>
+                    <td>Lưu dữ liệu đã xác thực để train model</td>
+                    <td>Cải thiện độ chính xác</td>
+                </tr>
+                <tr>
+                    <td>ai_processing_queue</td>
+                    <td>Hàng đợi xử lý ảnh</td>
+                    <td>Xử lý bất đồng bộ</td>
+                </tr>
+                <tr>
+                    <td>ai_model_versions</td>
+                    <td>Quản lý phiên bản AI model</td>
+                    <td>A/B testing, rollback</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>IX. CHỨC NĂNG BẢN ĐỒ MỘ PHẦN</h2>
+
+        <h3>9.1. Cấu trúc dữ liệu địa lý</h3>
+        <ul>
+            <li><strong>persons.grave_location</strong>: Kiểu POINT (PostGIS) hoặc GEOGRAPHY</li>
+            <li><strong>Format</strong>: POINT(longitude latitude) - VD: POINT(105.8342 21.0278)</li>
+            <li><strong>SRID</strong>: 4326 (WGS84 - GPS standard)</li>
+        </ul>
+
+        <h3>9.2. Query mẫu tìm mộ gần nhất</h3>
+        <div class="note">
+            <code>
+SELECT * FROM persons<br>
+WHERE grave_location IS NOT NULL<br>
+ORDER BY ST_Distance(grave_location, ST_MakePoint(105.8342, 21.0278))<br>
+LIMIT 10;
+            </code>
+        </div>
+
+        <h3>9.3. Metadata bổ sung cho mộ phần</h3>
+        <ul>
+            <li><strong>grave_place</strong>: Mô tả văn bản (VD: "Lô A, hàng 5, mộ số 12")</li>
+            <li><strong>grave_address</strong>: Địa chỉ nghĩa trang đầy đủ</li>
+            <li>Có thể thêm ảnh mộ vào bảng <code>images</code> với tag đặc biệt</li>
+        </ul>
+
+        <h2>X. TRIGGERS VÀ STORED PROCEDURES KHUYẾN NGHỊ</h2>
+
+        <h3>10.1. Triggers tự động</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Trigger</th>
+                    <th>Bảng</th>
+                    <th>Chức năng</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>update_tree_count</td>
+                    <td>persons</td>
+                    <td>Cập nhật số lượng thành viên trong tree</td>
+                </tr>
+                <tr>
+                    <td>update_fund_balance</td>
+                    <td>fund_transactions</td>
+                    <td>Tự động cập nhật số dư quỹ</td>
+                </tr>
+                <tr>
+                    <td>set_is_alive</td>
+                    <td>persons</td>
+                    <td>Set is_alive = FALSE khi có death_date</td>
+                </tr>
+                <tr>
+                    <td>create_notification</td>
+                    <td>events</td>
+                    <td>Tạo thông báo khi có sự kiện mới</td>
+                </tr>
+                <tr>
+                    <td>log_activity</td>
+                    <td>All tables</td>
+                    <td>Ghi log vào activity_logs</td>
+                </tr>
+                <tr>
+                    <td>update_image_count</td>
+                    <td>images</td>
+                    <td>Cập nhật số ảnh trong album</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>10.2. Stored Procedures quan trọng</h3>
+        <ul>
+            <li><code>sp_get_family_tree(tree_id, max_generation)</code> - Lấy cây gia phả đầy đủ</li>
+            <li><code>sp_find_relationship(person1_id, person2_id)</code> - Tìm quan hệ giữa 2 người</li>
+            <li><code>sp_classify_images_batch(album_id)</code> - Phân loại hàng loạt ảnh</li>
+            <li><code>sp_calculate_generation(person_id)</code> - Tính thế hệ tự động</li>
+            <li><code>sp_get_upcoming_events(user_id, days)</code> - Lấy sự kiện sắp tới</li>
+            <li><code>sp_merge_duplicate_persons(person1_id, person2_id)</code> - Gộp người trùng</li>
+        </ul>
+
+        <h2>XI. BACKUP VÀ DISASTER RECOVERY</h2>
+
+        <h3>11.1. Chiến lược Backup</h3>
+        <ul>
+            <li><strong>Full Backup</strong>: Mỗi tuần (Chủ nhật)</li>
+            <li><strong>Incremental Backup</strong>: Hàng ngày</li>
+            <li><strong>Ảnh và files</strong>: Lưu trên object storage (S3, CloudFlare R2) với versioning</li>
+            <li><strong>Face encodings</strong>: Backup riêng, mã hóa</li>
+        </ul>
+
+        <h3>11.2. Retention Policy</h3>
+        <ul>
+            <li>Giữ backup đầy đủ trong 3 tháng</li>
+            <li>Archive backup hàng năm vĩnh viễn</li>
+            <li>Transaction logs: 30 ngày</li>
+        </ul>
+
+        <h2>XII. MỞ RỘNG TƯƠNG LAI</h2>
+
+        <h3>12.1. Bảng có thể thêm</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên Bảng</th>
+                    <th>Mục Đích</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>comments</td>
+                    <td>Bình luận trên ảnh, sự kiện, người</td>
+                </tr>
+                <tr>
+                    <td>tags</td>
+                    <td>Gắn tag cho ảnh, sự kiện</td>
+                </tr>
+                <tr>
+                    <td>stories</td>
+                    <td>Câu chuyện, kỷ niệm gia đình</td>
+                </tr>
+                <tr>
+                    <td>achievements</td>
+                    <td>Thành tích, giải thưởng của thành viên</td>
+                </tr>
+                <tr>
+                    <td>health_records</td>
+                    <td>Hồ sơ sức khỏe (tùy chọn, cần bảo mật cao)</td>
+                </tr>
+                <tr>
+                    <td>dna_data</td>
+                    <td>Dữ liệu DNA/gen (cho tương lai xa)</td>
+                </tr>
+                <tr>
+                    <td>chat_messages</td>
+                    <td>Chat giữa các thành viên gia đình</td>
+                </tr>
+                <tr>
+                    <td>subscriptions</td>
+                    <td>Quản lý gói dịch vụ trả phí</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>12.2. Tính năng nâng cao</h3>
+        <ul>
+            <li><strong>Timeline View</strong>: Dòng thời gian tự động từ events, births, deaths</li>
+            <li><strong>3D Family Tree</strong>: Hiển thị cây 3D tương tác</li>
+            <li><strong>Video Processing</strong>: Nhận diện khuôn mặt trong video</li>
+            <li><strong>Voice Recording</strong>: Lưu trữ ghi âm, kể chuyện của người cao tuổi</li>
+            <li><strong>DNA Matching</strong>: Tích hợp dịch vụ test DNA</li>
+            <li><strong>AR Grave Finder</strong>: Tìm mộ bằng AR trên di động</li>
+            <li><strong>Multi-language</strong>: Hỗ trợ đa ngôn ngữ cho gia phả quốc tế</li>
+        </ul>
+
+        <h2>XIII. MIGRATION VÀ VERSIONING</h2>
+
+        <h3>13.1. Database Migrations</h3>
+        <ul>
+            <li>Sử dụng migration framework (Flyway, Liquibase, Alembic)</li>
+            <li>Đánh version cho mỗi schema change</li>
+            <li>Luôn có rollback plan</li>
+            <li>Test migration trên staging trước</li>
+        </ul>
+
+        <h3>13.2. Schema Versioning</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Version</th>
+                    <th>Thay Đổi</th>
+                    <th>Ngày</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1.0</td>
+                    <td>Schema ban đầu - Core tables</td>
+                    <td>04/12/2024</td>
+                </tr>
+                <tr>
+                    <td>1.1</td>
+                    <td>Thêm AI face recognition</td>
+                    <td>TBD</td>
+                </tr>
+                <tr>
+                    <td>1.2</td>
+                    <td>Thêm games và gamification</td>
+                    <td>TBD</td>
+                </tr>
+                <tr>
+                    <td>2.0</td>
+                    <td>Major refactor - Performance optimization</td>
+                    <td>TBD</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>XIV. KẾT LUẬN</h2>
+
+        <div class="table-info">
+            <strong>Tóm tắt:</strong> Database này được thiết kế để:
+            <ul style="margin-top: 10px;">
+                <li>✓ Lưu trữ đầy đủ thông tin gia phả đa thế hệ</li>
+                <li>✓ Tích hợp AI nhận diện khuôn mặt thông minh</li>
+                <li>✓ Quản lý ảnh, sự kiện, tài liệu hiệu quả</li>
+                <li>✓ Hỗ trợ bản đồ mộ phần với dữ liệu địa lý</li>
+                <li>✓ Gamification để tăng tương tác</li>
+                <li>✓ Bảo mật và quyền riêng tư cao</li>
+                <li>✓ Mở rộng dễ dàng cho tương lai</li>
+            </ul>
+        </div>
+
+        <div class="note" style="margin-top: 20px;">
+            <strong>Khuyến nghị triển khai:</strong><br>
+            - Database: PostgreSQL 14+ (hỗ trợ JSON, PostGIS, UUID tốt)<br>
+            - ORM: TypeORM, Prisma, hoặc SQLAlchemy<br>
+            - Storage: S3-compatible cho ảnh/files<br>
+            - AI Framework: Python + face_recognition/InsightFace<br>
+            - Frontend: React/Next.js với TypeScript<br>
+            - Backend: Node.js/NestJS hoặc Python/FastAPI
+        </div>
+
+        <hr style="margin: 30px 0; border: 1px solid #1a472a;">
+
+        <div style="text-align: center; color: #666; margin-top: 30px;">
+            <p><strong>HẾT</strong></p>
+            <p style="font-size: 10pt;">Tài liệu này có thể được cập nhật khi có yêu cầu mới hoặc thay đổi về chức năng
+            </p>
+            <p style="font-size: 10pt;">Liên hệ đội ngũ phát triển để được hỗ trợ chi tiết hơn</p>
+        </div>
+    </div>
+
+    <script>
+        // Tự động in khi người dùng yêu cầu
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('Tài liệu đặc tả database đã sẵn sàng');
+        });
+    </script>
+</body>
+
+</html>

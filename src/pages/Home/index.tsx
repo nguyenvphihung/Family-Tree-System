@@ -1,5 +1,5 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, Users, Shield, History, Heart } from "lucide-react";
 import { introduceImage, mapImage } from "@/assets/avatars";
@@ -20,6 +20,15 @@ const CustomArrowIcon = ({ className = "w-5 h-5", ...props }) => (
 
 const Home = () => {
   // Smooth scroll function
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("isAuthenticated");
+    if (token) {
+      // Nếu có token thì điều hướng sang dashboard
+      navigate("/dashboard");
+    }
+  }, []);
   ;
 
   return (

@@ -12,6 +12,7 @@ import EditTreeNameModal from "../../components/family-tree/EditTreeNameModal";
 import { useAuth } from "../../components/hooks/useAuth";
 import { imageService, treeService, personService, relationService, albumService } from "@/services";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 
 const FamilyTreeDemo: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -959,9 +960,12 @@ const FamilyTreeDemo: React.FC = () => {
               Photos
             </button>
 
-            <button className="bg-rose-200 hover:bg-rose-300 text-rose-800 mr-6 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 shadow-sm">
-              Go Premium
-            </button>
+            <Link
+              to="/grave-map"
+              className="bg-rose-200 hover:bg-rose-300 text-rose-800 mr-6 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 shadow-sm"
+            >
+              Xem mộ phần
+            </Link>
           </div>
         </div>
       </div>

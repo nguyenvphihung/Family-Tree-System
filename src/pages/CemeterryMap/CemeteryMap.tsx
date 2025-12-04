@@ -32,10 +32,7 @@ import { loadGoogleMapsAPI } from "./googleMapsLoader";
 import { AddGraveForm } from "./Components/AddGrave";
 import { EditableField } from "./Components/Edit";
 import "./CemeteryMap.css";
-import {
-  vietnamBoundary,
-  loadVietnamBoundary,
-} from "./Components/VietNamBoundary";
+
 import { isPointInPolygon } from "./utils";
 import { useAuth } from "@/components/hooks/useAuth";
 
@@ -85,13 +82,13 @@ type MapAction =
   | { type: "SET_FILTER_PROVINCE"; payload: string }
   | { type: "TOGGLE_ADD_MODE" }
   | {
-      type: "SET_SELECTED_PLACE";
-      payload: google.maps.places.PlaceResult | null;
-    }
+    type: "SET_SELECTED_PLACE";
+    payload: google.maps.places.PlaceResult | null;
+  }
   | {
-      type: "OPEN_NEW_GRAVE_FORM";
-      payload: Omit<MapState["newGraveForm"], "isOpen">;
-    }
+    type: "OPEN_NEW_GRAVE_FORM";
+    payload: Omit<MapState["newGraveForm"], "isOpen">;
+  }
   | { type: "CLOSE_NEW_GRAVE_FORM" }
   | { type: "SET_TOAST"; payload: string | null }
   | { type: "SET_DELETING_ID"; payload: string | null }
@@ -185,7 +182,7 @@ const CemeteryMap: React.FC = () => {
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(
     null
   );
-  
+
   // Store graves IDs to detect actual changes
   const gravesIdsRef = useRef<string>("");
 
@@ -206,7 +203,7 @@ const CemeteryMap: React.FC = () => {
   // Fetch graves data khi map API sẵn sàng và user đã authenticated
   useEffect(() => {
     if (!isMapApiReady) return;
-    
+
     if (!isAuthenticated) {
       dispatch({
         type: "DATA_FETCH_ERROR",
@@ -214,7 +211,7 @@ const CemeteryMap: React.FC = () => {
       });
       return;
     }
-    
+
     fetchGravesFromAPI()
       .then((data) => {
         setGraves(data);
@@ -265,14 +262,14 @@ const CemeteryMap: React.FC = () => {
 
   useEffect(() => {
     if (!isMapApiReady || mapInstanceRef.current) return;
-    
+
     // Retry logic: wait for mapDivRef to be available
     const initMap = () => {
       if (!mapDivRef.current) {
         setTimeout(initMap, 50);
         return;
       }
-      
+
       const map = new window.google.maps.Map(mapDivRef.current, {
         center: { lat: 16.047079, lng: 108.20623 },
         zoom: 6,
@@ -291,7 +288,7 @@ const CemeteryMap: React.FC = () => {
       directionsRendererRef.current =
         new window.google.maps.DirectionsRenderer();
       directionsRendererRef.current.setMap(map);
-      
+
       // Mark map as initialized to trigger markers creation
       setIsMapInitialized(true);
 
@@ -338,7 +335,7 @@ const CemeteryMap: React.FC = () => {
         });
       }
     };
-    
+
     initMap();
   }, [isMapApiReady, dispatch, handleClearDirections]);
 
@@ -463,7 +460,7 @@ const CemeteryMap: React.FC = () => {
           anchor: new window.google.maps.Point(20, 40),
         },
       });
-      
+
       // Inline click handler - không dùng callback để tránh re-render
       marker.addListener("click", () => {
         dispatch({ type: "SELECT_GRAVE", payload: grave });
@@ -490,18 +487,18 @@ const CemeteryMap: React.FC = () => {
                 return;
               }
               info.close();
-              
+
               navigator.geolocation.getCurrentPosition(
                 (position) => {
                   const origin = { lat: position.coords.latitude, lng: position.coords.longitude };
-                  
+
                   // Clear old directions
                   if (directionsRendererRef.current) {
                     directionsRendererRef.current.setMap(null);
                     directionsRendererRef.current = new window.google.maps.DirectionsRenderer();
                     directionsRendererRef.current.setMap(map);
                   }
-                  
+
                   dispatch({ type: "SET_TOAST", payload: "Đang tìm đường đi..." });
 
                   const request: google.maps.DirectionsRequest = {
@@ -532,21 +529,26 @@ const CemeteryMap: React.FC = () => {
         info.open({ anchor: marker, map });
         map.panTo(grave.coordinates);
       });
-      
+
       markersRef.current[grave.id] = marker;
     });
   }, [graves, isMapInitialized, dispatch]); // CHỈ phụ thuộc vào graves và isMapInitialized
 
   const filteredGraves = useMemo(() => {
-    const filtered = graves.filter(
-      (g) =>
-        (g.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          g.relation.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    const filtered = graves.filter((g) => {
+      const name = g.name?.toLowerCase() ?? "";
+      const relation = g.relation?.toLowerCase?.() ?? ""; // safe check
+
+      return (
+        (name.includes(searchTerm.toLowerCase()) ||
+          relation.includes(searchTerm.toLowerCase())) &&
         (filterProvince === ALL_PROVINCES ||
           g.location.province === filterProvince)
-    );
+      );
+    });
     return new Set(filtered.map((g) => g.id));
   }, [graves, searchTerm, filterProvince]);
+
 
   useEffect(() => {
     for (const graveId in markersRef.current) {
@@ -664,11 +666,11 @@ const CemeteryMap: React.FC = () => {
       try {
         // Call API to update death info
         const updatedPerson = await addGraveToAPI(personId, coords, address);
-        
+
         // Reload graves data to show the newly added grave
         const updatedGraves = await fetchGravesFromAPI();
         setGraves(updatedGraves);
-        
+
         dispatch({ type: "CLOSE_NEW_GRAVE_FORM" });
         if (tempMarkerRef.current) {
           tempMarkerRef.current.setMap(null);
@@ -760,9 +762,9 @@ const CemeteryMap: React.FC = () => {
                 <li>Thêm domain sau vào <strong>HTTP referrers</strong>:</li>
               </ol>
               <div className="mt-3 bg-gray-100 p-3 rounded font-mono text-xs">
-                http://localhost:5173/*<br/>
-                http://localhost:5174/*<br/>
-                http://127.0.0.1:5173/*<br/>
+                http://localhost:5173/*<br />
+                http://localhost:5174/*<br />
+                http://127.0.0.1:5173/*<br />
                 http://127.0.0.1:5174/*
               </div>
             </div>
@@ -787,7 +789,6 @@ const CemeteryMap: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-      {/* Top Navigation Bar */}
       <nav className="bg-gradient-to-r from-gray-800 to-gray-900 shadow-lg sticky top-0 z-50">
         <div className="max-w-screen-2xl mx-auto px-6">
           <div className="flex items-center h-16">
@@ -822,54 +823,7 @@ const CemeteryMap: React.FC = () => {
 
       <div className="max-w-screen-2xl mx-auto px-6 py-6">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-2">
-            <div className="w-12 h-12 bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-              <MapPin className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Bản đồ nghĩa trang</h1>
-              <p className="text-gray-600 mt-1">Quản lý thông tin mộ phần</p>
-            </div>
-          </div>
-          
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Tổng số mộ</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{graves.length}</p>
-                </div>
-                <div className="w-12 h-12 bg-rose-50 rounded-lg flex items-center justify-center">
-                  <MapPin className="w-6 h-6 text-rose-600" />
-                </div>
-              </div>
-            </div>
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Đang hiển thị</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{filteredGraves.size}</p>
-                </div>
-                <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                  <Search className="w-6 h-6 text-blue-600" />
-                </div>
-              </div>
-            </div>
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Đã chọn</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{selectedGrave ? 1 : 0}</p>
-                </div>
-                <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
-                  <Navigation className="w-6 h-6 text-green-600" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+
 
         <div className="flex flex-col lg:flex-row gap-6">
           {/* === Sidebar === */}
@@ -880,7 +834,7 @@ const CemeteryMap: React.FC = () => {
                 <Search className="w-5 h-5 text-rose-600" />
                 Tìm kiếm & Lọc
               </h2>
-              
+
               {/* Province Filter */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -986,11 +940,10 @@ const CemeteryMap: React.FC = () => {
                       .map((grave) => (
                         <div
                           key={grave.id}
-                          className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                            selectedGrave?.id === grave.id
-                              ? "border-rose-500 bg-rose-50 shadow-md"
-                              : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
-                          }`}
+                          className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${selectedGrave?.id === grave.id
+                            ? "border-rose-500 bg-rose-50 shadow-md"
+                            : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+                            }`}
                           onClick={() => handleGraveClick(grave)}
                         >
                           <div className="flex items-start gap-3">
@@ -1097,11 +1050,10 @@ const CemeteryMap: React.FC = () => {
               {/* Add Grave Button */}
               <div className="absolute top-4 right-4 z-10">
                 <button
-                  className={`px-5 py-3 rounded-lg shadow-md hover:shadow-lg font-semibold transition-all flex items-center gap-2 ${
-                    isAddMode
-                      ? "bg-white text-red-600 hover:bg-gray-50"
-                      : "bg-white text-gray-700 hover:bg-gray-50"
-                  }`}
+                  className={`px-5 py-3 rounded-lg shadow-md hover:shadow-lg font-semibold transition-all flex items-center gap-2 ${isAddMode
+                    ? "bg-white text-red-600 hover:bg-gray-50"
+                    : "bg-white text-gray-700 hover:bg-gray-50"
+                    }`}
                   onClick={() => {
                     dispatch({ type: "TOGGLE_ADD_MODE" });
                     if (addressSearchRef.current)

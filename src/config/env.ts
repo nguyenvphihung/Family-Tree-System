@@ -1,7 +1,7 @@
 // Environment configuration
 // Note: 
 // - Local development: http://localhost:8081/api
-// - Production: https://geneology-web-be.onrender.com/api
+// - Production: https://geneology-web-be-167p.onrender.com/api
 // - API endpoints will automatically append /relations when needed (e.g., /relations/trees/{treeId}/root)
 export const env = {
   API_BASE_URL:
