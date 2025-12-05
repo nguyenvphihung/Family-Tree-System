@@ -134,9 +134,7 @@ export const validators = {
      */
     name: (value: string): string | null => {
         if (!value) return null;
-        if (!VALIDATION_PATTERNS.NAME.test(value)) {
-            return VALIDATION_MESSAGES.INVALID_NAME;
-        }
+
         return null;
     },
 

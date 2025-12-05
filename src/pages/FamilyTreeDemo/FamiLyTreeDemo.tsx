@@ -13,8 +13,93 @@ import { useAuth } from "../../components/hooks/useAuth";
 import { imageService, treeService, personService, relationService, albumService } from "@/services";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import RelationshipModal from "@/components/RelationshipModal";
 
 const FamilyTreeDemo: React.FC = () => {
+  // States cho chức năng xác định quan hệ
+  const [person1IdForRelation, setPerson1IdForRelation] = useState<string>('');
+  const [person2IdForRelation, setPerson2IdForRelation] = useState<string>('');
+  const [person1NameForRelation, setPerson1NameForRelation] = useState<string>('');
+  const [person2NameForRelation, setPerson2NameForRelation] = useState<string>('');
+  const [showRelationshipModal, setShowRelationshipModal] = useState(false);
+  const [isSelectingSecondPerson, setIsSelectingSecondPerson] = useState(false);
+
+  // Handler: Bắt đầu chọn người thứ 2
+  const handleCheckRelationship = () => {
+    if (selectedPerson) {
+      setPerson1IdForRelation(selectedPerson.id);
+      setPerson1NameForRelation(selectedPerson.name);
+      setIsSelectingSecondPerson(true);
+      toast.info('Vui lòng chọn người thứ 2 trên sơ đồ cây');
+    } else {
+      toast.warning('Vui lòng chọn một người trước');
+    }
+  };
+
+  // Handler: Đóng modal và reset states
+  const handleCloseRelationshipModal = () => {
+    setShowRelationshipModal(false);
+    setIsSelectingSecondPerson(false);
+    setPerson1IdForRelation('');
+    setPerson2IdForRelation('');
+    setPerson1NameForRelation('');
+    setPerson2NameForRelation('');
+  };
+
+  // Handler: Click vào node trên cây
+  const handleNodeClick = async (person: FamilyMember) => {
+    console.log('handleNodeClick - Person data:', person);
+
+    // Nếu đang trong chế độ chọn người thứ 2 để xác định quan hệ
+    if (isSelectingSecondPerson && person1IdForRelation) {
+      console.log('handleNodeClick - Selecting second person for relationship');
+
+      // Không cho chọn cùng một người
+      if (person.id === person1IdForRelation) {
+        toast.warning('Không thể chọn cùng một người. Vui lòng chọn người khác.');
+        return;
+      }
+
+      // Set person 2 và mở modal - KHÔNG set selectedPerson
+      setPerson2IdForRelation(person.id);
+      setPerson2NameForRelation(person.name);
+      setShowRelationshipModal(true);
+      setIsSelectingSecondPerson(false);
+      console.log('Đã chọn người thứ hai:', person.name);
+      return; // ← QUAN TRỌNG: Return ngay, không chạy code bên dưới
+    }
+
+    // Logic gốc: Fetch thông tin đầy đủ của person CHỈ khi KHÔNG chọn người thứ 2
+    let enrichedPerson = person;
+
+    if (person.id) {
+      try {
+        console.log('handleNodeClick - Fetching latest person info for:', person.id);
+        const fullPersonInfo = await personService.getPerson(person.id);
+        console.log('handleNodeClick - Full person info from API:', fullPersonInfo);
+
+        enrichedPerson = {
+          ...person,
+          avatarUrl: fullPersonInfo.avatarUrl || person.avatarUrl,
+          birthPlace: fullPersonInfo.birthPlace || person.birthPlace,
+          deathPlace: fullPersonInfo.deathPlace || person.deathPlace,
+          deathDate: fullPersonInfo.deathDate || person.deathDate,
+          gravePlace: fullPersonInfo.gravePlace || person.gravePlace,
+        };
+
+        console.log('handleNodeClick - Enriched person with fresh avatarUrl:', enrichedPerson.avatarUrl);
+      } catch (error) {
+        console.error('handleNodeClick - Failed to fetch person info:', error);
+      }
+    }
+
+    // Set selectedPerson
+    setSelectedPerson(enrichedPerson);
+    console.log('Selected person:', enrichedPerson);
+  };
+
+
+
   const { user, isAuthenticated } = useAuth();
   // Modal tạo album
   const [showCreateAlbumModal, setShowCreateAlbumModal] = useState(false);
@@ -366,40 +451,7 @@ const FamilyTreeDemo: React.FC = () => {
     }
   };
 
-  // Function để xử lý khi click vào node
-  const handleNodeClick = async (person: FamilyMember) => {
-    console.log('handleNodeClick - Person data:', person);
-    console.log('handleNodeClick - Avatar URL (before fetch):', person.avatarUrl);
 
-    // Always fetch latest person info from API to ensure fresh data
-    if (person.id) {
-      try {
-        console.log('handleNodeClick - Fetching latest person info for:', person.id);
-        const fullPersonInfo = await personService.getPerson(person.id);
-        console.log('handleNodeClick - Full person info from API:', fullPersonInfo);
-
-        // Merge with existing person data, prioritizing API response
-        const enrichedPerson = {
-          ...person,
-          avatarUrl: fullPersonInfo.avatarUrl || person.avatarUrl,
-          birthPlace: fullPersonInfo.birthPlace || person.birthPlace,
-          deathPlace: fullPersonInfo.deathPlace || person.deathPlace,
-          deathDate: fullPersonInfo.deathDate || person.deathDate,
-          gravePlace: fullPersonInfo.gravePlace || person.gravePlace,
-        };
-
-        console.log('handleNodeClick - Enriched person with fresh avatarUrl:', enrichedPerson.avatarUrl);
-        setSelectedPerson(enrichedPerson);
-        return;
-      } catch (error) {
-        console.error('handleNodeClick - Failed to fetch person info:', error);
-        // Fallback to original person data if API fails
-      }
-    }
-
-    setSelectedPerson(person);
-    console.log('Selected person (fallback):', person);
-  };
 
   // Create new tree
   const handleCreateTree = async (treeData: any) => {
@@ -1263,17 +1315,37 @@ const FamilyTreeDemo: React.FC = () => {
                 )}
               </div>
             </div>
+            {/* Button Xác định quan hệ */}
+            <button
+              onClick={handleCheckRelationship}
+              disabled={isSelectingSecondPerson}
+              className={`w-full mt-2 px-4 py-2 rounded transition-colors flex items-center justify-center space-x-2 ${isSelectingSecondPerson
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-rose-600 hover:bg-rose-700 text-white'
+                }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <span>
+                {isSelectingSecondPerson ? 'Đang chọn người thứ 2...' : 'Xác định quan hệ'}
+              </span>
+            </button>
+            {/* Relationship Modal - CHỈ check showRelationshipModal */}
+            {showRelationshipModal && (
+              <RelationshipModal
+                key={`${person1IdForRelation}-${person2IdForRelation}`}
+                isOpen={showRelationshipModal}
+                onClose={handleCloseRelationshipModal}
+                person1Id={person1IdForRelation}
+                person2Id={person2IdForRelation}
+                person1Name={person1NameForRelation}
+                person2Name={person2NameForRelation}
+              />
+            )}
           </div>
 
-          {/* DNA Test Button */}
-          <div
-            className="flex-1 justify-center mx-auto"
-            style={{ marginTop: "8px", width: "fit-content" }}
-          >
-            <button className="px-4 py-2 w-full bg-white border border-rose-300 rounded-full text-rose-700 hover:bg-rose-50 transition-colors">
-              Order DNA test
-            </button>
-          </div>
+
         </div>
 
         {/* Main content phải */}
