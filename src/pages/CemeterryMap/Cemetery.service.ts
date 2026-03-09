@@ -5,8 +5,6 @@ import api from "@/config/axios";
 import { getProvinceByCoords } from "./provinces.data";
 
 const API_BASE_URL = env.API_BASE_URL;
-
-// Helper: Parse gravePlace string "lat,lng" or "lat,lng,zoom" (legacy) -> coordinates
 const parseGravePlace = (
   gravePlace: string
 ): { lat: number; lng: number } | null => {

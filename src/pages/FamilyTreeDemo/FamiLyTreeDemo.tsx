@@ -10,7 +10,13 @@ import DeleteTreeConfirmModal from "../../components/family-tree/DeleteTreeConfi
 import EditTreeNameModal from "../../components/family-tree/EditTreeNameModal";
 
 import { useAuth } from "../../components/hooks/useAuth";
-import { imageService, treeService, personService, relationService, albumService } from "@/services";
+import {
+  imageService,
+  treeService,
+  personService,
+  relationService,
+  albumService,
+} from "@/services";
 
 const FamilyTreeDemo: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -18,10 +24,10 @@ const FamilyTreeDemo: React.FC = () => {
   const [showCreateAlbumModal, setShowCreateAlbumModal] = useState(false);
   const [showEditAlbumModal, setShowEditAlbumModal] = useState(false);
   const [albumToEdit, setAlbumToEdit] = useState<any | null>(null);
-  const [editAlbumName, setEditAlbumName] = useState('');
+  const [editAlbumName, setEditAlbumName] = useState("");
   const [showDeleteAlbumConfirm, setShowDeleteAlbumConfirm] = useState(false);
   const [albumToDelete, setAlbumToDelete] = useState<any | null>(null);
-  const [newAlbumName, setNewAlbumName] = useState('');
+  const [newAlbumName, setNewAlbumName] = useState("");
   // Cập nhật tên cây
   const handleUpdateTree = async (treeId: string, newName: string) => {
     try {
@@ -31,7 +37,7 @@ const FamilyTreeDemo: React.FC = () => {
       // Đóng modal Select Family Tree sau khi cập nhật thành công
       setShowTreeSelector(false);
     } catch (error: any) {
-      setError(error.message || 'Failed to update tree');
+      setError(error.message || "Failed to update tree");
     } finally {
       setLoading(false);
     }
@@ -73,7 +79,9 @@ const FamilyTreeDemo: React.FC = () => {
   };
 
   // State để lưu thông tin node được chọn
-  const [selectedPerson, setSelectedPerson] = useState<FamilyMember | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<FamilyMember | null>(
+    null
+  );
 
   // State cho modal xem thông tin và modal thêm thành viên
   const [showPersonInfoModal, setShowPersonInfoModal] = useState(false);
@@ -89,7 +97,7 @@ const FamilyTreeDemo: React.FC = () => {
     // Auto center tree when tree data is loaded
     if (hasTreeData && currentTreeId) {
       const timer = setTimeout(() => {
-        const svgElement = document.querySelector('.family-tree-svg') as any;
+        const svgElement = document.querySelector(".family-tree-svg") as any;
         if (svgElement && svgElement.centerTreeView) {
           svgElement.centerTreeView();
         }
@@ -105,15 +113,15 @@ const FamilyTreeDemo: React.FC = () => {
 
     // Listen for reload current tree event
     const handleReloadCurrentTree = async () => {
-      console.log('Reload current tree event received');
+      console.log("Reload current tree event received");
       await getTrees();
       setShowCreateTreeModal(false);
     };
 
-    window.addEventListener('reloadCurrentTree', handleReloadCurrentTree);
+    window.addEventListener("reloadCurrentTree", handleReloadCurrentTree);
 
     return () => {
-      window.removeEventListener('reloadCurrentTree', handleReloadCurrentTree);
+      window.removeEventListener("reloadCurrentTree", handleReloadCurrentTree);
     };
   }, []);
 
@@ -122,7 +130,7 @@ const FamilyTreeDemo: React.FC = () => {
       setLoading(true);
       await getTrees();
     } catch (error) {
-      console.error('Error initializing component:', error);
+      console.error("Error initializing component:", error);
     } finally {
       setLoading(false);
     }
@@ -131,13 +139,16 @@ const FamilyTreeDemo: React.FC = () => {
   const getTrees = async () => {
     try {
       const trees = await treeService.getTrees();
-      console.log('User trees loaded:', trees);
+      console.log("User trees loaded:", trees);
 
       setUserTrees(trees);
 
       if (trees && trees.length > 0) {
         // Nếu chưa có currentTreeId hoặc currentTreeId không tồn tại trong danh sách
-        if (!currentTreeId || !trees.find(tree => tree.id === currentTreeId)) {
+        if (
+          !currentTreeId ||
+          !trees.find((tree) => tree.id === currentTreeId)
+        ) {
           const firstTreeId = trees[0]?.id;
           setCurrentTreeId(firstTreeId);
           // Load tree data for the first tree
@@ -151,19 +162,18 @@ const FamilyTreeDemo: React.FC = () => {
         setError(null); // Clear error khi không có cây
       }
     } catch (error: any) {
-      console.error('Error loading user trees:', error);
-      setError(error.message || 'Failed to load user trees');
+      console.error("Error loading user trees:", error);
+      setError(error.message || "Failed to load user trees");
     }
   };
 
   // (removed) getAllTrees was unused; all tree APIs are called via familyService in used functions above
 
-
   // Hàm chỉ refresh danh sách cây mà không tự động chọn cây đầu tiên
   const refreshTreeList = async () => {
     try {
       const trees = await treeService.getTrees();
-      console.log('Tree list refreshed:', trees);
+      console.log("Tree list refreshed:", trees);
       setUserTrees(trees);
 
       // Nếu không còn cây nào, reset states
@@ -171,18 +181,17 @@ const FamilyTreeDemo: React.FC = () => {
         setCurrentTreeId(null);
         setHasTreeData(false);
         setSelectedPerson(null);
-
       }
     } catch (error: any) {
-      console.error('Error refreshing tree list:', error);
-      setError(error.message || 'Failed to refresh tree list');
+      console.error("Error refreshing tree list:", error);
+      setError(error.message || "Failed to refresh tree list");
     }
   };
 
   // FE-only refresh action for Photo Manager header Refresh button
   const handlePhotoManagerRefresh = async () => {
     // Hiển thị toast trước, đảm bảo nổi trên modal
-    showLocalToast('Tải lại danh sách album thành công', 'success');
+    showLocalToast("Tải lại danh sách album thành công", "success");
     // Chờ 3s cho toast hiển thị, sau đó mới reload dữ liệu trong modal
     setTimeout(async () => {
       try {
@@ -201,31 +210,37 @@ const FamilyTreeDemo: React.FC = () => {
   // Close more menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (showMoreMenu && !(event.target as Element)?.closest('.relative')) {
+      if (showMoreMenu && !(event.target as Element)?.closest(".relative")) {
         setShowMoreMenu(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showMoreMenu]);
 
   // Local toast for FE-only actions (not from API)
-  const showLocalToast = (message: string, type: 'success' | 'error' = 'success') => {
-    const responseArea = document.getElementById('response-area');
+  const showLocalToast = (
+    message: string,
+    type: "success" | "error" = "success"
+  ) => {
+    const responseArea = document.getElementById("response-area");
     if (!responseArea) return;
-    const isSuccess = type === 'success';
+    const isSuccess = type === "success";
     responseArea.textContent = message;
-    responseArea.className = `fixed top-20 left-1/2 transform -translate-x-1/2 z-[99999] ${isSuccess ? 'bg-green-50 border border-green-300 text-green-800' : 'bg-red-50 border border-red-300 text-red-800'
-      } rounded-lg p-3 shadow-lg max-w-sm text-center text-sm font-medium`;
-    responseArea.style.display = 'block';
-    responseArea.style.zIndex = '99999';
+    responseArea.className = `fixed top-20 left-1/2 transform -translate-x-1/2 z-[99999] ${
+      isSuccess
+        ? "bg-green-50 border border-green-300 text-green-800"
+        : "bg-red-50 border border-red-300 text-red-800"
+    } rounded-lg p-3 shadow-lg max-w-sm text-center text-sm font-medium`;
+    responseArea.style.display = "block";
+    responseArea.style.zIndex = "99999";
     setTimeout(() => {
-      responseArea.style.display = 'none';
-      responseArea.textContent = '';
-      responseArea.className = 'response-area';
+      responseArea.style.display = "none";
+      responseArea.textContent = "";
+      responseArea.className = "response-area";
     }, 3000);
   };
 
@@ -239,32 +254,36 @@ const FamilyTreeDemo: React.FC = () => {
 
       // Load tree relations data
       const data = await relationService.getTreeRelations(treeId, 7);
-      console.log('Tree data loaded for tree:', treeId, data);
-      console.log('Data type:', typeof data, 'Data length:', Array.isArray(data) ? data.length : 'Not array');
+      console.log("Tree data loaded for tree:", treeId, data);
+      console.log(
+        "Data type:",
+        typeof data,
+        "Data length:",
+        Array.isArray(data) ? data.length : "Not array"
+      );
 
       // Check if tree has data (has members)
       let hasData = false;
       if (Array.isArray(data)) {
         hasData = data.length > 0;
-      } else if (data && typeof data === 'object') {
+      } else if (data && typeof data === "object") {
         // If data is an object, check if it has any meaningful content
         hasData = Object.keys(data).length > 0;
       }
 
-      console.log('Has tree data:', hasData);
+      console.log("Has tree data:", hasData);
       setHasTreeData(hasData);
-
     } catch (error: any) {
       // console.error('Error loading tree data:', error);
-      setError(error.message || 'Failed to load tree data');
+      setError(error.message || "Failed to load tree data");
       setHasTreeData(false);
     } finally {
       setLoading(false);
     }
-  };  // Function để load dữ liệu cây gia đình
+  }; // Function để load dữ liệu cây gia đình
   const loadTreeData = async () => {
     if (!currentTreeId) {
-      setError('No tree selected');
+      setError("No tree selected");
       return;
     }
 
@@ -277,18 +296,21 @@ const FamilyTreeDemo: React.FC = () => {
 
     try {
       setLoading(true);
-      const data = await relationService.getPersonTreeRelations(currentTreeId, personId, 7);
-      console.log('Person tree relations loaded:', data);
+      const data = await relationService.getPersonTreeRelations(
+        currentTreeId,
+        personId,
+        7
+      );
+      console.log("Person tree relations loaded:", data);
       setPersonTreeData(data);
       setShowPersonTreeModal(true);
     } catch (error: any) {
-      console.error('Error loading person tree relations:', error);
-      setError(error.message || 'Failed to load person tree relations');
+      console.error("Error loading person tree relations:", error);
+      setError(error.message || "Failed to load person tree relations");
     } finally {
       setLoading(false);
     }
   };
-
 
   const handleRefreshTree = async () => {
     try {
@@ -299,10 +321,9 @@ const FamilyTreeDemo: React.FC = () => {
       if (currentTreeId) {
         await loadTreeDataForTree(currentTreeId);
       }
-
     } catch (error: any) {
-      console.error('Error refreshing tree:', error);
-      setError(error.message || 'Failed to refresh tree');
+      console.error("Error refreshing tree:", error);
+      setError(error.message || "Failed to refresh tree");
     } finally {
       setLoading(false);
       // Thông báo success được xử lý tự động bởi makeRequest
@@ -312,7 +333,7 @@ const FamilyTreeDemo: React.FC = () => {
   const handleZoomIn = () => {
     setZoomLevel((prev) => Math.min(prev + 0.2, 3));
     // Apply zoom to current tree
-    const svgElement = document.querySelector('.family-tree-svg') as any;
+    const svgElement = document.querySelector(".family-tree-svg") as any;
     if (svgElement && svgElement.setZoom) {
       svgElement.setZoom(Math.min(zoomLevel + 0.2, 3));
     }
@@ -321,7 +342,7 @@ const FamilyTreeDemo: React.FC = () => {
   const handleZoomOut = () => {
     setZoomLevel((prev) => Math.max(prev - 0.2, 0.3));
     // Apply zoom to current tree
-    const svgElement = document.querySelector('.family-tree-svg') as any;
+    const svgElement = document.querySelector(".family-tree-svg") as any;
     if (svgElement && svgElement.setZoom) {
       svgElement.setZoom(Math.max(zoomLevel - 0.2, 0.3));
     }
@@ -330,7 +351,7 @@ const FamilyTreeDemo: React.FC = () => {
   const handleZoomReset = () => {
     setZoomLevel(1);
     // Reset zoom and center the current tree
-    const svgElement = document.querySelector('.family-tree-svg') as any;
+    const svgElement = document.querySelector(".family-tree-svg") as any;
     if (svgElement) {
       if (svgElement.setZoom) {
         svgElement.setZoom(1);
@@ -343,7 +364,7 @@ const FamilyTreeDemo: React.FC = () => {
 
   const handleZoomCenter = () => {
     // Center the current tree without changing zoom level
-    const svgElement = document.querySelector('.family-tree-svg') as any;
+    const svgElement = document.querySelector(".family-tree-svg") as any;
     if (svgElement && svgElement.centerTreeView) {
       svgElement.centerTreeView();
     }
@@ -351,15 +372,24 @@ const FamilyTreeDemo: React.FC = () => {
 
   // Function để xử lý khi click vào node
   const handleNodeClick = async (person: FamilyMember) => {
-    console.log('handleNodeClick - Person data:', person);
-    console.log('handleNodeClick - Avatar URL (before fetch):', person.avatarUrl);
+    console.log("handleNodeClick - Person data:", person);
+    console.log(
+      "handleNodeClick - Avatar URL (before fetch):",
+      person.avatarUrl
+    );
 
     // Always fetch latest person info from API to ensure fresh data
     if (person.id) {
       try {
-        console.log('handleNodeClick - Fetching latest person info for:', person.id);
+        console.log(
+          "handleNodeClick - Fetching latest person info for:",
+          person.id
+        );
         const fullPersonInfo = await personService.getPerson(person.id);
-        console.log('handleNodeClick - Full person info from API:', fullPersonInfo);
+        console.log(
+          "handleNodeClick - Full person info from API:",
+          fullPersonInfo
+        );
 
         // Merge with existing person data, prioritizing API response
         const enrichedPerson = {
@@ -371,17 +401,20 @@ const FamilyTreeDemo: React.FC = () => {
           gravePlace: fullPersonInfo.gravePlace || person.gravePlace,
         };
 
-        console.log('handleNodeClick - Enriched person with fresh avatarUrl:', enrichedPerson.avatarUrl);
+        console.log(
+          "handleNodeClick - Enriched person with fresh avatarUrl:",
+          enrichedPerson.avatarUrl
+        );
         setSelectedPerson(enrichedPerson);
         return;
       } catch (error) {
-        console.error('handleNodeClick - Failed to fetch person info:', error);
+        console.error("handleNodeClick - Failed to fetch person info:", error);
         // Fallback to original person data if API fails
       }
     }
 
     setSelectedPerson(person);
-    console.log('Selected person (fallback):', person);
+    console.log("Selected person (fallback):", person);
   };
 
   // Create new tree
@@ -389,19 +422,18 @@ const FamilyTreeDemo: React.FC = () => {
     try {
       setLoading(true);
       await treeService.createTree({
-        name: treeData.name
+        name: treeData.name,
       });
       // Refresh user trees and switch to the new tree
       await getTrees();
       setShowCreateTreeModal(false);
       // no-op
     } catch (error: any) {
-      console.error('Error creating tree:', error);
-      setError(error.message || 'Failed to create tree');
+      console.error("Error creating tree:", error);
+      setError(error.message || "Failed to create tree");
     } finally {
       setLoading(false);
     }
-
   };
 
   // Delete tree (internal logic for state management)
@@ -416,21 +448,21 @@ const FamilyTreeDemo: React.FC = () => {
         setCurrentTreeId(null);
         setHasTreeData(false);
         setSelectedPerson(null);
-        setTreeViewKey(prev => prev + 1); // Force re-render
+        setTreeViewKey((prev) => prev + 1); // Force re-render
       }
 
       // Tự động refresh danh sách cây để cập nhật UI (không tự động chọn cây đầu tiên)
       await refreshTreeList();
 
-      // Đóng modal danh sách cây sau khi xóa thành công  
+      // Đóng modal danh sách cây sau khi xóa thành công
       setShowTreeSelector(false);
     } catch (error: any) {
-      console.error('Error updating UI after tree deletion:', error);
-      setError(error.message || 'Failed to update UI after tree deletion');
+      console.error("Error updating UI after tree deletion:", error);
+      setError(error.message || "Failed to update UI after tree deletion");
     } finally {
       setLoading(false);
     }
-  };  // Switch to different tree
+  }; // Switch to different tree
   const handleSwitchTree = async (treeId: string) => {
     try {
       setCurrentTreeId(treeId);
@@ -439,21 +471,20 @@ const FamilyTreeDemo: React.FC = () => {
 
       // Không cần thông báo thủ công - switch tree là UI action, không phải API call
     } catch (error: any) {
-      console.error('Error switching tree:', error);
-      setError(error.message || 'Failed to switch tree');
+      console.error("Error switching tree:", error);
+      setError(error.message || "Failed to switch tree");
     }
   };
-
 
   const loadUserAlbums = async (userId: string) => {
     try {
       setLoading(true);
       const albums = await albumService.getUserAlbums(userId);
       setUserAlbums(albums);
-      console.log('User albums loaded:', albums);
+      console.log("User albums loaded:", albums);
     } catch (error: any) {
-      console.error('Error loading albums:', error);
-      setError(error.message || 'Failed to load albums');
+      console.error("Error loading albums:", error);
+      setError(error.message || "Failed to load albums");
     } finally {
       setLoading(false);
     }
@@ -463,21 +494,20 @@ const FamilyTreeDemo: React.FC = () => {
   const handleCreateAlbum = async (albumData: any) => {
     try {
       setLoading(true);
-      if (!user?.id) throw new Error('User is not authenticated');
+      if (!user?.id) throw new Error("User is not authenticated");
       const newAlbum = await albumService.createAlbum({
         userId: user.id,
-        name: albumData.name
+        name: albumData.name,
       });
       await loadUserAlbums(user.id);
     } catch (error: any) {
-
-      let msg = 'Album đã tồn tại';
+      let msg = "Album đã tồn tại";
       // if (typeof error === 'string') msg = error;
       // else if (error && typeof error.message === 'string' && error.message.trim() !== '') {
       //   // Làm sạch thông điệp không mong muốn
       //   msg = error.message.replace(/\(HTTP \d+\)/gi, '').trim();
       // }
-      showLocalToast(msg, 'error');
+      showLocalToast(msg, "error");
     } finally {
       setLoading(false);
     }
@@ -487,14 +517,17 @@ const FamilyTreeDemo: React.FC = () => {
   const handleUpdateAlbum = async (albumId: string, albumData: any) => {
     try {
       setLoading(true);
-      const updatedAlbum = await albumService.updateAlbum(albumId, albumData.name);
+      const updatedAlbum = await albumService.updateAlbum(
+        albumId,
+        albumData.name
+      );
 
       if (user?.id) {
         await loadUserAlbums(user.id);
       }
     } catch (error: any) {
-      console.error('Error updating album:', error);
-      setError(error.message || 'Failed to update album');
+      console.error("Error updating album:", error);
+      setError(error.message || "Failed to update album");
     } finally {
       setLoading(false);
     }
@@ -512,13 +545,12 @@ const FamilyTreeDemo: React.FC = () => {
       if (selectedAlbum?.id === albumId) {
         setSelectedAlbum(null);
         setAlbumImages([]);
-
       }
       // Hiển thị thông báo xóa thành công màu đỏ theo yêu cầu
-      showLocalToast('Xoá album thành công', 'error');
+      showLocalToast("Xoá album thành công", "error");
     } catch (error: any) {
-      console.error('Error deleting album:', error);
-      setError(error.message || 'Failed to delete album');
+      console.error("Error deleting album:", error);
+      setError(error.message || "Failed to delete album");
     } finally {
       setLoading(false);
     }
@@ -526,18 +558,20 @@ const FamilyTreeDemo: React.FC = () => {
 
   // Search album by name locally first, then by ID from server
   const handleSearchAlbum = async () => {
-    const q = (searchAlbumQuery || '').trim().toLowerCase();
+    const q = (searchAlbumQuery || "").trim().toLowerCase();
     if (!q) {
-      showLocalToast('Vui lòng nhập tên album hoặc ID', 'error');
+      showLocalToast("Vui lòng nhập tên album hoặc ID", "error");
       return;
     }
 
     // 1) Tìm theo tên trong danh sách hiện tại
-    const localMatch = userAlbums.find((a: any) => (a?.name || '').toLowerCase().includes(q));
+    const localMatch = userAlbums.find((a: any) =>
+      (a?.name || "").toLowerCase().includes(q)
+    );
     if (localMatch) {
       setSelectedAlbum(localMatch);
       await loadAlbumImages(localMatch.id);
-      showLocalToast('Tìm album thành công', 'success');
+      showLocalToast("Tìm album thành công", "success");
       return;
     }
 
@@ -550,29 +584,28 @@ const FamilyTreeDemo: React.FC = () => {
         if (!exists) setUserAlbums([album, ...userAlbums]);
         setSelectedAlbum(album);
         await loadAlbumImages(album.id);
-        showLocalToast('Tìm album thành công', 'success');
+        showLocalToast("Tìm album thành công", "success");
         return;
       }
-      showLocalToast('Không tìm thấy album', 'error');
+      showLocalToast("Không tìm thấy album", "error");
     } catch (_) {
-      showLocalToast('Không tìm thấy album', 'error');
+      showLocalToast("Không tìm thấy album", "error");
     } finally {
       setLoading(false);
     }
   };
 
-
   const loadAlbumImages = async (albumId: string) => {
     try {
-      console.log('[FamilyTreeDemo] Loading images for album:', albumId);
+      console.log("[FamilyTreeDemo] Loading images for album:", albumId);
       setLoading(true);
       const images = await imageService.getImagesByAlbum(albumId);
-      console.log('[FamilyTreeDemo] Images received:', images);
-      console.log('[FamilyTreeDemo] Number of images:', images?.length || 0);
+      console.log("[FamilyTreeDemo] Images received:", images);
+      console.log("[FamilyTreeDemo] Number of images:", images?.length || 0);
       setAlbumImages(images || []);
     } catch (error: any) {
-      console.error('[FamilyTreeDemo] Error loading album images:', error);
-      setError(error.message || 'Failed to load album images');
+      console.error("[FamilyTreeDemo] Error loading album images:", error);
+      setError(error.message || "Failed to load album images");
       setAlbumImages([]); // Clear images on error
     } finally {
       setLoading(false);
@@ -591,12 +624,12 @@ const FamilyTreeDemo: React.FC = () => {
   // Upload image
   const handleUploadImage = async (imageData: any) => {
     try {
-      console.log('[Upload Handler] Starting upload:', imageData);
+      console.log("[Upload Handler] Starting upload:", imageData);
       await imageService.uploadImage({
         file: imageData.file,
-        albumId: imageData.albumId
+        albumId: imageData.albumId,
       });
-      console.log('[Upload Handler] Upload successful');
+      console.log("[Upload Handler] Upload successful");
 
       // Close modal
       setShowUploadModal(false);
@@ -607,11 +640,10 @@ const FamilyTreeDemo: React.FC = () => {
       }
 
       // Show success notification
-      showLocalToast('Upload ảnh thành công', 'success');
-
+      showLocalToast("Upload ảnh thành công", "success");
     } catch (error) {
-      console.error('[Upload Handler] Upload failed:', error);
-      showLocalToast('Upload ảnh thất bại', 'error');
+      console.error("[Upload Handler] Upload failed:", error);
+      showLocalToast("Upload ảnh thất bại", "error");
     }
   };
   // Delete image
@@ -625,8 +657,8 @@ const FamilyTreeDemo: React.FC = () => {
         await loadAlbumImages(selectedAlbum.id);
       }
     } catch (error: any) {
-      console.error('Error deleting image:', error);
-      setError(error.message || 'Failed to delete image');
+      console.error("Error deleting image:", error);
+      setError(error.message || "Failed to delete image");
     } finally {
       setLoading(false);
     }
@@ -637,12 +669,12 @@ const FamilyTreeDemo: React.FC = () => {
     try {
       setLoading(true);
       const imageData = await imageService.getImage(imageId);
-      console.log('Image detail loaded:', imageData);
+      console.log("Image detail loaded:", imageData);
       setSelectedImage(imageData);
       setShowImageDetailModal(true);
     } catch (error: any) {
-      console.error('Error loading image detail:', error);
-      setError(error.message || 'Failed to load image detail');
+      console.error("Error loading image detail:", error);
+      setError(error.message || "Failed to load image detail");
     } finally {
       setLoading(false);
     }
@@ -674,11 +706,11 @@ const FamilyTreeDemo: React.FC = () => {
       setLoading(true);
 
       if (!selectedPerson?.id) {
-        throw new Error('No parent selected');
+        throw new Error("No parent selected");
       }
 
       if (!currentTreeId) {
-        throw new Error('No tree selected');
+        throw new Error("No tree selected");
       }
 
       const addChildRequest = {
@@ -688,11 +720,11 @@ const FamilyTreeDemo: React.FC = () => {
           name: childData.name || "unknown",
           gender: childData.gender || "M",
           birthday: childData.birthday || null,
-          birthPlace: childData.birthPlace || ""
+          birthPlace: childData.birthPlace || "",
         },
         childrenType: "BIOLOGICAL" as const,
         adoptionDate: "",
-        notes: ""
+        notes: "",
       };
 
       // Call API to add child
@@ -703,10 +735,10 @@ const FamilyTreeDemo: React.FC = () => {
 
       // Tự động reload cây
       await loadTreeData();
-      setTreeViewKey(prev => prev + 1);
+      setTreeViewKey((prev) => prev + 1);
     } catch (error: any) {
-      console.error('Error adding child:', error);
-      setError(error.message || 'Failed to add child');
+      console.error("Error adding child:", error);
+      setError(error.message || "Failed to add child");
     } finally {
       setLoading(false);
     }
@@ -718,11 +750,11 @@ const FamilyTreeDemo: React.FC = () => {
       setLoading(true);
 
       if (!selectedPerson?.id) {
-        throw new Error('No child selected');
+        throw new Error("No child selected");
       }
 
       if (!currentTreeId) {
-        throw new Error('No tree selected');
+        throw new Error("No tree selected");
       }
 
       // Prepare data according to AddParentRequest interface
@@ -732,8 +764,8 @@ const FamilyTreeDemo: React.FC = () => {
           name: parentData.name || "unknown",
           gender: parentData.gender || "M",
           birthday: parentData.birthday || null,
-          birthPlace: parentData.birthPlace || ""
-        }
+          birthPlace: parentData.birthPlace || "",
+        },
       };
 
       await relationService.addParent(currentTreeId, addParentRequest);
@@ -743,10 +775,10 @@ const FamilyTreeDemo: React.FC = () => {
 
       // Tự động reload cây
       await loadTreeData();
-      setTreeViewKey(prev => prev + 1);
+      setTreeViewKey((prev) => prev + 1);
     } catch (error: any) {
-      console.error('Error adding parent:', error);
-      setError(error.message || 'Failed to add parent');
+      console.error("Error adding parent:", error);
+      setError(error.message || "Failed to add parent");
     } finally {
       setLoading(false);
     }
@@ -758,11 +790,11 @@ const FamilyTreeDemo: React.FC = () => {
       setLoading(true);
 
       if (!selectedPerson?.id) {
-        throw new Error('No person selected');
+        throw new Error("No person selected");
       }
 
       if (!currentTreeId) {
-        throw new Error('No tree selected');
+        throw new Error("No tree selected");
       }
 
       const addSpouseRequest = {
@@ -770,23 +802,27 @@ const FamilyTreeDemo: React.FC = () => {
           name: spouseData.name || "unknown",
           gender: spouseData.gender || "F",
           birthday: spouseData.birthday || null,
-          birthPlace: spouseData.birthPlace || ""
+          birthPlace: spouseData.birthPlace || "",
         },
         marriageDate: spouseData.marriageDate || null,
-        divorceDate: spouseData.divorceDate || null
+        divorceDate: spouseData.divorceDate || null,
       };
 
-      await relationService.addSpouse(currentTreeId, selectedPerson.id, addSpouseRequest);
+      await relationService.addSpouse(
+        currentTreeId,
+        selectedPerson.id,
+        addSpouseRequest
+      );
 
       // Close modal
       setShowAddSpouseModal(false);
 
       // Tự động reload cây
       await loadTreeData();
-      setTreeViewKey(prev => prev + 1);
+      setTreeViewKey((prev) => prev + 1);
     } catch (error: any) {
-      console.error('Error adding spouse:', error);
-      setError(error.message || 'Failed to add spouse');
+      console.error("Error adding spouse:", error);
+      setError(error.message || "Failed to add spouse");
     } finally {
       setLoading(false);
     }
@@ -798,14 +834,14 @@ const FamilyTreeDemo: React.FC = () => {
       setLoading(true);
 
       if (!currentTreeId) {
-        throw new Error('No tree selected');
+        throw new Error("No tree selected");
       }
 
       const createRootRequest = {
         name: rootData.name || "unknown",
         gender: rootData.gender || "M",
         birthday: rootData.birthday || null,
-        birthPlace: rootData.birthPlace || ""
+        birthPlace: rootData.birthPlace || "",
       };
 
       await relationService.createRootPerson(currentTreeId, createRootRequest);
@@ -819,17 +855,17 @@ const FamilyTreeDemo: React.FC = () => {
         await loadTreeDataForTree(currentTreeId);
 
         // Force re-render of tree view
-        setTreeViewKey(prev => prev + 1);
+        setTreeViewKey((prev) => prev + 1);
 
         // Also trigger tree view refresh
-        const svgElement = document.querySelector('.family-tree-svg') as any;
+        const svgElement = document.querySelector(".family-tree-svg") as any;
         if (svgElement && svgElement.refreshTreeData) {
           svgElement.refreshTreeData();
         }
       }, 500);
     } catch (error: any) {
-      console.error('Error adding root person:', error);
-      setError(error.message || 'Failed to add root person');
+      console.error("Error adding root person:", error);
+      setError(error.message || "Failed to add root person");
     } finally {
       setLoading(false);
     }
@@ -843,7 +879,10 @@ const FamilyTreeDemo: React.FC = () => {
     let age = 0;
     age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate() && monthDiff > 1)) {
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birth.getDate() && monthDiff > 1)
+    ) {
       age--;
     }
     return age;
@@ -982,7 +1021,13 @@ const FamilyTreeDemo: React.FC = () => {
                       cx="32"
                       cy="32"
                       r="30"
-                      stroke={selectedPerson?.gender === 'M' ? "#5BD1D7" : selectedPerson?.gender === 'F' ? "#F59794" : "#B0B7C3"}
+                      stroke={
+                        selectedPerson?.gender === "M"
+                          ? "#5BD1D7"
+                          : selectedPerson?.gender === "F"
+                          ? "#F59794"
+                          : "#B0B7C3"
+                      }
                       strokeWidth="2"
                       fill="#fff"
                     />
@@ -990,13 +1035,25 @@ const FamilyTreeDemo: React.FC = () => {
                       cx="32"
                       cy="26"
                       r="10"
-                      stroke={selectedPerson?.gender === 'M' ? "#5BD1D7" : selectedPerson?.gender === 'F' ? "#F59794" : "#B0B7C3"}
+                      stroke={
+                        selectedPerson?.gender === "M"
+                          ? "#5BD1D7"
+                          : selectedPerson?.gender === "F"
+                          ? "#F59794"
+                          : "#B0B7C3"
+                      }
                       strokeWidth="1.5"
                       fill="#F5F6F7"
                     />
                     <path
                       d="M16 50c0-6.5 8-12 16-12s16 5.5 16 12"
-                      stroke={selectedPerson?.gender === 'M' ? "#5BD1D7" : selectedPerson?.gender === 'F' ? "#F59794" : "#B0B7C3"}
+                      stroke={
+                        selectedPerson?.gender === "M"
+                          ? "#5BD1D7"
+                          : selectedPerson?.gender === "F"
+                          ? "#F59794"
+                          : "#B0B7C3"
+                      }
                       strokeWidth="1.5"
                       fill="#F5F6F7"
                     />
@@ -1046,26 +1103,30 @@ const FamilyTreeDemo: React.FC = () => {
                   {selectedPerson?.name || "Chọn một người"}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {selectedPerson ? (
-                    "Family member"
-                  ) : (
-                    "Click vào thành viên để xem thông tin"
-                  )}
+                  {selectedPerson
+                    ? "Family member"
+                    : "Click vào thành viên để xem thông tin"}
                 </div>
                 <div className="text-xs text-gray-700 mt-1">
                   {selectedPerson?.birthday && (
-
                     <>
                       ★ {formatBirthday(selectedPerson.birthday)}
                       {calculateAge(selectedPerson.birthday) > 0 && (
-                        <span> (age ~{calculateAge(selectedPerson.birthday)})</span>
+                        <span>
+                          {" "}
+                          (age ~{calculateAge(selectedPerson.birthday)})
+                        </span>
                       )}
                     </>
                   )}
                 </div>
                 {selectedPerson?.gender && (
                   <div className="text-xs text-gray-600 mt-1">
-                    {selectedPerson.gender === 'M' ? '♂ Nam' : selectedPerson.gender === 'F' ? '♀ Nữ' : 'Không rõ'}
+                    {selectedPerson.gender === "M"
+                      ? "♂ Nam"
+                      : selectedPerson.gender === "F"
+                      ? "♀ Nữ"
+                      : "Không rõ"}
                   </div>
                 )}
                 {selectedPerson?.birthPlace && (
@@ -1074,7 +1135,6 @@ const FamilyTreeDemo: React.FC = () => {
                   </div>
                 )}
                 {selectedPerson && (
-
                   <button className="text-xs text-rose-700 font-semibold mt-1 hover:underline">
                     Research this person »
                   </button>
@@ -1089,8 +1149,18 @@ const FamilyTreeDemo: React.FC = () => {
                 >
                   <span className="bg-gray-100 rounded-full p-2 mb-1">
                     {/* icon profile giữ nguyên */}
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
                     </svg>
                   </span>
                   <span className="text-xs">Profile</span>
@@ -1101,8 +1171,18 @@ const FamilyTreeDemo: React.FC = () => {
                   disabled={!selectedPerson || loading}
                 >
                   <span className="bg-gray-100 rounded-full p-2 mb-1">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+                      />
                     </svg>
                   </span>
                   <span className="text-xs">Edit</span>
@@ -1117,8 +1197,18 @@ const FamilyTreeDemo: React.FC = () => {
                     {loading ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-rose-500"></div>
                     ) : (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12M6 12h12" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 6v12M6 12h12"
+                        />
                       </svg>
                     )}
                   </span>
@@ -1132,7 +1222,13 @@ const FamilyTreeDemo: React.FC = () => {
                     onClick={() => setShowMoreMenu(!showMoreMenu)}
                   >
                     <span className="bg-gray-100 rounded-full p-2 mb-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
                         <circle cx="5" cy="12" r="1.5" />
                         <circle cx="12" cy="12" r="1.5" />
                         <circle cx="19" cy="12" r="1.5" />
@@ -1241,7 +1337,9 @@ const FamilyTreeDemo: React.FC = () => {
                 {selectedPerson?.birthday ? (
                   <div className="flex items-center space-x-2">
                     <span className="font-medium">Birth</span>
-                    <span className="text-gray-400">{formatBirthday(selectedPerson.birthday)}</span>
+                    <span className="text-gray-400">
+                      {formatBirthday(selectedPerson.birthday)}
+                    </span>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">
@@ -1379,8 +1477,18 @@ const FamilyTreeDemo: React.FC = () => {
 
             {!loading && !error && !currentTreeId && (
               <div className="flex flex-col items-center justify-center text-gray-600">
-                <svg className="w-8 h-8 mb-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                <svg
+                  className="w-8 h-8 mb-2"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+                  />
                 </svg>
                 <span className="text-sm mb-3">No trees available</span>
                 <button
@@ -1418,7 +1526,10 @@ const FamilyTreeDemo: React.FC = () => {
                 }}
                 onPersonUpdated={(updatedPerson) => {
                   // Update selectedPerson if it's the same person being updated
-                  if (selectedPerson && selectedPerson.id === updatedPerson.id) {
+                  if (
+                    selectedPerson &&
+                    selectedPerson.id === updatedPerson.id
+                  ) {
                     setSelectedPerson(updatedPerson);
                   }
                 }}
@@ -1427,12 +1538,25 @@ const FamilyTreeDemo: React.FC = () => {
 
             {!loading && !error && currentTreeId && !hasTreeData && (
               <div className="flex flex-col items-center justify-center text-gray-600">
-                <svg className="w-12 h-12 mb-4 text-green-500" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                <svg
+                  className="w-12 h-12 mb-4 text-green-500"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z"
+                  />
                 </svg>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Your Family Tree is Empty</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Your Family Tree is Empty
+                </h3>
                 <p className="text-sm text-gray-600 mb-4 text-center max-w-md">
-                  Start building your family tree by adding the first person. This will be the foundation of your genealogy.
+                  Start building your family tree by adding the first person.
+                  This will be the foundation of your genealogy.
                 </p>
                 <button
                   onClick={() => setShowAddRootModal(true)}
@@ -1587,7 +1711,7 @@ const FamilyTreeDemo: React.FC = () => {
         isOpen={showAddRootModal}
         onClose={() => setShowAddRootModal(false)}
         onSave={handleAddRoot}
-        treeName={userTrees.find(tree => tree.id === currentTreeId)?.name}
+        treeName={userTrees.find((tree) => tree.id === currentTreeId)?.name}
       />
 
       {/* Tree Selector Modal */}
@@ -1600,14 +1724,20 @@ const FamilyTreeDemo: React.FC = () => {
                 {userTrees.map((tree: any) => (
                   <div
                     key={tree.id}
-                    className={`w-full p-3 rounded-lg border flex items-center justify-between ${tree.id === currentTreeId ? 'bg-blue-50 border-blue-300' : 'hover:bg-gray-50'}`}
+                    className={`w-full p-3 rounded-lg border flex items-center justify-between ${
+                      tree.id === currentTreeId
+                        ? "bg-blue-50 border-blue-300"
+                        : "hover:bg-gray-50"
+                    }`}
                   >
                     <div
                       onClick={() => handleSwitchTree(tree.id)}
                       className="flex-1 cursor-pointer"
                     >
                       <div className="font-medium">{tree.name}</div>
-                      <div className="text-sm text-gray-500">Created: {new Date(tree.createdAt).toLocaleDateString()}</div>
+                      <div className="text-sm text-gray-500">
+                        Created: {new Date(tree.createdAt).toLocaleDateString()}
+                      </div>
                     </div>
 
                     {/* Action Buttons */}
@@ -1621,8 +1751,18 @@ const FamilyTreeDemo: React.FC = () => {
                         className="p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded"
                         title="Edit Tree Name"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
                         </svg>
                       </button>
 
@@ -1637,8 +1777,18 @@ const FamilyTreeDemo: React.FC = () => {
                         className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
                         title="Delete Tree"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16"
+                          />
                         </svg>
                       </button>
                     </div>
@@ -1656,7 +1806,7 @@ const FamilyTreeDemo: React.FC = () => {
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                 disabled={loading}
               >
-                {loading ? 'Loading...' : 'Refresh Trees'}
+                {loading ? "Loading..." : "Refresh Trees"}
               </button>
               <button
                 onClick={() => setShowTreeSelector(false)}
@@ -1674,15 +1824,19 @@ const FamilyTreeDemo: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-96">
             <h2 className="text-lg font-bold mb-4">Create New Family Tree</h2>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.target as HTMLFormElement);
-              handleCreateTree({
-                name: formData.get('name') as string
-              });
-            }}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target as HTMLFormElement);
+                handleCreateTree({
+                  name: formData.get("name") as string,
+                });
+              }}
+            >
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Tree Name</label>
+                <label className="block text-sm font-medium mb-2">
+                  Tree Name
+                </label>
                 <input
                   type="text"
                   name="name"
@@ -1714,14 +1868,16 @@ const FamilyTreeDemo: React.FC = () => {
       {/* Photo Manager Modal */}
       {showPhotoManager && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="rounded-lg p-6 w-3/4 h-3/4 max-w-4xl" style={{ background: '#f9fafb' }}>
+          <div
+            className="rounded-lg p-6 w-3/4 h-3/4 max-w-4xl"
+            style={{ background: "#f9fafb" }}
+          >
             <div className="flex justify-between items-center mb-4">
               <div className="flex-1 flex items-center justify-center space-x-3">
                 <h2 className="text-lg font-bold mr-60">Photo Manager</h2>
 
                 <h2>Tìm album của bạn </h2>
                 <div className="hidden md:flex items-center space-x-2 bg-white border border-gray-300 rounded px-2 py-1">
-
                   <input
                     type="text"
                     placeholder="Nhập tên album"
@@ -1741,22 +1897,40 @@ const FamilyTreeDemo: React.FC = () => {
                 onClick={() => setShowPhotoManager(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
 
-            <div className="flex h-auto space-x-4" onClick={(e) => {
-              // Nếu click vào vùng ngoài album list thì bỏ chọn album
-              if ((e.target as HTMLElement).classList.contains('albums-list-outer')) {
-                setSelectedAlbum(null);
-              }
-            }}>
+            <div
+              className="flex h-auto space-x-4"
+              onClick={(e) => {
+                // Nếu click vào vùng ngoài album list thì bỏ chọn album
+                if (
+                  (e.target as HTMLElement).classList.contains(
+                    "albums-list-outer"
+                  )
+                ) {
+                  setSelectedAlbum(null);
+                }
+              }}
+            >
               {/* Albums List */}
-              <div className="w-1/3 border-r pr-3 albums-list-outer" style={{ position: 'relative' }}>
+              <div
+                className="w-1/3 border-r pr-3 albums-list-outer"
+                style={{ position: "relative" }}
+              >
                 <div className="flex justify-between items-center mb-4">
-
                   <div className="flex space-x-2 items-center">
                     <button
                       onClick={() => setShowCreateAlbumModal(true)}
@@ -1768,21 +1942,28 @@ const FamilyTreeDemo: React.FC = () => {
                     {showCreateAlbumModal && (
                       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg p-6 w-96">
-
-                          <form onSubmit={e => {
-                            e.preventDefault();
-                            if (newAlbumName.trim()) {
-                              handleCreateAlbum({ name: newAlbumName.trim() });
-                              setShowCreateAlbumModal(false);
-                              setNewAlbumName('');
-                            }
-                          }}>
+                          <form
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              if (newAlbumName.trim()) {
+                                handleCreateAlbum({
+                                  name: newAlbumName.trim(),
+                                });
+                                setShowCreateAlbumModal(false);
+                                setNewAlbumName("");
+                              }
+                            }}
+                          >
                             <div className="mb-4">
-                              <label className="block text-sm font-medium mb-2">Album Name</label>
+                              <label className="block text-sm font-medium mb-2">
+                                Album Name
+                              </label>
                               <input
                                 type="text"
                                 value={newAlbumName}
-                                onChange={e => setNewAlbumName(e.target.value)}
+                                onChange={(e) =>
+                                  setNewAlbumName(e.target.value)
+                                }
                                 required
                                 className="w-full border border-gray-300 rounded px-3 py-2"
                                 placeholder="Enter album name"
@@ -1792,7 +1973,10 @@ const FamilyTreeDemo: React.FC = () => {
                             <div className="flex justify-end space-x-2">
                               <button
                                 type="button"
-                                onClick={() => { setShowCreateAlbumModal(false); setNewAlbumName(''); }}
+                                onClick={() => {
+                                  setShowCreateAlbumModal(false);
+                                  setNewAlbumName("");
+                                }}
                                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
                               >
                                 Cancel
@@ -1813,7 +1997,6 @@ const FamilyTreeDemo: React.FC = () => {
                       className="text-sm bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
                     >
                       Refresh
-
                     </button>
                   </div>
                 </div>
@@ -1821,17 +2004,21 @@ const FamilyTreeDemo: React.FC = () => {
                   {userAlbums.map((album: any) => (
                     <div
                       key={album.id}
-                      className={`flex items-center justify-between p-2 rounded border ${selectedAlbum?.id === album.id ? 'bg-blue-50 border-blue-300' : 'hover:bg-gray-50'}`}
+                      className={`flex items-center justify-between p-2 rounded border ${
+                        selectedAlbum?.id === album.id
+                          ? "bg-blue-50 border-blue-300"
+                          : "hover:bg-gray-50"
+                      }`}
                       onClick={(e) => {
                         e.stopPropagation(); // Không cho click lan ra ngoài
-                        console.log('[Album Selection] Selected album:', {
+                        console.log("[Album Selection] Selected album:", {
                           albumId: album.id,
-                          albumName: album.name
+                          albumName: album.name,
                         });
                         setSelectedAlbum(album);
                         loadAlbumImages(album.id);
                       }}
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: "pointer" }}
                     >
                       <div className="flex-1">{album.name}</div>
 
@@ -1840,14 +2027,24 @@ const FamilyTreeDemo: React.FC = () => {
                         <button
                           onClick={() => {
                             setAlbumToEdit(album);
-                            setEditAlbumName(album.name || '');
+                            setEditAlbumName(album.name || "");
                             setShowEditAlbumModal(true);
                           }}
                           className="p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded"
                           title="Edit Album"
                         >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
                           </svg>
                         </button>
 
@@ -1860,8 +2057,18 @@ const FamilyTreeDemo: React.FC = () => {
                           className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
                           title="Delete Album"
                         >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16" />
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16"
+                            />
                           </svg>
                         </button>
                       </div>
@@ -1874,17 +2081,23 @@ const FamilyTreeDemo: React.FC = () => {
               <div className="w-2/3 pl-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-medium text-gray-700">
-                    {selectedAlbum ? `Đang chọn "${selectedAlbum.name}"` : 'Select an album'}
+                    {selectedAlbum
+                      ? `Đang chọn "${selectedAlbum.name}"`
+                      : "Select an album"}
                   </h3>
                   <button
                     onClick={() => {
                       if (!selectedAlbum) {
-                        showLocalToast('Vui lòng chọn album trước', 'error');
+                        showLocalToast("Vui lòng chọn album trước", "error");
                         return;
                       }
                       setShowUploadModal(true);
                     }}
-                    className={`text-sm text-white px-2 py-1 rounded ${selectedAlbum ? 'bg-green-500 hover:bg-green-600' : 'bg-green-400 cursor-not-allowed'}`}
+                    className={`text-sm text-white px-2 py-1 rounded ${
+                      selectedAlbum
+                        ? "bg-green-500 hover:bg-green-600"
+                        : "bg-green-400 cursor-not-allowed"
+                    }`}
                   >
                     Upload Image
                   </button>
@@ -1904,8 +2117,17 @@ const FamilyTreeDemo: React.FC = () => {
                         onClick={() => handleDeleteImage(image.id)}
                         className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M6 18L18 6M6 6l12 12"
+                          />
                         </svg>
                       </button>
                     </div>
@@ -1921,34 +2143,42 @@ const FamilyTreeDemo: React.FC = () => {
       {showUploadModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-96">
-            <h2 className="text-lg font-bold mb-4">Upload Image to {selectedAlbum?.name}</h2>
-            <form onSubmit={async (e) => {
-              e.preventDefault();
+            <h2 className="text-lg font-bold mb-4">
+              Upload Image to {selectedAlbum?.name}
+            </h2>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
 
-              const form = e.target as HTMLFormElement;
-              const fileInput = form.querySelector('input[type="file"]') as HTMLInputElement;
-              const file = fileInput.files?.[0];
+                const form = e.target as HTMLFormElement;
+                const fileInput = form.querySelector(
+                  'input[type="file"]'
+                ) as HTMLInputElement;
+                const file = fileInput.files?.[0];
 
-              console.log('[Upload Form] Submitting upload for album');
+                console.log("[Upload Form] Submitting upload for album");
 
-              if (file && selectedAlbum) {
-                await handleUploadImage({
-                  file: file,
-                  albumId: selectedAlbum.id
-                });
+                if (file && selectedAlbum) {
+                  await handleUploadImage({
+                    file: file,
+                    albumId: selectedAlbum.id,
+                  });
 
-                // Reset form after successful upload
-                form.reset();
-              } else {
-                console.error('[Upload Form] Missing file or album:', {
-                  hasFile: !!file,
-                  hasAlbum: !!selectedAlbum
-                });
-                alert('Vui lòng chọn file và album');
-              }
-            }}>
+                  // Reset form after successful upload
+                  form.reset();
+                } else {
+                  console.error("[Upload Form] Missing file or album:", {
+                    hasFile: !!file,
+                    hasAlbum: !!selectedAlbum,
+                  });
+                  alert("Vui lòng chọn file và album");
+                }
+              }}
+            >
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Select Image</label>
+                <label className="block text-sm font-medium mb-2">
+                  Select Image
+                </label>
                 <input
                   type="file"
                   accept="image/*"
@@ -1981,27 +2211,47 @@ const FamilyTreeDemo: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-96">
             <h2 className="text-lg font-bold mb-4">Edit Album</h2>
-            <form onSubmit={e => {
-              e.preventDefault();
-              if (albumToEdit && editAlbumName.trim()) {
-                handleUpdateAlbum(albumToEdit.id, { name: editAlbumName.trim() });
-                setShowEditAlbumModal(false);
-                setAlbumToEdit(null);
-              }
-            }}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (albumToEdit && editAlbumName.trim()) {
+                  handleUpdateAlbum(albumToEdit.id, {
+                    name: editAlbumName.trim(),
+                  });
+                  setShowEditAlbumModal(false);
+                  setAlbumToEdit(null);
+                }
+              }}
+            >
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Album Name</label>
+                <label className="block text-sm font-medium mb-2">
+                  Album Name
+                </label>
                 <input
                   type="text"
                   value={editAlbumName}
-                  onChange={e => setEditAlbumName(e.target.value)}
+                  onChange={(e) => setEditAlbumName(e.target.value)}
                   required
                   className="w-full border border-gray-300 rounded px-3 py-2"
                 />
               </div>
               <div className="flex justify-end space-x-2">
-                <button type="button" onClick={() => { setShowEditAlbumModal(false); setAlbumToEdit(null); }} className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditAlbumModal(false);
+                    setAlbumToEdit(null);
+                  }}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Save
+                </button>
               </div>
             </form>
           </div>
@@ -2013,10 +2263,32 @@ const FamilyTreeDemo: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-96">
             <h2 className="text-lg font-bold mb-4">Delete Album</h2>
-            <p className="mb-6">Are you sure you want to delete album "{albumToDelete.name}"? This will also delete all images in this album.</p>
+            <p className="mb-6">
+              Are you sure you want to delete album "{albumToDelete.name}"? This
+              will also delete all images in this album.
+            </p>
             <div className="flex justify-end space-x-2">
-              <button type="button" onClick={() => { setShowDeleteAlbumConfirm(false); setAlbumToDelete(null); }} className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Cancel</button>
-              <button type="button" onClick={() => { handleDeleteAlbum(albumToDelete.id); setShowDeleteAlbumConfirm(false); setAlbumToDelete(null); }} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Delete</button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteAlbumConfirm(false);
+                  setAlbumToDelete(null);
+                }}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleDeleteAlbum(albumToDelete.id);
+                  setShowDeleteAlbumConfirm(false);
+                  setAlbumToDelete(null);
+                }}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Delete
+              </button>
             </div>
           </div>
         </div>
@@ -2073,14 +2345,25 @@ const FamilyTreeDemo: React.FC = () => {
                 }}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
             <div className="space-y-4">
               <div className="bg-gray-100 p-4 rounded-lg">
-                <h3 className="font-medium mb-2">Person: {selectedPerson?.name}</h3>
+                <h3 className="font-medium mb-2">
+                  Person: {selectedPerson?.name}
+                </h3>
                 <div className="bg-white p-3 rounded border">
                   <pre className="text-sm overflow-auto max-h-96">
                     {JSON.stringify(personTreeData, null, 2)}
@@ -2105,8 +2388,17 @@ const FamilyTreeDemo: React.FC = () => {
                 }}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -2123,9 +2415,9 @@ const FamilyTreeDemo: React.FC = () => {
               <div>
                 <h3 className="font-medium mb-2">Image Information:</h3>
                 <div className="bg-gray-100 p-4 rounded-lg space-y-2 text-sm">
-                  <div><strong>Name:</strong> {selectedImage.name || 'N/A'}</div>
-
-
+                  <div>
+                    <strong>Name:</strong> {selectedImage.name || "N/A"}
+                  </div>
                 </div>
               </div>
             </div>
@@ -2134,11 +2426,13 @@ const FamilyTreeDemo: React.FC = () => {
       )}
 
       {/* Response Area for notifications */}
-      <div id="response-area" style={{ display: 'none' }} className="response-area"></div>
-
+      <div
+        id="response-area"
+        style={{ display: "none" }}
+        className="response-area"
+      ></div>
     </div>
   );
 };
 
 export default FamilyTreeDemo;
-

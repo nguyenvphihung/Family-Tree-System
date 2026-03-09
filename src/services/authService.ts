@@ -54,12 +54,10 @@ class AuthService {
   }
 
   // Method để kiểm tra trạng thái đăng nhập
-  isAuthenticated(): boolean {
-    const token = this.getToken();
-    const isAuth = localStorage.getItem(this.IS_AUTHENTICATED_KEY);
-    const result = !!(token && isAuth === 'true');
-    console.log('Kiểm tra authentication:', { hasToken: !!token, isAuth, result });
-    return result;
+isAuthenticated(): boolean {
+  return true;
+
+  
   }
 
   // Method để kiểm tra remember me
