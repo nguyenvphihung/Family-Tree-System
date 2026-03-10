@@ -15,10 +15,7 @@ import CemeteryMap from "@/pages/CemeterryMap/CemeteryMap";
 const VNPayPage = lazy(() => import("@/pages/VNPay"));
 const PaymentCallback = lazy(() => import("@/pages/VNPay/PaymentCallback"));
 
-/**
- * Private Routes - Yêu cầu đăng nhập
- * Các route này cần authentication để truy cập
- */
+
 export const privateRoutes: RouteObject[] = [
     { path: "/dashboard", element: <Dashboard /> },
     { path: "/user-detail", element: <UserDetail /> },
@@ -43,3 +40,4 @@ export const privateRoutes: RouteObject[] = [
 ];
 
 export default privateRoutes;
+

@@ -895,6 +895,7 @@ const FamilyTreeDemo: React.FC = () => {
       setLoading(false);
     }
   };
+  
 
   // Function để tính tuổi từ ngày sinh
   const calculateAge = (birthday?: string) => {
@@ -926,57 +927,8 @@ const FamilyTreeDemo: React.FC = () => {
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-6">
-            <span className="text-[10px] text-gray-300 font-medium">
-              Family Tree System
-            </span>
+       
           </div>
-
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-              <span className="text-gray-800 font-bold text-sm">FT</span>
-            </div>
-            <span className="text-base font-bold text-white">Family Tree</span>
-          </div>
-
-          {/* Main Navigation Bar - Modern */}
-          <div className="">
-            <div className="flex items-center space-x-8">
-              <a
-                href="#"
-                className="text-white hover:text-gray-900 font-medium transition-colors duration-200"
-              >
-                Home
-              </a>
-              <a href="#" className="text-rose-500 font-bold">
-                Family tree
-              </a>
-              <a
-                href="#"
-                className="text-white hover:text-gray-900 font-medium transition-colors duration-200"
-              >
-                Discoveries
-              </a>
-              <a
-                href="#"
-                className="text-white hover:text-gray-900 font-medium transition-colors duration-200"
-              >
-                Photos
-              </a>
-              <a
-                href="#"
-                className="text-white hover:text-gray-900 font-medium transition-colors duration-200"
-              >
-                DNA
-              </a>
-              <a
-                href="#"
-                className="text-white hover:text-gray-900 font-medium transition-colors duration-200"
-              >
-                Research
-              </a>
-            </div>
-          </div>
-
           <div className="flex items-center space-x-4">
             {/* Tree Selector Button */}
             <button
@@ -1356,97 +1308,10 @@ const FamilyTreeDemo: React.FC = () => {
           {/* Tree Controls */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <button className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 px-3.5 py-2 rounded-xl text-xs flex items-center space-x-2 shadow-sm transition-all duration-200">
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"
-                  />
-                </svg>
-                <span>Family view</span>
-              </button>
-              <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200">
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"
-                  />
-                </svg>
-              </button>
-              <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200">
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-              </button>
-              <button className="w-10 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all duration-200">
-                <svg
-                  className="w-6 h-6"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
+             
+              
             </div>
 
-            <div className="flex items-center gap-4">
-              <select className="border-2 border-gray-300 rounded-xl px-3 py-1.5 text-xs font-medium focus:border-rose-400 focus:outline-none transition-colors duration-200">
-                <option>Generations 5+</option>
-                <option>Generations 6+</option>
-                <option>Generations 7+</option>
-                <option>Generations +</option>
-              </select>
-              <div className="relative max-w-md">
-                <input
-                  type="text"
-                  placeholder="Find a person..."
-                  className="w-40 border-2 border-gray-300 rounded-xl pl-3 pr-10 py-1.5 text-xs font-medium focus:border-rose-400 focus:outline-none transition-colors duration-200"
-                />
-                <button className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* Family Tree Visualization */}
